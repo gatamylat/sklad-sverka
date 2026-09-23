@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Сверка склад ↔ заявка</title>
 <meta name="description" content="Инструмент Яны: бросить заявку конструктора — увидеть, какие направляющие есть на складе. Работает без сети.">
 <style>
@@ -76,6 +76,86 @@ label.chip{display:inline-flex;gap:6px;align-items:center;border:1.5px solid var
 select.sel{font-family:inherit;font-size:12px;border:1.5px solid var(--brd);border-radius:6px;padding:3px 6px;background:var(--surf);color:var(--t1)}
 .small{font-size:12px;color:var(--t2)}
 @media (max-width:700px){.hidecol{display:none}.wrap{padding:12px 12px 90px}}
+/* ── шапка: название + имя, реестр, настройки ── */
+header .hl{flex:1 1 auto;min-width:0}
+header .ttl{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+button.who{border-radius:100px;padding:4px 12px;font-size:13px;background:var(--accbg);border-color:transparent;color:var(--t1)}
+button.who::before{content:"👤 "}
+header .acts{display:flex;gap:8px;align-items:center}
+button.btn-reg{background:var(--accbg);border-color:var(--acc);color:var(--acc);font-weight:600;padding:8px 16px}
+button.btn-ico{font-size:18px;line-height:1;padding:6px 10px}
+header .status{flex-basis:100%}
+.tools{display:none;justify-content:flex-end;margin-top:12px}.tools.on{display:flex}
+/* ── безопасные зоны iPhone (вырез, полоска «домой») ── */
+.wrap{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+.bar{padding-bottom:max(10px,env(safe-area-inset-bottom))}
+.sheet .panel{padding-bottom:max(24px,calc(env(safe-area-inset-bottom) + 12px))}
+/* ── сенсорные экраны (iPhone, iPad): крупнее цели, без автозума Safari ── */
+@media (pointer:coarse){
+  button{min-height:40px}
+  button.who{min-height:34px}
+  input[type=checkbox]{width:22px;height:22px}
+  select.sel{font-size:16px;padding:5px 8px}
+  .addph,.thumb{width:48px;height:48px}.thumb.sm{width:36px;height:36px}
+  label.chip{padding:8px 12px}
+  .sheet .panel{padding-left:16px;padding-right:16px}
+}
+/* ── iPad mini (744×1133) и другие планшеты в портрете ── */
+@media (min-width:601px) and (max-width:900px){
+  .wrap{padding-top:18px}
+  td,th{padding:8px 7px}
+  .reg th,.reg td{padding:6px 5px}
+}
+/* ── iPhone (414 у iPhone 11) и другие телефоны ── */
+@media (max-width:600px){
+  .wrap{padding:12px max(12px,env(safe-area-inset-right)) 96px max(12px,env(safe-area-inset-left))}
+  header{margin-bottom:10px;gap:8px}
+  header h1{font-size:20px}
+  header .acts{flex-basis:100%}
+  header .acts .btn-reg{flex:1}
+  .drop{padding:18px 14px}
+  .legend{gap:6px 10px;font-size:11px}
+  .card .hd{padding:10px 12px}
+  /* результат сверки — карточками вместо таблицы */
+  table.res,table.res tbody{display:block}
+  table.res tr.th{display:none}
+  table.res tr{display:grid;grid-template-columns:auto 1fr auto;column-gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--brd)}
+  table.res tr:last-child{border-bottom:0}
+  table.res td{border:0;padding:0}
+  table.res td.chk{grid-column:1;grid-row:1;width:auto;text-align:left}
+  table.res td.c-st{grid-column:2;grid-row:1}
+  table.res td.chk:empty{display:none}
+  table.res td.chk:empty+td.c-st{grid-column:1/3}
+  table.res td.c-need{grid-column:3;grid-row:1;white-space:nowrap;font-weight:600}
+  table.res td.c-pos{grid-column:1/-1;margin-top:6px}
+  table.res td.c-stk{grid-column:1/-1;margin-top:4px}
+  table.res td.c-stk:empty{display:none}
+  table.res tr.hdr{display:block;background:rgba(0,0,0,.02)}
+  table.res tr.hdr td:first-child{display:none}
+  /* реестр — карточками: 3 строки по 3 поля */
+  table.reg,table.reg tbody{display:block}
+  table.reg tr.th{display:none}
+  table.reg tr{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--brd)}
+  table.reg td{border:0;padding:0;font-size:13px;min-width:0}
+  table.reg td.r-ser{grid-column:1;grid-row:1;font-weight:600;font-size:14px}
+  table.reg td.r-len{grid-column:2;grid-row:1;font-weight:600}
+  table.reg td.r-len::after{content:" мм";font-weight:400;color:var(--t2)}
+  table.reg td.r-qty{grid-column:3;grid-row:1;text-align:right;font-weight:600}
+  table.reg td.r-qty::after{content:" компл";font-weight:400;color:var(--t2)}
+  table.reg td.r-dmp{grid-column:1;grid-row:2}
+  table.reg td.r-dmp::before{content:"доводчик ";color:var(--t2)}
+  table.reg td.r-tip{grid-column:2;grid-row:2}
+  table.reg td.r-tip::before{content:"TIP-ON ";color:var(--t2)}
+  table.reg td.r-tip:empty{visibility:hidden}
+  table.reg td.r-art{grid-column:3;grid-row:2;text-align:right;overflow-wrap:anywhere}
+  table.reg td.r-op{grid-column:1;grid-row:3}
+  table.reg td.r-ph{grid-column:2;grid-row:3}
+  table.reg td.r-chk{grid-column:3;grid-row:3;text-align:right}
+  table.reg td.r-chk::before{content:"проверено ";color:var(--t2);font-size:12px;vertical-align:middle}
+  table.reg td.r-chk input{vertical-align:middle}
+  .sheet .panel{border-radius:14px 14px 0 0}
+  .viewer .vb button{min-width:120px}
+}
 </style>
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#FAF9F5">
@@ -88,9 +168,9 @@ select.sel{font-family:inherit;font-size:12px;border:1.5px solid var(--brd);bord
 <body>
 <div class="wrap">
   <header>
-    <div><h1>Сверка склад ↔ заявка</h1><div class="sub">Направляющие Blum · пилот · работает без сети</div></div>
-    <div class="status"><span class="dot" id="syncDot"></span><span id="syncInfo">локально</span> · <span id="regInfo">реестр…</span> · <button class="ghost" id="btnWho" title="кто работает">—</button>
-      <button class="ghost" id="btnReg">Реестр</button><button class="ghost" id="btnSet">Настройки</button><button class="ghost" id="btnClear">Очистить</button></div>
+    <div class="hl"><div class="ttl"><h1>Сверка склад ↔ заявка</h1><button class="who" id="btnWho" title="Кто работает — нажмите, чтобы сменить">—</button></div><div class="sub">Направляющие Blum · пилот · работает без сети</div></div>
+    <div class="acts"><button class="btn-reg" id="btnReg">📋 Реестр</button><button class="btn-ico" id="btnSet" title="Настройки" aria-label="Настройки">⚙️</button></div>
+    <div class="status"><span class="dot" id="syncDot"></span><span id="syncInfo">локально</span> · <span id="regInfo">реестр…</span></div>
   </header>
 
   <label class="drop" id="drop"><input type="file" id="file" multiple accept=".xlsx,.xls,.xlsm">
@@ -102,6 +182,7 @@ select.sel{font-family:inherit;font-size:12px;border:1.5px solid var(--brd);bord
     <span><span class="pill grey">нет</span> закупка</span>
     <span><span class="pill skip">вне пилота</span> ящики, замки, чужие бренды</span>
   </div>
+  <div class="tools" id="tools"><button class="ghost" id="btnClear" title="Убрать с экрана все загруженные заявки (реестр и фото не трогаются)">✕ Убрать все заявки</button></div>
   <div id="out"></div>
 </div>
 
@@ -1491,10 +1572,10 @@ function loadRegister(){
 function saveRegister(){lsSet(LS_REG,JSON.stringify({loadedAt:new Date().toLocaleString('ru-RU'),source:state.regSource||'встроенный',items:state.register}));loadRegister();}
 function renderRegister(){
   var rows=state.register.slice().sort(function(a,b){return (a.series+a.len).localeCompare(b.series+b.len)});
-  var h='<table class="reg"><tr><th>серия</th><th>длина</th><th>доводчик</th><th>TIP-ON</th><th>кол-во</th><th>артикул</th><th>упаковка</th><th>фото</th><th>проверено</th></tr>';
-  rows.forEach(function(p){h+='<tr'+(p.type!=='rail'?' class="dim"':'')+'><td>'+esc(p.series)+'</td><td>'+p.len+'</td><td>'+(p.damper==='BLUMOTION'?'да':p.damper==='NONE'?'нет':'?')+'</td><td>'+(p.tipon?'да':'')+'</td><td>'+p.qty+'</td><td>'+esc(p.art||'')+'</td>'+
-    '<td><select class="sel" data-op="'+esc(p.id)+'"><option value=""'+(!p.opened?' selected':'')+'>?</option><option value="sealed"'+(p.opened==='sealed'?' selected':'')+'>целое</option><option value="opened"'+(p.opened==='opened'?' selected':'')+'>вскрыто</option></select></td>'+
-    '<td>'+thumbsHtml(p.id,false,true)+'</td><td><input type="checkbox" data-id="'+esc(p.id)+'" '+(p.checked?'checked':'')+'>'+(p.checkedAt?'<div class="small">'+esc(p.checkedAt)+'</div>':'')+'</td></tr>'});
+  var h='<table class="reg"><tr class="th"><th>серия</th><th>длина</th><th>доводчик</th><th>TIP-ON</th><th>кол-во</th><th>артикул</th><th>упаковка</th><th>фото</th><th>проверено</th></tr>';
+  rows.forEach(function(p){h+='<tr'+(p.type!=='rail'?' class="dim"':'')+'><td class="r-ser">'+esc(p.series)+'</td><td class="r-len">'+p.len+'</td><td class="r-dmp">'+(p.damper==='BLUMOTION'?'да':p.damper==='NONE'?'нет':'?')+'</td><td class="r-tip">'+(p.tipon?'да':'')+'</td><td class="r-qty">'+p.qty+'</td><td class="r-art">'+esc(p.art||'')+'</td>'+
+    '<td class="r-op"><select class="sel" data-op="'+esc(p.id)+'"><option value=""'+(!p.opened?' selected':'')+'>?</option><option value="sealed"'+(p.opened==='sealed'?' selected':'')+'>целое</option><option value="opened"'+(p.opened==='opened'?' selected':'')+'>вскрыто</option></select></td>'+
+    '<td class="r-ph">'+thumbsHtml(p.id,false,true)+'</td><td class="r-chk"><input type="checkbox" data-id="'+esc(p.id)+'" '+(p.checked?'checked':'')+'>'+(p.checkedAt?'<div class="small">'+esc(p.checkedAt)+'</div>':'')+'</td></tr>'});
   h+='</table>';$('regTable').innerHTML=h;bindThumbs($('regTable'));
   Array.prototype.forEach.call($('regTable').querySelectorAll('[data-op]'),function(sl){sl.addEventListener('change',function(){var p=state.register.filter(function(x){return x.id===sl.getAttribute('data-op')})[0];if(p){p.opened=sl.value||null;p.updatedAt=Date.now();saveRegister();schedulePush()}})});
   $('regMeta').textContent=state.register.length+' позиций. Поля по Х5: серия · длина · доводчик · TIP-ON · кол-во · место · проверено.';
@@ -1530,7 +1611,7 @@ function handleFiles(list){
 
 // ── рендер ──
 function render(){
-  var out=$('out'); if(!state.files.length){out.innerHTML='';updateBar();return;}
+  var out=$('out'); $('tools').classList.toggle('on',state.files.length>0); if(!state.files.length){out.innerHTML='';updateBar();return;}
   var h='';
   state.files.forEach(function(f){
     h+='<div class="card"><div class="hd"><div><h2><span class="code">'+esc(f.order||'—')+'</span>'+esc(f.title||f.fileName)+'</h2><div class="meta">'+esc(f.fileName)+(f.ok?' · лист «'+esc(f.sheet)+'» · вариант '+f.variant+(f.warnings.length?' · '+esc(f.warnings.join('; ')):''):'')+'</div></div><button class="ghost" data-rm="'+f.id+'">убрать</button></div>';
@@ -1538,21 +1619,21 @@ function render(){
     var rows=f.rows.map(function(r){r.match=r.norm?Core.matchRow(r.norm,state.register,state.live):null;return r});
     var shown=rows.filter(function(r){return state.showAll||(r.match&&r.match.status!=='skip')||(r.norm&&r.norm.type==='rail')});
     if(!shown.length){h+='<div class="empty">Направляющих Blum в заявке нет'+(state.showAll?'':' — включите «показывать все строки» в настройках, чтобы увидеть остальное')+'</div></div>';return;}
-    h+='<table><tr><th class="chk">выдать</th><th>статус</th><th>позиция</th><th>нужно</th><th>на складе</th><th class="hidecol">в заявке</th></tr>';
+    h+='<table class="res"><tr class="th"><th class="chk">выдать</th><th>статус</th><th>позиция</th><th>нужно</th><th>на складе</th><th class="hidecol">в заявке</th></tr>';
     shown.forEach(function(r){
       if(r.isHeader){h+='<tr class="hdr"><td></td><td colspan="5">'+esc(r.name||r.art)+'</td></tr>';return;}
       var m=r.match,n=r.norm,st=m?m.status:null;
       var pid=f.id+':'+r.n, can=st==='green'||st==='orange';
       h+='<tr'+(st==='skip'||!m?' class="dim"':'')+'>';
       h+='<td class="chk">'+(can?'<input type="checkbox" data-pick="'+pid+'" '+(state.picked[pid]?'checked':'')+'>':'')+'</td>';
-      h+='<td>'+(m?'<span class="pill '+st+'">'+esc(st==='green'?'есть':st==='orange'?'есть, не проверено':st==='yellow'?(m.label==='не разобрал'?'не разобрал':'похожее'):st==='grey'?'нет':'вне пилота')+'</span>':'')+'</td>';
-      h+='<td>'+(n&&n.key?'<div class="key">'+esc(n.key)+'</div>':'<div>'+esc(n&&n.type!=='other'?n.type:'')+'</div>')+'<div class="raw">'+esc(r.art)+(r.art&&r.name?' · ':'')+esc(r.name)+'</div>';
+      h+='<td class="c-st">'+(m?'<span class="pill '+st+'">'+esc(st==='green'?'есть':st==='orange'?'есть, не проверено':st==='yellow'?(m.label==='не разобрал'?'не разобрал':'похожее'):st==='grey'?'нет':'вне пилота')+'</span>':'')+'</td>';
+      h+='<td class="c-pos">'+(n&&n.key?'<div class="key">'+esc(n.key)+'</div>':'<div>'+esc(n&&n.type!=='other'?n.type:'')+'</div>')+'<div class="raw">'+esc(r.art)+(r.art&&r.name?' · ':'')+esc(r.name)+'</div>';
       if(r.incomplete)h+='<div class="note bad">в заявке нет единицы и количества</div>';
       if(r.dup)h+='<div class="note bad">'+esc(r.dup)+'</div>';
       if(m&&m.notes.length)h+='<div class="note">'+esc(m.notes.join(' · '))+'</div>';
       h+='</td>';
-      h+='<td>'+(r.qty!=null?esc(r.qty)+' '+esc(n&&n.unit?n.unit:r.unit):'<span class="note bad">—</span>')+'</td>';
-      h+='<td>'+(m&&m.status!=='skip'?'<div>'+esc(m.label)+'</div>'+m.hits.map(function(p){return '<div class="hit"><b>'+p.qty+'</b> · '+esc(p.art||'')+' · '+esc(p.place||'')+(p.checked?' · проверено '+esc(p.checkedAt||'')+(p.checkedBy?' ('+esc(p.checkedBy)+')':''):'')+(p.opened==='opened'?' · вскрыто':p.opened==='sealed'?' · целое':'')+'</div>'+((photos[p.id]||[]).length?thumbsHtml(p.id,true,false):'')}).join(''):'')+'</td>';
+      h+='<td class="c-need">'+(r.qty!=null?esc(r.qty)+' '+esc(n&&n.unit?n.unit:r.unit):'<span class="note bad">—</span>')+'</td>';
+      h+='<td class="c-stk">'+(m&&m.status!=='skip'?'<div>'+esc(m.label)+'</div>'+m.hits.map(function(p){return '<div class="hit"><b>'+p.qty+'</b> · '+esc(p.art||'')+' · '+esc(p.place||'')+(p.checked?' · проверено '+esc(p.checkedAt||'')+(p.checkedBy?' ('+esc(p.checkedBy)+')':''):'')+(p.opened==='opened'?' · вскрыто':p.opened==='sealed'?' · целое':'')+'</div>'+((photos[p.id]||[]).length?thumbsHtml(p.id,true,false):'')}).join(''):'')+'</td>';
       h+='<td class="hidecol raw">'+esc(r.unit)+(r.supplier?' · '+esc(r.supplier):'')+(r.note?' · '+esc(r.note.length>60?r.note.slice(0,60)+'…':r.note):'')+'</td></tr>';
     });
     h+='</table></div>';
