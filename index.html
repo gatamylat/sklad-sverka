@@ -116,27 +116,47 @@ button.del{color:var(--dng);border-color:transparent;background:none;white-space
 .reg .om{display:none}
 @media (pointer:coarse){.form input,.form select,input.inl{font-size:16px;padding:7px 8px}}
 #shReg .panel{width:min(1160px,100%)}
-/* реестр карточками: телефоны и iPad mini в портрете (12 колонок туда не помещаются) */
+/* шапка таблицы реестра прилипает к верху окна при прокрутке */
+.reg tr.th th{position:sticky;top:-16px;background:var(--surf);z-index:2;box-shadow:inset 0 -1px 0 var(--brd)}
+/* реестр карточками: телефоны (в т.ч. горизонтально) и iPad mini в портрете — по одной карточке в ряд.
+   Поля идут строками: [серия · длина ✕] / [доводчик TIP-ON артикул] / [кол-во место] / [упаковка фото проверено] */
 @media (max-width:900px){
-  table.reg,table.reg tbody,table.reg tr,table.reg td{display:block}
+  table.reg,table.reg tbody{display:block}
   table.reg tr.th{display:none}
-  table.reg tr{background:var(--surf);border:1px solid var(--brd);border-radius:12px;padding:8px 12px;margin:8px 0}
-  table.reg td{display:flex;align-items:center;gap:10px;border:0;padding:5px 0;font-size:13px}
-  table.reg td::before{content:attr(data-l);font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);min-width:72px;flex:0 0 auto}
-  table.reg td.r-ser{display:block;font-family:var(--fh);font-size:18px;font-weight:500;padding:4px 0 6px}
+  table.reg tr{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;background:var(--surf);border:1px solid var(--brd);border-radius:10px;padding:8px 10px;margin:6px 0}
+  table.reg tr::before,table.reg tr::after{content:"";flex:0 0 100%;height:0;margin:-3px 0}
+  table.reg td{display:inline-flex;align-items:center;gap:6px;border:0;padding:0;font-size:13px;min-width:0}
+  table.reg td::before{content:attr(data-l);font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--t2)}
+  table.reg td.r-ser{order:10;flex:1 0 calc(100% - 110px);font-family:var(--fh);font-size:16px;font-weight:500}
   table.reg td.r-ser::before{display:none}
+  table.reg td.r-del{order:20;margin-left:auto}
+  table.reg td.r-del::before{display:none}
+  table.reg td.r-del button.del{min-height:0;padding:2px 4px;font-size:12px}
+  table.reg td.r-dmp{order:30}table.reg td.r-tip{order:40}table.reg td.r-art{order:50}
+  table.reg td.r-tip:empty{display:none}table.reg td.r-art:empty{display:none}
+  table.reg tr::before{order:55}
+  table.reg td.r-qty{order:60}
+  table.reg td.r-place{order:70;flex:1 1 200px;flex-wrap:wrap;gap:2px 6px}
+  table.reg td.r-place .small{display:none}
+  table.reg td.r-ph::before{display:none}
+  table.reg tr::after{order:75}
+  table.reg td.r-op{order:80}table.reg td.r-ph{order:90}
+  table.reg td.r-chk{order:100;margin-left:auto}
+  table.reg td.r-chk .small{font-size:10px}
   table.reg .om{display:inline}
   table.reg td.hm{display:none}
-  table.reg td.r-chk .small{margin-left:6px}
-  table.reg td.r-del{justify-content:flex-end}
-  table.reg td.r-del::before{display:none}
-  input.inl{flex:1;width:auto}input.inl.n{flex:0 0 70px;width:70px}
-  table.reg td.r-place{flex-wrap:wrap}
-  table.reg td.r-place .small{flex-basis:100%;padding-left:82px}
+  input.inl{flex:1;width:auto;min-width:0}input.inl.n{flex:0 0 58px;width:58px}
+  table.reg .addph,table.reg .thumb{width:40px;height:40px}
+  table.reg select.sel{width:auto;max-width:110px}
 }
+/* широкие карточки (телефон горизонтально, iPad mini): кол-во, место, упаковка, фото, проверено — одной строкой */
 @media (min-width:701px) and (max-width:900px){
-  table.reg tbody{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
-  table.reg tr{margin:0}
+  table.reg tr::after{display:none}
+  table.reg td.r-ser{flex:0 0 auto}
+  table.reg td.r-del{order:52}
+  table.reg td.r-place{flex:1 1 160px}
+  table.reg td.r-ph::before{display:inline}
+  table.reg td.r-chk{margin-left:0}
 }
 /* ── iPad mini (744×1133) и другие планшеты в портрете ── */
 @media (min-width:601px) and (max-width:900px){
