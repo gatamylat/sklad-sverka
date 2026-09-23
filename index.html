@@ -118,6 +118,9 @@ header .status{flex-basis:100%}
 @keyframes regflash{0%,45%{background:var(--warnbg)}100%{background:transparent}}
 .reg .none td{color:var(--t2);text-align:center;padding:20px}
 /* результат сверки: подсказка «что делать», позиции со склада — кликабельны */
+#regIss{margin-bottom:2px}
+details.unm{display:inline}details.unm summary{display:inline;cursor:pointer;color:var(--dng)}
+details.unm ul{margin:4px 0 6px;padding-left:18px}
 .act-hint{font-size:11px;color:var(--t2);margin-top:4px;max-width:180px;line-height:1.3}
 .hitline{cursor:pointer;border-radius:8px;padding:4px 6px;margin:4px -6px 0;transition:background .15s}
 .hitline:hover,.hitline:active{background:var(--accbg)}
@@ -263,6 +266,7 @@ button.del{color:var(--dng);border-color:transparent;background:none;white-space
 
 <div class="sheet" id="shReg"><div class="panel"><button class="xclose" data-close="shReg" title="Закрыть (Esc)" aria-label="Закрыть">✕</button><div class="handle"></div>
   <h2>Реестр остатков</h2>
+  <div class="small" id="regIss"></div>
   <div class="small" id="regMeta"></div>
   <div class="row">
     <label class="chip"><input type="file" id="regFile" accept=".json,.xlsx" style="display:none"><span>Загрузить реестр (json / xlsx)</span></label>
@@ -1581,7 +1585,7 @@ function bindThumbs(root){Array.prototype.forEach.call(root.querySelectorAll('[d
 
 
 // ═══ ОБЛАКО (Firebase, по инструкции Пу v2: таймауты, long-polling, слияние по записям, не отправлять до первой загрузки) ═══
-var FB_APP='sklad-sverka', FB_DOC=null, FB_PH=null, fbDb=null, fbEnabled=false, _firstSyncDone=false, _seenRemoteSync=0, _ownWriteId=null, _pushTimer=null, _unsent=0, _inMerge=false, _pushing=false;
+var FB_APP='sklad-sverka', FB_DOC=null, FB_PH=null, FB_ISS=null, fbDb=null, fbEnabled=false, _firstSyncDone=false, _seenRemoteSync=0, _ownWriteId=null, _pushTimer=null, _unsent=0, _inMerge=false, _pushing=false;
 var who=lsGet('sverka.who')||'';
 var fbConfig={apiKey:"AIzaSyAgIA0PLvUOJsRN8tHRzC03evTTkt3KHHc",authDomain:"skills-tracker-3f21b.firebaseapp.com",projectId:"skills-tracker-3f21b",storageBucket:"skills-tracker-3f21b.firebasestorage.app",messagingSenderId:"108202530564",appId:"1:108202530564:web:31ecf70071f49a89abe251"};
 function fbTimeout(pr,ms){return new Promise(function(res,rej){var done=false;var t=setTimeout(function(){if(done)return;done=true;var e=new Error('timeout');e.code='timeout';rej(e)},ms);pr.then(function(v){if(!done){done=true;clearTimeout(t);res(v)}},function(e){if(!done){done=true;clearTimeout(t);rej(e)}})})}
@@ -1589,10 +1593,11 @@ function setSync(cls,text,detail){$('syncDot').className='dot '+cls;$('syncInfo'
 function fbInit(){
   if(typeof firebase==='undefined'){setSync('','локально · библиотека облака не загрузилась (нет сети?)');return;}
   try{firebase.initializeApp(fbConfig);fbDb=firebase.firestore();try{fbDb.settings({experimentalAutoDetectLongPolling:true,merge:true})}catch(_){}
-    FB_DOC=fbDb.collection('apps').doc(FB_APP).collection('shared').doc('register');FB_PH=fbDb.collection('apps').doc(FB_APP).collection('photos');fbAuth();
+    FB_DOC=fbDb.collection('apps').doc(FB_APP).collection('shared').doc('register');FB_PH=fbDb.collection('apps').doc(FB_APP).collection('photos');FB_ISS=fbDb.collection('apps').doc(FB_APP).collection('shared').doc('issues');fbAuth();
     window.addEventListener('online',function(){setSync('warn','связь вернулась…');fbAuth()});window.addEventListener('offline',function(){setSync('','офлайн · '+_unsent+' не отправлено')});
     document.addEventListener('visibilitychange',function(){if(document.hidden)flushPush()});window.addEventListener('pagehide',flushPush);
     setInterval(function(){if(!_firstSyncDone&&fbEnabled)fbFirstLoad();else if(_unsent>0)flushPush()},30000);
+    setInterval(pollIssues,300000);   // запасной путь для списаний, если onSnapshot молчит
   }catch(e){console.error('fb init',e);setSync('bad','облако: '+(e.code||e.message))}
 }
 function fbAuth(){if(!fbDb)return;var a=firebase.auth();if(a.currentUser){fbEnabled=true;if(!_firstSyncDone)fbFirstLoad();return}
@@ -1601,6 +1606,9 @@ function fbFirstLoad(){if(!fbEnabled||_firstSyncDone)return;setSync('warn','за
   fbTimeout(FB_DOC.get(),12000).then(function(doc){_firstSyncDone=true;
     if(doc.exists){applyRemote(doc.data(),'first')}else{setSync('ok','облако пустое — отправлю реестр');schedulePush()}
     FB_DOC.onSnapshot(function(d){if(!d.exists||_pushing)return;var r=d.data();if(r._writeId&&r._writeId===_ownWriteId)return;applyRemote(r,'live')},function(e){console.warn('snapshot',e.code)});
+    // списания из «Закупок» — только после того, как реестр увиден в облаке (иначе спишем со встроенного и затрём)
+    pollIssues();
+    FB_ISS.onSnapshot(function(d){if(d.exists)applyIssuesDoc(d.data())},function(e){console.warn('issues snapshot',e.code||e.message)});
   }).catch(function(e){setSync('','офлайн · работаю локально ('+(e.code||e.message)+')')})}
 function applyRemote(rd,how){try{var rts=rd.lastSync&&rd.lastSync.toMillis?rd.lastSync.toMillis():0;if(rts)_seenRemoteSync=rts;var remote=JSON.parse(rd.data||'{}');_inMerge=true;var need=mergeRemote(remote);_inMerge=false;
     setSync('ok','в облаке · '+(rd.updatedBy||'')+' '+(rts?new Date(rts).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''),'');if(need)schedulePush();fetchMissingPhotos()}catch(e){_inMerge=false;console.error('applyRemote',e)}}
@@ -1645,6 +1653,45 @@ function askWho(){$('whoPin').value='';$('whoErr').textContent='';var h='';Objec
 function confirmWho(){var n=$('whoList')._sel;if(!n){$('whoErr').textContent='Выберите имя';return}if($('whoPin').value.trim()!==USERS[n]){$('whoErr').textContent='Неверный пин-код';$('whoPin').value='';$('whoPin').focus();return}
   who=n;lsSet('sverka.who',who);$('btnWho').textContent=who;$('shWho').classList.remove('on');toast('Работает: '+who)}
 
+// ═══ СПИСАНИЯ ИЗ «ЗАКУПОК» (Apps Script пишет в shared/issues, приложение применяет к реестру один раз) ═══
+var LS_ISS_APPLIED='sverka.issues.applied', LS_ISS_UNM='sverka.issues.unmatched';
+function lsArr(k){try{var a=JSON.parse(lsGet(k)||'[]');return Array.isArray(a)?a:[]}catch(e){return []}}
+function pollIssues(){if(!FB_ISS||!fbEnabled||!_firstSyncDone)return;fbTimeout(FB_ISS.get(),12000).then(function(d){if(d.exists)applyIssuesDoc(d.data())}).catch(function(e){console.warn('issues get',e.code||e.message)})}
+function applyIssuesDoc(data){var items;try{items=JSON.parse((data&&data.items)||'[]')}catch(e){console.warn('issues: items не JSON',e);return}applyIssues(items)}
+function applyIssues(items){
+  if(!_firstSyncDone||!Array.isArray(items))return;
+  var applied=lsArr(LS_ISS_APPLIED),seen={},unm=lsArr(LS_ISS_UNM),newIds=false,unmNew=false,changed=0;
+  applied.forEach(function(id){seen[id]=1});
+  state.register.forEach(function(p){(p.issued||[]).forEach(function(x){if(x&&x.id)seen[x.id]=1})});   // след в самом реестре — защита от повтора на другом устройстве
+  items.forEach(function(it){
+    if(!it||!it.id||seen[it.id])return;seen[it.id]=1;applied.push(it.id);newIds=true;
+    var len=Number(it.len),q=Number(it.qty)||0,date=it.date||String(it.at||'').slice(0,10);
+    if(q<=0)return;
+    var base=state.register.filter(function(p){return p.type==='rail'&&p.series===it.series&&Number(p.len)===len&&p.qty>0});
+    var cand=it.damper?base.filter(function(p){return p.damper===it.damper}):base,similar=false;
+    if(it.damper&&!cand.length&&base.length){cand=base;similar=true}
+    cand=cand.map(function(p){return [p,state.register.indexOf(p)]}).sort(function(a,b){return ((b[0].checked?1:0)-(a[0].checked?1:0))||(a[1]-b[1])}).map(function(x){return x[0]});
+    var need=q;
+    cand.forEach(function(p){if(need<=0)return;var take=Math.min(need,p.qty);if(!(take>0))return;
+      var rec={id:it.id,qty:take,order:it.order||'',date:date};if(similar)rec.similar=true;
+      p.qty-=take;p.issued=(p.issued||[]).concat([rec]);p.updatedAt=Date.now();need-=take;changed++});
+    if(need>0){console.warn('списание: на полке не нашли',it);
+      unm.push({id:it.id,key:it.key||((it.series||'')+' · '+(it.len||'')),qty:need,order:it.order||'',date:date,why:need<q?'не хватило на полке':'нет на полке'});unmNew=true}
+  });
+  if(newIds)lsSet(LS_ISS_APPLIED,JSON.stringify(applied.slice(-2000)));
+  if(unmNew)lsSet(LS_ISS_UNM,JSON.stringify(unm.slice(-200)));
+  if(changed){saveRegister();renderRegister();render();schedulePush();toast('Списано по «Закупкам»')}
+  else if(unmNew)renderRegister();
+}
+function renderIssInfo(){var el=$('regIss');if(!el)return;var since=new Date(Date.now()-30*864e5).toISOString().slice(0,10),ids={},q=0;
+  state.register.forEach(function(p){(p.issued||[]).forEach(function(x){if(x&&x.date>=since){ids[x.id]=1;q+=x.qty||0}})});
+  var n=Object.keys(ids).length,unm=lsArr(LS_ISS_UNM);
+  var h='списано по «Закупкам»: '+n+' за 30 дней'+(q?' ('+q+' компл.)':'');
+  if(unm.length)h+=' · <details class="unm"><summary>не нашли на полке: '+unm.length+'</summary><ul>'+unm.slice().reverse().map(function(u){return '<li>'+esc(u.key)+' · '+esc(u.qty)+' компл. · '+esc(u.order)+' · '+esc(u.date)+(u.why==='не хватило на полке'?' · не хватило':'')+'</li>'}).join('')+'</ul></details>';
+  el.innerHTML=h}
+function issuedHtml(p){var l=p.issued||[];if(!l.length)return '';var sum=0,last=l[0];l.forEach(function(x){sum+=x.qty||0;if((x.date||'')>=(last.date||''))last=x});
+  return '<div class="small">выдано: '+sum+' (последнее '+esc(last.date||'')+' → '+esc(last.order||'')+(last.similar?', похожее':'')+')</div>'}
+
 // ── реестр ──
 function loadRegister(){
   var saved=lsGet(LS_REG); var src='встроенный';
@@ -1686,7 +1733,7 @@ function renderRegister(){
     '<td class="r-op" data-l="упаковка"><select class="sel" data-op="'+esc(p.id)+'"><option value=""'+(!p.opened?' selected':'')+'>?</option><option value="sealed"'+(p.opened==='sealed'?' selected':'')+'>целое</option><option value="opened"'+(p.opened==='opened'?' selected':'')+'>вскрыто</option></select></td>'+
     '<td class="r-ph" data-l="фото">'+thumbsHtml(p.id,false,true)+'</td><td class="r-chk" data-l="проверено"><input type="checkbox" data-id="'+esc(p.id)+'" '+(p.checked?'checked':'')+'>'+(p.checkedAt?'<div class="small">'+esc(p.checkedAt)+(p.checkedBy?' · '+esc(p.checkedBy):'')+'</div>':'')+'</td>'+
     '<td class="r-del" data-l=""><button class="del" data-del="'+esc(p.id)+'">✕ удалить</button></td></tr>'});
-  h+='</table>';$('regTable').innerHTML=h;bindThumbs($('regTable'));syncRegBar();
+  h+='</table>';$('regTable').innerHTML=h;bindThumbs($('regTable'));renderIssInfo();syncRegBar();
   Array.prototype.forEach.call($('regTable').querySelectorAll('[data-op]'),function(sl){sl.addEventListener('change',function(){var p=state.register.filter(function(x){return x.id===sl.getAttribute('data-op')})[0];if(p){p.opened=sl.value||null;p.updatedAt=Date.now();saveRegister();schedulePush()}})});
   $('regMeta').textContent=state.register.length+' позиций'+(rows.length!==state.register.length?', показано '+rows.length:'')+'. Поля по Х5: серия · длина · доводчик · TIP-ON · кол-во · место · проверено.';
   Array.prototype.forEach.call($('regTable').querySelectorAll('input[type=checkbox]'),function(cb){cb.addEventListener('change',function(){
@@ -1782,7 +1829,7 @@ function render(){
       if(m&&m.notes.length)h+='<div class="note">'+esc(m.notes.join(' · '))+'</div>';
       h+='</td>';
       h+='<td class="c-need">'+(r.qty!=null?esc(r.qty)+' '+esc(n&&n.unit?n.unit:r.unit):'<span class="note bad">—</span>')+'</td>';
-      h+='<td class="c-stk">'+(m&&m.status!=='skip'?'<div>'+esc(m.label)+'</div>'+m.hits.map(function(p){return '<div class="hitline" data-reg="'+esc(p.id)+'" title="открыть в реестре"><div class="key">'+esc(stockKey(p))+'</div><div class="hit"><b>'+p.qty+' '+esc(unitOf(p))+'</b> · '+esc(p.art||'')+' · '+esc(p.place||'')+(p.checked?' · проверено '+esc(p.checkedAt||'')+(p.checkedBy?' ('+esc(p.checkedBy)+')':''):'')+(p.opened==='opened'?' · вскрыто':p.opened==='sealed'?' · целое':'')+' · <span class="go">в реестре →</span></div></div>'+((photos[p.id]||[]).length?thumbsHtml(p.id,true,false):'')}).join(''):'')+'</td>';
+      h+='<td class="c-stk">'+(m&&m.status!=='skip'?'<div>'+esc(m.label)+'</div>'+m.hits.map(function(p){return '<div class="hitline" data-reg="'+esc(p.id)+'" title="открыть в реестре"><div class="key">'+esc(stockKey(p))+'</div><div class="hit"><b>'+p.qty+' '+esc(unitOf(p))+'</b> · '+esc(p.art||'')+' · '+esc(p.place||'')+(p.checked?' · проверено '+esc(p.checkedAt||'')+(p.checkedBy?' ('+esc(p.checkedBy)+')':''):'')+(p.opened==='opened'?' · вскрыто':p.opened==='sealed'?' · целое':'')+' · <span class="go">в реестре →</span></div>'+issuedHtml(p)+'</div>'+((photos[p.id]||[]).length?thumbsHtml(p.id,true,false):'')}).join(''):'')+'</td>';
       h+='<td class="hidecol raw">'+esc(r.unit)+(r.supplier?' · '+esc(r.supplier):'')+(r.note?' · '+esc(r.note.length>60?r.note.slice(0,60)+'…':r.note):'')+'</td></tr>';
     });
     h+='</table></div>';

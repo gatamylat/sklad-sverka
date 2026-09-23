@@ -1,5 +1,5 @@
 // Service Worker — сверка склада. Сеть первая, кеш — запасной. При каждом обновлении менять CACHE_NAME.
-var CACHE_NAME = 'sklad-sverka-v6';
+var CACHE_NAME = 'sklad-sverka-v7';
 var FILES = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-512-maskable.png'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE_NAME).then(function (c) {
