@@ -100,6 +100,44 @@ header .status{flex-basis:100%}
   label.chip{padding:8px 12px}
   .sheet .panel{padding-left:16px;padding-right:16px}
 }
+/* ── реестр: форма добавления, правка в строке, удаление ── */
+details.add{margin-top:10px;border:1.5px solid var(--brd);border-radius:12px;padding:0 12px;background:var(--surf)}
+details.add[open]{padding-bottom:12px}
+details.add summary{cursor:pointer;font-weight:600;color:var(--acc);padding:10px 0;list-style:none}
+details.add summary::-webkit-details-marker{display:none}
+.form{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px 12px;align-items:end}
+.form label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--t2)}
+.form .wide{grid-column:1/-1}
+.form input,.form select,input.inl{font-family:inherit;font-size:13px;border:1.5px solid var(--brd);border-radius:6px;padding:5px 7px;background:var(--surf);color:var(--t1);min-width:0}
+.form .place{display:flex;gap:6px}.form .place select{flex:0 0 auto}.form .place input{flex:1}
+.form .act{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+input.inl{width:130px}input.inl.n{width:64px}
+button.del{color:var(--dng);border-color:transparent;background:none;white-space:nowrap;padding:5px 8px}
+.reg .om{display:none}
+@media (pointer:coarse){.form input,.form select,input.inl{font-size:16px;padding:7px 8px}}
+#shReg .panel{width:min(1160px,100%)}
+/* реестр карточками: телефоны и iPad mini в портрете (12 колонок туда не помещаются) */
+@media (max-width:900px){
+  table.reg,table.reg tbody,table.reg tr,table.reg td{display:block}
+  table.reg tr.th{display:none}
+  table.reg tr{background:var(--surf);border:1px solid var(--brd);border-radius:12px;padding:8px 12px;margin:8px 0}
+  table.reg td{display:flex;align-items:center;gap:10px;border:0;padding:5px 0;font-size:13px}
+  table.reg td::before{content:attr(data-l);font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);min-width:72px;flex:0 0 auto}
+  table.reg td.r-ser{display:block;font-family:var(--fh);font-size:18px;font-weight:500;padding:4px 0 6px}
+  table.reg td.r-ser::before{display:none}
+  table.reg .om{display:inline}
+  table.reg td.hm{display:none}
+  table.reg td.r-chk .small{margin-left:6px}
+  table.reg td.r-del{justify-content:flex-end}
+  table.reg td.r-del::before{display:none}
+  input.inl{flex:1;width:auto}input.inl.n{flex:0 0 70px;width:70px}
+  table.reg td.r-place{flex-wrap:wrap}
+  table.reg td.r-place .small{flex-basis:100%;padding-left:82px}
+}
+@media (min-width:701px) and (max-width:900px){
+  table.reg tbody{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+  table.reg tr{margin:0}
+}
 /* ── iPad mini (744×1133) и другие планшеты в портрете ── */
 @media (min-width:601px) and (max-width:900px){
   .wrap{padding-top:18px}
@@ -132,27 +170,6 @@ header .status{flex-basis:100%}
   table.res td.c-stk:empty{display:none}
   table.res tr.hdr{display:block;background:rgba(0,0,0,.02)}
   table.res tr.hdr td:first-child{display:none}
-  /* реестр — карточками: 3 строки по 3 поля */
-  table.reg,table.reg tbody{display:block}
-  table.reg tr.th{display:none}
-  table.reg tr{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--brd)}
-  table.reg td{border:0;padding:0;font-size:13px;min-width:0}
-  table.reg td.r-ser{grid-column:1;grid-row:1;font-weight:600;font-size:14px}
-  table.reg td.r-len{grid-column:2;grid-row:1;font-weight:600}
-  table.reg td.r-len::after{content:" мм";font-weight:400;color:var(--t2)}
-  table.reg td.r-qty{grid-column:3;grid-row:1;text-align:right;font-weight:600}
-  table.reg td.r-qty::after{content:" компл";font-weight:400;color:var(--t2)}
-  table.reg td.r-dmp{grid-column:1;grid-row:2}
-  table.reg td.r-dmp::before{content:"доводчик ";color:var(--t2)}
-  table.reg td.r-tip{grid-column:2;grid-row:2}
-  table.reg td.r-tip::before{content:"TIP-ON ";color:var(--t2)}
-  table.reg td.r-tip:empty{visibility:hidden}
-  table.reg td.r-art{grid-column:3;grid-row:2;text-align:right;overflow-wrap:anywhere}
-  table.reg td.r-op{grid-column:1;grid-row:3}
-  table.reg td.r-ph{grid-column:2;grid-row:3}
-  table.reg td.r-chk{grid-column:3;grid-row:3;text-align:right}
-  table.reg td.r-chk::before{content:"проверено ";color:var(--t2);font-size:12px;vertical-align:middle}
-  table.reg td.r-chk input{vertical-align:middle}
   .sheet .panel{border-radius:14px 14px 0 0}
   .viewer .vb button{min-width:120px}
 }
@@ -209,6 +226,21 @@ header .status{flex-basis:100%}
     <button id="regReset" class="ghost">Вернуть встроенный</button>
   </div>
   <div class="small">Галочка «проверено» — состояние прогнано руками (Х9). Без неё позиция не бывает зелёной. Фото коробки и дорожки — кнопка «+» (с телефона откроется камера). Отметки и фото сохраняются в этом браузере; чтобы передать другому — «Скачать реестр (json)», фото уходят вместе с ним.</div>
+  <details class="add" id="regAdd"><summary>＋ Добавить позицию</summary>
+    <div class="form">
+      <label>серия<select id="aSer"><option>MOVENTO</option><option>TANDEM 560H</option><option>TANDEM 560F</option><option>TANDEM+ 550H</option><option>TANDEM+ 550F</option><option>LEGRABOX</option><option>TANDEMBOX</option></select></label>
+      <label>длина, мм<input type="number" id="aLen" inputmode="numeric" step="50" min="200" max="800" placeholder="450"></label>
+      <label>доводчик<select id="aDmp"><option value="BLUMOTION">BLUMOTION</option><option value="NONE">NONE (без доводчика)</option><option value="">не знаю</option></select></label>
+      <label>TIP-ON<select id="aTip"><option value="0">нет</option><option value="1">да</option></select></label>
+      <label>кол-во, компл.<input type="number" id="aQty" inputmode="numeric" min="0" value="1"></label>
+      <label>артикул<input type="text" id="aArt" placeholder="если виден" autocomplete="off"></label>
+      <label class="wide">место<span class="place"><select id="aPlT"><option value="box">коробка заказа</option><option value="zone">зона типов, полка</option></select><input type="text" id="aPl" placeholder="код заказа или полка" autocomplete="off"></span></label>
+      <label>откуда пришло<select id="aOrg"><option>опись Якоби</option><option>зелёные заказы</option><option>оцифровка 22.09</option><option>возврат со сборки</option><option>неизвестно</option></select></label>
+      <label>упаковка<select id="aOp"><option value="">?</option><option value="sealed">целое</option><option value="opened">вскрыто</option></select></label>
+      <label class="wide">примечание<input type="text" id="aNote" autocomplete="off"></label>
+      <div class="wide act"><button class="primary" id="aAdd">Добавить</button><span class="small" id="aHint"></span></div>
+    </div>
+  </details>
   <div id="regTable" style="margin-top:10px"></div>
   <div class="row"><button id="shRegClose">Закрыть</button></div>
 </div></div>
@@ -1572,16 +1604,41 @@ function loadRegister(){
 function saveRegister(){lsSet(LS_REG,JSON.stringify({loadedAt:new Date().toLocaleString('ru-RU'),source:state.regSource||'встроенный',items:state.register}));loadRegister();}
 function renderRegister(){
   var rows=state.register.slice().sort(function(a,b){return (a.series+a.len).localeCompare(b.series+b.len)});
-  var h='<table class="reg"><tr class="th"><th>серия</th><th>длина</th><th>доводчик</th><th>TIP-ON</th><th>кол-во</th><th>артикул</th><th>упаковка</th><th>фото</th><th>проверено</th></tr>';
-  rows.forEach(function(p){h+='<tr'+(p.type!=='rail'?' class="dim"':'')+'><td class="r-ser">'+esc(p.series)+'</td><td class="r-len">'+p.len+'</td><td class="r-dmp">'+(p.damper==='BLUMOTION'?'да':p.damper==='NONE'?'нет':'?')+'</td><td class="r-tip">'+(p.tipon?'да':'')+'</td><td class="r-qty">'+p.qty+'</td><td class="r-art">'+esc(p.art||'')+'</td>'+
-    '<td class="r-op"><select class="sel" data-op="'+esc(p.id)+'"><option value=""'+(!p.opened?' selected':'')+'>?</option><option value="sealed"'+(p.opened==='sealed'?' selected':'')+'>целое</option><option value="opened"'+(p.opened==='opened'?' selected':'')+'>вскрыто</option></select></td>'+
-    '<td class="r-ph">'+thumbsHtml(p.id,false,true)+'</td><td class="r-chk"><input type="checkbox" data-id="'+esc(p.id)+'" '+(p.checked?'checked':'')+'>'+(p.checkedAt?'<div class="small">'+esc(p.checkedAt)+'</div>':'')+'</td></tr>'});
+  var h='<table class="reg"><tr class="th"><th>серия</th><th>длина</th><th>доводчик</th><th>TIP-ON</th><th>кол-во</th><th>артикул</th><th>место</th><th>упаковка</th><th>фото</th><th>проверено</th><th></th></tr>';
+  rows.forEach(function(p){h+='<tr data-row="'+esc(p.id)+'"'+(p.type!=='rail'?' class="dim"':'')+'><td class="r-ser" data-l="серия">'+esc(p.series)+'<span class="om"> · '+p.len+'</span></td><td class="r-len hm" data-l="длина">'+p.len+'</td><td class="r-dmp" data-l="доводчик">'+(p.damper==='BLUMOTION'?'да':p.damper==='NONE'?'нет':'?')+'</td><td class="r-tip" data-l="TIP-ON">'+(p.tipon?'да':'')+'</td>'+
+    '<td class="r-qty" data-l="кол-во"><input type="number" inputmode="numeric" min="0" class="inl n" data-qty="'+esc(p.id)+'" value="'+esc(p.qty)+'"></td><td class="r-art" data-l="артикул">'+esc(p.art||'')+'</td>'+
+    '<td class="r-place" data-l="место"><input class="inl" data-place="'+esc(p.id)+'" placeholder="коробка / полка" value="'+esc(p.place||'')+'">'+(p.origin?'<div class="small">'+esc(p.origin)+'</div>':'')+'</td>'+
+    '<td class="r-op" data-l="упаковка"><select class="sel" data-op="'+esc(p.id)+'"><option value=""'+(!p.opened?' selected':'')+'>?</option><option value="sealed"'+(p.opened==='sealed'?' selected':'')+'>целое</option><option value="opened"'+(p.opened==='opened'?' selected':'')+'>вскрыто</option></select></td>'+
+    '<td class="r-ph" data-l="фото">'+thumbsHtml(p.id,false,true)+'</td><td class="r-chk" data-l="проверено"><input type="checkbox" data-id="'+esc(p.id)+'" '+(p.checked?'checked':'')+'>'+(p.checkedAt?'<div class="small">'+esc(p.checkedAt)+(p.checkedBy?' · '+esc(p.checkedBy):'')+'</div>':'')+'</td>'+
+    '<td class="r-del" data-l=""><button class="del" data-del="'+esc(p.id)+'">✕ удалить</button></td></tr>'});
   h+='</table>';$('regTable').innerHTML=h;bindThumbs($('regTable'));
   Array.prototype.forEach.call($('regTable').querySelectorAll('[data-op]'),function(sl){sl.addEventListener('change',function(){var p=state.register.filter(function(x){return x.id===sl.getAttribute('data-op')})[0];if(p){p.opened=sl.value||null;p.updatedAt=Date.now();saveRegister();schedulePush()}})});
   $('regMeta').textContent=state.register.length+' позиций. Поля по Х5: серия · длина · доводчик · TIP-ON · кол-во · место · проверено.';
   Array.prototype.forEach.call($('regTable').querySelectorAll('input[type=checkbox]'),function(cb){cb.addEventListener('change',function(){
     var p=state.register.filter(function(x){return x.id===cb.getAttribute('data-id')})[0]; if(!p)return;
     p.checked=cb.checked; p.checkedAt=cb.checked?new Date().toISOString().slice(0,10):null; p.checkedBy=cb.checked?who:''; p.updatedAt=Date.now(); saveRegister(); render(); schedulePush();})});
+  var byId=function(id){return state.register.filter(function(x){return x.id===id})[0]};
+  Array.prototype.forEach.call($('regTable').querySelectorAll('[data-qty]'),function(inp){inp.addEventListener('change',function(){var p=byId(inp.getAttribute('data-qty'));if(!p)return;
+    var v=inp.value.trim()===''?NaN:Number(inp.value);if(isNaN(v)||v<0){inp.value=p.qty;toast('Кол-во — число от 0');return}
+    p.qty=v;p.updatedAt=Date.now();saveRegister();render();schedulePush();toast('Кол-во: '+p.series+' · '+p.len+' → '+v)})});
+  Array.prototype.forEach.call($('regTable').querySelectorAll('[data-place]'),function(inp){inp.addEventListener('change',function(){var p=byId(inp.getAttribute('data-place'));if(!p)return;
+    p.place=inp.value.trim();p.updatedAt=Date.now();saveRegister();render();schedulePush();toast('Место сохранено')})});
+  Array.prototype.forEach.call($('regTable').querySelectorAll('[data-del]'),function(b){b.addEventListener('click',function(){var p=byId(b.getAttribute('data-del'));if(!p)return;
+    if(!confirm('Удалить '+p.series+' · '+p.len+' ('+p.qty+' компл.)? Фото тоже удалятся.'))return;
+    markDel(p.id);(photos[p.id]||[]).forEach(function(ph){markDel(ph.id);dbDel(ph.id).catch(function(){});if(FB_PH){try{FB_PH.doc(ph.id).delete().catch(function(){})}catch(e){}}});delete photos[p.id];
+    state.register=state.register.filter(function(x){return x.id!==p.id});saveRegister();renderRegister();render();schedulePush();toast('Удалено')})});
+}
+function addPosition(){
+  var len=parseInt($('aLen').value,10);if(!(len>=200&&len<=800)){$('aHint').textContent='длина 200–800 мм';$('aLen').focus();return}
+  var qty=$('aQty').value.trim()===''?1:Number($('aQty').value);if(isNaN(qty)||qty<0){$('aHint').textContent='кол-во — число от 0';$('aQty').focus();return}
+  var ser=$('aSer').value,plT=$('aPlT').value,pl=$('aPl').value.trim();
+  var p={id:'P'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),type:(ser==='LEGRABOX'||ser==='TANDEMBOX')?'box':'rail',series:ser,len:len,damper:$('aDmp').value||null,tipon:$('aTip').value==='1',side:null,
+    qty:qty,unit:'компл',art:$('aArt').value.trim(),note:$('aNote').value.trim(),place:plT==='box'?'коробка '+pl:'зона типов, '+pl,placeType:plT,origin:$('aOrg').value,opened:$('aOp').value||null,
+    checked:false,checkedAt:null,addedBy:who,addedAt:new Date().toISOString().slice(0,10),updatedAt:Date.now()};
+  state.register.push(p);saveRegister();renderRegister();render();schedulePush();
+  ['aLen','aArt','aNote'].forEach(function(id){$(id).value=''});$('aQty').value='1';
+  toast('Позиция добавлена');$('aHint').textContent='добавлено: '+p.series+' · '+p.len+' · '+p.qty+' компл. Фото — «+» в строке';
+  var tr=$('regTable').querySelector('tr[data-row="'+p.id+'"]');if(tr&&tr.scrollIntoView)tr.scrollIntoView({block:'center',behavior:'smooth'});
 }
 function importRegisterFile(file){
   var rd=new FileReader();
@@ -1668,7 +1725,7 @@ Array.prototype.forEach.call(document.querySelectorAll('[data-close]'),function(
 $('showAll').addEventListener('change',function(e){state.showAll=e.target.checked;lsSet(LS_SHOWALL,state.showAll?'1':'0');render()});
 $('darkMode').addEventListener('change',function(e){var th=e.target.checked?'dark':'light';document.documentElement.setAttribute('data-theme',th);lsSet(LS_THEME,th)});
 $('regFile').addEventListener('change',function(e){if(e.target.files[0])importRegisterFile(e.target.files[0]);e.target.value=''});
-$('regExport').addEventListener('click',exportRegister);
+$('regExport').addEventListener('click',exportRegister);$('aAdd').addEventListener('click',addPosition);
 $('regReset').addEventListener('click',function(){try{localStorage.removeItem(LS_REG)}catch(e){}state.register=[];state.regSource='встроенный';loadRegister();renderRegister();render();toast('Встроенный реестр восстановлен')});
 $('btnCopy').addEventListener('click',copySummary);
 $('btnWho').addEventListener('click',askWho);$('whoOk').addEventListener('click',confirmWho);$('whoPin').addEventListener('keydown',function(e){if(e.key==='Enter')confirmWho()});$('shWhoClose').addEventListener('click',function(){$('shWho').classList.remove('on')});$('btnPull').addEventListener('click',forcePull);$('btnPush').addEventListener('click',function(){_unsent++;pushNow()});
