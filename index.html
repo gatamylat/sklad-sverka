@@ -54,7 +54,9 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--acc);cursor:point
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 .sheet{position:fixed;inset:0;background:rgba(20,18,10,.18);backdrop-filter:blur(6px);display:none;z-index:7;align-items:flex-end;justify-content:center}
 .sheet.on{display:flex}
-.sheet .panel{background:var(--surf);border-radius:16px 16px 0 0;width:min(900px,100%);max-height:85vh;overflow:auto;padding:16px 20px 24px}
+.sheet .panel{background:var(--surf);border-radius:16px 16px 0 0;width:min(900px,100%);max-height:85vh;max-height:calc(100dvh - 72px);overflow:auto;padding:16px 20px 24px;position:relative}
+.sheet .xclose{position:sticky;top:0;float:right;z-index:3;margin:-6px -8px 0 8px;width:40px;height:40px;padding:0;border-radius:50%;font-size:20px;line-height:1;box-shadow:0 2px 10px rgba(30,25,10,.15)}
+.sheet .pin{font-family:inherit;font-size:18px;letter-spacing:4px;width:140px;border:1.5px solid var(--brd);border-radius:8px;padding:6px 10px;background:var(--surf);color:var(--t1)}
 .sheet .handle{width:28px;height:3px;background:var(--t2);opacity:.2;border-radius:2px;margin:0 auto 14px}
 .sheet h2{font-size:18px;margin-bottom:10px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0}
@@ -107,7 +109,7 @@ select.sel{font-family:inherit;font-size:12px;border:1.5px solid var(--brd);bord
 <div class="toast" id="toast"></div>
 <div class="viewer" id="viewer"><img id="viewerImg" alt=""><div class="cap" id="viewerCap"></div><div class="vb"><button id="viewerDel">Удалить фото</button><button class="primary" id="viewerClose">Закрыть</button></div></div>
 
-<div class="sheet" id="shSet"><div class="panel"><div class="handle"></div>
+<div class="sheet" id="shSet"><div class="panel"><button class="xclose" data-close="shSet" title="Закрыть (Esc)" aria-label="Закрыть">✕</button><div class="handle"></div>
   <h2>Настройки</h2>
   <div class="small">Живые серии — что конструкторы ещё закладывают. Утверждает Кирпичев. Строки с серией вне списка получают пометку, но сверяются.</div>
   <div class="row" id="liveList"></div>
@@ -117,7 +119,7 @@ select.sel{font-family:inherit;font-size:12px;border:1.5px solid var(--brd);bord
   <div class="row"><button id="shSetClose">Готово</button></div>
 </div></div>
 
-<div class="sheet" id="shReg"><div class="panel"><div class="handle"></div>
+<div class="sheet" id="shReg"><div class="panel"><button class="xclose" data-close="shReg" title="Закрыть (Esc)" aria-label="Закрыть">✕</button><div class="handle"></div>
   <h2>Реестр остатков — направляющие</h2>
   <div class="small" id="regMeta"></div>
   <div class="row">
@@ -128,6 +130,14 @@ select.sel{font-family:inherit;font-size:12px;border:1.5px solid var(--brd);bord
   <div class="small">Галочка «проверено» — состояние прогнано руками (Х9). Без неё позиция не бывает зелёной. Фото коробки и дорожки — кнопка «+» (с телефона откроется камера). Отметки и фото сохраняются в этом браузере; чтобы передать другому — «Скачать реестр (json)», фото уходят вместе с ним.</div>
   <div id="regTable" style="margin-top:10px"></div>
   <div class="row"><button id="shRegClose">Закрыть</button></div>
+</div></div>
+
+<div class="sheet" id="shWho"><div class="panel"><button class="xclose" data-close="shWho" title="Закрыть (Esc)" aria-label="Закрыть">✕</button><div class="handle"></div>
+  <h2>Кто работает?</h2>
+  <div class="small">Выберите себя и введите свой пин-код.</div>
+  <div class="row" id="whoList"></div>
+  <div class="row"><input type="password" class="pin" id="whoPin" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="пин-код"><button class="primary" id="whoOk">Войти</button><span class="small note bad" id="whoErr"></span></div>
+  <div class="row"><button id="shWhoClose">Отмена</button></div>
 </div></div>
 
 <script>/* SheetJS 0.18.5, Apache-2.0, встроен для работы без сети */
@@ -1382,10 +1392,15 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return
 
 // ── фото (IndexedDB, base64 jpeg ≤1000px) ──
 var dbp=null;
-function db(){if(dbp)return dbp;dbp=new Promise(function(res,rej){try{var rq=indexedDB.open('sverka',1);rq.onupgradeneeded=function(){var d=rq.result;if(!d.objectStoreNames.contains('photos')){var st=d.createObjectStore('photos',{keyPath:'id'});st.createIndex('pos','pos',{unique:false})}};rq.onsuccess=function(){res(rq.result)};rq.onerror=function(){rej(rq.error)}}catch(e){rej(e)}});return dbp}
-function dbAll(){return db().then(function(d){return new Promise(function(res,rej){var rq=d.transaction('photos').objectStore('photos').getAll();rq.onsuccess=function(){res(rq.result||[])};rq.onerror=function(){rej(rq.error)}})}).catch(function(){return []})}
-function dbPut(o){return db().then(function(d){return new Promise(function(res,rej){var tx=d.transaction('photos','readwrite');tx.objectStore('photos').put(o);tx.oncomplete=res;tx.onerror=function(){rej(tx.error)}})})}
-function dbDel(id){return db().then(function(d){return new Promise(function(res,rej){var tx=d.transaction('photos','readwrite');tx.objectStore('photos').delete(id);tx.oncomplete=res;tx.onerror=function(){rej(tx.error)}})})}
+function db(){if(dbp)return dbp;var p=dbp=new Promise(function(res,rej){try{var rq=indexedDB.open('sverka',1);rq.onupgradeneeded=function(){var d=rq.result;if(!d.objectStoreNames.contains('photos')){var st=d.createObjectStore('photos',{keyPath:'id'});st.createIndex('pos','pos',{unique:false})}};
+  rq.onsuccess=function(){var d=rq.result;var drop=function(){if(dbp===p)dbp=null};d.onclose=drop;d.onversionchange=function(){drop();try{d.close()}catch(_){}};res(d)};rq.onerror=function(){if(dbp===p)dbp=null;rej(rq.error)}}catch(e){if(dbp===p)dbp=null;rej(e)}});return p}
+// iPhone (Safari) закрывает соединение с IndexedDB, пока открыта камера/выбор фото → «The database connection is closing».
+// Поэтому: при ошибке сбрасываем кешированное соединение, открываем заново и повторяем операцию один раз.
+function dbTx(mode,fn){var run=function(){return db().then(function(d){return new Promise(function(res,rej){var tx=d.transaction('photos',mode);var out=fn(tx.objectStore('photos'));tx.oncomplete=function(){res(out&&'result' in out?out.result:undefined)};tx.onerror=function(){rej(tx.error)};tx.onabort=function(){rej(tx.error||new Error('transaction aborted'))}})})};
+  return run().catch(function(){dbp=null;return run()})}
+function dbAll(){return dbTx('readonly',function(st){return st.getAll()}).then(function(r){return r||[]}).catch(function(){return []})}
+function dbPut(o){return dbTx('readwrite',function(st){st.put(o)})}
+function dbDel(id){return dbTx('readwrite',function(st){st.delete(id)})}
 var photos={}; // pos → [{id,pos,data,at}]
 function loadPhotos(){return dbAll().then(function(all){Object.keys(photos).forEach(function(k){delete photos[k]});all.forEach(function(p){(photos[p.pos]=photos[p.pos]||[]).push(p)});Object.keys(photos).forEach(function(k){photos[k].sort(function(a,b){return a.at<b.at?-1:1})})})}
 function shrink(file){return new Promise(function(res,rej){var img=new Image();var url=URL.createObjectURL(file);img.onload=function(){var mx=800,w=img.width,h=img.height,k=Math.min(1,mx/Math.max(w,h));var c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',.7))};img.onerror=function(){URL.revokeObjectURL(url);rej(new Error('не картинка'))};img.src=url})}
@@ -1457,7 +1472,12 @@ function fbDeletePhoto(id){markDel(id);if(FB_PH){try{FB_PH.doc(id).delete().catc
 function forcePull(){if(!fbEnabled){toast('Облако недоступно');return}setSync('warn','загружаю…');fbTimeout(FB_DOC.get(),12000).then(function(doc){if(!doc.exists){toast('В облаке пусто');return}
   var snap=JSON.stringify({at:new Date().toISOString(),items:state.register});try{localStorage.setItem('sverka.snapshot.'+Date.now(),snap);var keys=Object.keys(localStorage).filter(function(k){return k.indexOf('sverka.snapshot.')===0}).sort();while(keys.length>5)localStorage.removeItem(keys.shift())}catch(e){}
   var rd=JSON.parse(doc.data().data||'{}');state.register=rd.items||state.register;lsSet(LS_REG,JSON.stringify({loadedAt:new Date().toLocaleString('ru-RU'),source:'облако',items:state.register}));_unsent=0;applyRemote(doc.data(),'force');toast('Загружено из облака')}).catch(function(e){toast('Не удалось: '+(e.code||e.message))})}
-function askWho(){var n=prompt('Кто работает? (Пу / Яна / Якоби — одинаково на всех устройствах)',who||'');if(n!=null&&n.trim()){who=n.trim();lsSet('sverka.who',who);$('btnWho').textContent=who}}
+var USERS={'Константин':'1002','Сергей':'5154','Яна':'1781'};
+function askWho(){$('whoPin').value='';$('whoErr').textContent='';var h='';Object.keys(USERS).forEach(function(n){h+='<button data-who="'+esc(n)+'"'+(n===who?' class="primary"':'')+'>'+esc(n)+'</button>'});$('whoList').innerHTML=h;$('whoList')._sel=USERS[who]?who:'';
+  Array.prototype.forEach.call($('whoList').querySelectorAll('[data-who]'),function(b){b.addEventListener('click',function(){$('whoList')._sel=b.getAttribute('data-who');Array.prototype.forEach.call($('whoList').querySelectorAll('[data-who]'),function(x){x.classList.toggle('primary',x===b)});$('whoErr').textContent='';$('whoPin').focus()})});
+  $('shWho').classList.add('on')}
+function confirmWho(){var n=$('whoList')._sel;if(!n){$('whoErr').textContent='Выберите имя';return}if($('whoPin').value.trim()!==USERS[n]){$('whoErr').textContent='Неверный пин-код';$('whoPin').value='';$('whoPin').focus();return}
+  who=n;lsSet('sverka.who',who);$('btnWho').textContent=who;$('shWho').classList.remove('on');toast('Работает: '+who)}
 
 // ── реестр ──
 function loadRegister(){
@@ -1562,19 +1582,22 @@ $('file').addEventListener('change',function(e){handleFiles(e.target.files);e.ta
 $('btnClear').addEventListener('click',function(){state.files=[];state.picked={};render()});
 $('btnSet').addEventListener('click',function(){$('shSet').classList.add('on')});$('shSetClose').addEventListener('click',function(){$('shSet').classList.remove('on')});
 $('btnReg').addEventListener('click',function(){renderRegister();$('shReg').classList.add('on')});$('shRegClose').addEventListener('click',function(){$('shReg').classList.remove('on')});
-[$('shSet'),$('shReg')].forEach(function(sh){sh.addEventListener('click',function(e){if(e.target===sh)sh.classList.remove('on')})});
+Array.prototype.forEach.call(document.querySelectorAll('[data-close]'),function(b){b.addEventListener('click',function(){$(b.getAttribute('data-close')).classList.remove('on')})});
+[$('shSet'),$('shReg'),$('shWho')].forEach(function(sh){sh.addEventListener('click',function(e){if(e.target===sh)sh.classList.remove('on')})});
 $('showAll').addEventListener('change',function(e){state.showAll=e.target.checked;lsSet(LS_SHOWALL,state.showAll?'1':'0');render()});
 $('darkMode').addEventListener('change',function(e){var th=e.target.checked?'dark':'light';document.documentElement.setAttribute('data-theme',th);lsSet(LS_THEME,th)});
 $('regFile').addEventListener('change',function(e){if(e.target.files[0])importRegisterFile(e.target.files[0]);e.target.value=''});
 $('regExport').addEventListener('click',exportRegister);
 $('regReset').addEventListener('click',function(){try{localStorage.removeItem(LS_REG)}catch(e){}state.register=[];state.regSource='встроенный';loadRegister();renderRegister();render();toast('Встроенный реестр восстановлен')});
 $('btnCopy').addEventListener('click',copySummary);
-$('btnWho').addEventListener('click',askWho);$('btnPull').addEventListener('click',forcePull);$('btnPush').addEventListener('click',function(){_unsent++;pushNow()});
+$('btnWho').addEventListener('click',askWho);$('whoOk').addEventListener('click',confirmWho);$('whoPin').addEventListener('keydown',function(e){if(e.key==='Enter')confirmWho()});$('shWhoClose').addEventListener('click',function(){$('shWho').classList.remove('on')});$('btnPull').addEventListener('click',forcePull);$('btnPush').addEventListener('click',function(){_unsent++;pushNow()});
+document.addEventListener('keydown',function(e){if(e.key!=='Escape'&&e.key!=='Esc')return;if($('viewer').classList.contains('on')){$('viewer').classList.remove('on');return}
+  var open=['shWho','shReg','shSet'].filter(function(id){return $(id).classList.contains('on')});if(open.length){$(open[0]).classList.remove('on');e.preventDefault()}});
 $('viewerClose').addEventListener('click',function(){$('viewer').classList.remove('on')});
 $('viewer').addEventListener('click',function(e){if(e.target===$('viewer'))$('viewer').classList.remove('on')});
 $('viewerDel').addEventListener('click',function(){var id=$('viewer')._id;if(!id)return;if(!confirm('Удалить это фото?'))return;dbDel(id).then(function(){Object.keys(photos).forEach(function(k){photos[k]=photos[k].filter(function(p){return p.id!==id})});$('viewer').classList.remove('on');renderRegister();render();fbDeletePhoto(id);toast('Фото удалено')})});
 
-loadRegister();loadSettings();render();$('btnWho').textContent=who||'кто?';loadPhotos().then(function(){render();fbInit();if(!who)setTimeout(askWho,600)});
+loadRegister();loadSettings();render();if(who&&!USERS[who]){who='';lsSet('sverka.who','')}$('btnWho').textContent=who||'кто?';loadPhotos().then(function(){render();fbInit();if(!who)setTimeout(askWho,600)});
 if('serviceWorker' in navigator){try{navigator.serviceWorker.register('./sw.js').catch(function(){})}catch(e){}}
 window.__sverka={mergeRemote:mergeRemote,localPayload:localPayload,state:state,photos:photos,DEL:DEL,markDel:markDel,getUnsent:function(){return _unsent}};
 })();
