@@ -19,7 +19,7 @@ html,body{margin:0;background:var(--bg);color:var(--t1);font-family:var(--ff);fo
 h1,h2,h3{font-family:var(--fh);font-weight:500;letter-spacing:-.3px;margin:0}
 button{font-family:inherit;font-size:13px;font-weight:500;border:1.5px solid var(--brd);background:var(--surf);color:var(--t1);border-radius:8px;padding:7px 12px;cursor:pointer;transition:transform .12s cubic-bezier(.22,1,.36,1),background .15s}
 button:active{transform:scale(.97)}button.primary{background:var(--acc);border-color:var(--acc);color:#fff}button.ghost{border-color:transparent;color:var(--t2)}
-.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 80px}
+.wrap{max-width:1440px;margin:0 auto;padding:24px 16px 90px}
 header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 header h1{font-size:24px}header .sub{color:var(--t2);font-size:12px}
 .status{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--t2)}
@@ -62,7 +62,8 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--acc);cursor:point
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0}
 label.chip{display:inline-flex;gap:6px;align-items:center;border:1.5px solid var(--brd);border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer}
 .empty{padding:30px;text-align:center;color:var(--t2)}
-.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--t2);margin:10px 0 0}
+.legend{display:none;gap:10px 16px;flex-wrap:wrap;font-size:13px;color:var(--t2);margin:10px 0 0;padding:10px 14px;background:var(--surf);border:1px solid var(--brd);border-radius:10px}
+.legend.on{display:flex}
 .summary{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:rgba(0,0,0,.03);border-radius:8px;padding:10px 12px}
 .reg th,.reg td{font-size:12px;padding:5px 8px}
 .thumbs{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
@@ -85,7 +86,29 @@ header .acts{display:flex;gap:8px;align-items:center}
 button.btn-reg{background:var(--accbg);border-color:var(--acc);color:var(--acc);font-weight:600;padding:8px 16px}
 button.btn-ico{font-size:18px;line-height:1;padding:6px 10px}
 header .status{flex-basis:100%}
-.tools{display:none;justify-content:flex-end;margin-top:12px}.tools.on{display:flex}
+.tools{display:none;justify-content:space-between;gap:8px;margin-top:12px}.tools.on{display:flex}
+.drop .d2{display:block;margin-top:4px;font-size:13px}
+.drop.compact{padding:14px 20px}
+/* ── чище: крупнее вторичный текст, больше воздуха в таблице, подсветка строк ── */
+th{font-size:11px}
+.note,.hit,.raw{font-size:13px}
+.act-hint{font-size:12.5px!important}
+.pill{font-size:12px;padding:3px 10px;cursor:default}
+.hd .meta{font-size:13px}
+@media (min-width:901px){
+  html,body{font-size:15px}
+  header h1{font-size:28px}header .sub,header .status{font-size:13px}
+  .card .hd h2{font-size:20px}
+  .drop b{font-size:16px}
+  .reg th{font-size:11px}.reg td{font-size:13.5px}
+  .sheet .small{font-size:13px}
+  table.res td,table.res th{padding:12px 14px}
+  table.res tr:not(.th):not(.hdr):hover td{background:rgba(0,0,0,.018)}
+}
+.reg tr[data-row]{transition:background .12s}
+.reg tr[data-row]:hover td{background:var(--accbg)}
+@media (max-width:900px){table.reg tr[data-row]:hover{background:var(--accbg)}table.reg tr[data-row]:hover td{background:transparent}}
+.raw a{color:var(--acc);text-decoration:none;white-space:nowrap}
 /* ── безопасные зоны iPhone (вырез, полоска «домой») ── */
 .wrap{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
 .bar{padding-bottom:max(10px,env(safe-area-inset-bottom))}
@@ -234,19 +257,19 @@ button.del{color:var(--dng);border-color:transparent;background:none;white-space
   <header>
     <div class="hl"><div class="ttl"><h1>Сверка склад ↔ заявка</h1><button class="who" id="btnWho" title="Кто работает — нажмите, чтобы сменить">—</button></div><div class="sub">Направляющие Blum · пилот · работает без сети</div></div>
     <div class="acts"><button class="btn-reg" id="btnReg">📋 Реестр</button><button class="btn-ico" id="btnSet" title="Настройки" aria-label="Настройки">⚙️</button></div>
-    <div class="status"><span class="dot" id="syncDot"></span><span id="syncInfo">локально</span> · <span id="regInfo">реестр…</span></div>
+    <div class="status"><span class="dot" id="syncDot"></span><span id="syncInfo">локально</span></div>
   </header>
 
   <label class="drop" id="drop"><input type="file" id="file" multiple accept=".xlsx,.xls,.xlsm">
-    <b>Бросьте сюда заявку конструктора</b> (xlsx, можно несколько сразу — все изделия объекта)<br><span class="small">или нажмите, чтобы выбрать файл</span></label>
-  <div class="legend">
+    <b>Бросьте сюда заявку конструктора</b><span class="d2">xlsx, можно несколько сразу — все изделия объекта · или нажмите, чтобы выбрать файл</span></label>
+  <div class="tools" id="tools"><button class="ghost" id="btnLegend" aria-expanded="false">ⓘ Что значат цвета</button><button class="ghost" id="btnClear" title="Убрать с экрана все загруженные заявки (реестр и фото не трогаются)">✕ Убрать все заявки</button></div>
+  <div class="legend" id="legend">
     <span><span class="pill green">есть</span> проверено, можно выдавать</span>
     <span><span class="pill orange">есть, не проверено</span> лежит, состояние не проверяли</span>
     <span><span class="pill yellow">похожее</span> серия и длина те, признак другой или не ясен</span>
     <span><span class="pill grey">нет</span> закупка</span>
     <span><span class="pill skip">вне пилота</span> ящики, замки, чужие бренды</span>
   </div>
-  <div class="tools" id="tools"><button class="ghost" id="btnClear" title="Убрать с экрана все загруженные заявки (реестр и фото не трогаются)">✕ Убрать все заявки</button></div>
   <div id="out"></div>
 </div>
 
@@ -266,6 +289,7 @@ button.del{color:var(--dng);border-color:transparent;background:none;white-space
 
 <div class="sheet" id="shReg"><div class="panel"><button class="xclose" data-close="shReg" title="Закрыть (Esc)" aria-label="Закрыть">✕</button><div class="handle"></div>
   <h2>Реестр остатков</h2>
+  <div class="small" id="regInfo">реестр…</div>
   <div class="small" id="regIss"></div>
   <div class="small" id="regMeta"></div>
   <div class="row">
@@ -1806,8 +1830,12 @@ function handleFiles(list){
 }
 
 // ── рендер ──
+// подсказки к цветным меткам (при наведении) и ссылки в примечании вместо длинного адреса
+var PILL_TIP={green:'есть: проверено, можно выдавать',orange:'есть, не проверено: лежит, состояние не проверяли',yellow:'похожее: серия и длина те, признак другой или не ясен',grey:'нет: в закупку',skip:'вне пилота: ящики, замки, чужие бренды'};
+function noteHtml(t){var out='',last=0,re=/https?:\/\/[^\s]+/g,m;while((m=re.exec(t))){out+=esc(t.slice(last,m.index))+'<a href="'+esc(m[0])+'" target="_blank" rel="noopener" title="'+esc(m[0])+'">🔗 ссылка</a>';last=m.index+m[0].length}
+  var rest=t.slice(last);return out+esc(rest.length>60?rest.slice(0,60)+'…':rest)}
 function render(){
-  var out=$('out'); $('tools').classList.toggle('on',state.files.length>0); if(!state.files.length){out.innerHTML='';updateBar();return;}
+  var out=$('out'); $('tools').classList.toggle('on',state.files.length>0); $('drop').classList.toggle('compact',state.files.length>0); if(!state.files.length){out.innerHTML='';updateBar();return;}
   var h='';
   state.files.forEach(function(f){
     h+='<div class="card"><div class="hd"><div><h2><span class="code">'+esc(f.order||'—')+'</span>'+esc(cardTitle(f))+'</h2><div class="meta">'+esc(noCode(f.fileName,f.order))+(f.ok?' · лист «'+esc(f.sheet)+'» · вариант '+f.variant+(f.warnings.length?' · '+esc(f.warnings.join('; ')):''):'')+'</div></div><button class="ghost" data-rm="'+f.id+'">убрать</button></div>';
@@ -1822,7 +1850,7 @@ function render(){
       var pid=f.id+':'+r.n, can=st==='green'||st==='orange'||(st==='yellow'&&m.hits.length>0);
       h+='<tr'+(st==='skip'||!m?' class="dim"':'')+'>';
       h+='<td class="chk">'+(can?'<input type="checkbox" data-pick="'+pid+'" '+(state.picked[pid]?'checked':'')+(st==='yellow'?' title="выдать похожее — если на полке подходит"':'')+'>':'')+'</td>';
-      h+='<td class="c-st">'+(m?'<span class="pill '+st+'">'+esc(st==='green'?'есть':st==='orange'?'есть, не проверено':st==='yellow'?(m.label==='не разобрал'?'не разобрал':'похожее'):st==='grey'?'нет':'вне пилота')+'</span>'+(actHint(m)?'<div class="act-hint">'+esc(actHint(m))+'</div>':''):'')+'</td>';
+      h+='<td class="c-st">'+(m?'<span class="pill '+st+'" title="'+esc(PILL_TIP[st]||'')+'">'+esc(st==='green'?'есть':st==='orange'?'есть, не проверено':st==='yellow'?(m.label==='не разобрал'?'не разобрал':'похожее'):st==='grey'?'нет':'вне пилота')+'</span>'+(actHint(m)?'<div class="act-hint">'+esc(actHint(m))+'</div>':''):'')+'</td>';
       h+='<td class="c-pos">'+(n&&n.key?'<div class="key">'+esc(n.key)+'</div>':'<div>'+esc(n&&n.type!=='other'?n.type:'')+'</div>')+'<div class="raw">'+esc(r.art)+(r.art&&r.name?' · ':'')+esc(r.name)+'</div>';
       if(r.incomplete)h+='<div class="note bad">в заявке нет единицы и количества</div>';
       if(r.dup)h+='<div class="note bad">'+esc(r.dup)+'</div>';
@@ -1830,7 +1858,7 @@ function render(){
       h+='</td>';
       h+='<td class="c-need">'+(r.qty!=null?esc(r.qty)+' '+esc(n&&n.unit?n.unit:r.unit):'<span class="note bad">—</span>')+'</td>';
       h+='<td class="c-stk">'+(m&&m.status!=='skip'?'<div>'+esc(m.label)+'</div>'+m.hits.map(function(p){return '<div class="hitline" data-reg="'+esc(p.id)+'" title="открыть в реестре"><div class="key">'+esc(stockKey(p))+'</div><div class="hit"><b>'+p.qty+' '+esc(unitOf(p))+'</b> · '+esc(p.art||'')+' · '+esc(p.place||'')+(p.checked?' · проверено '+esc(p.checkedAt||'')+(p.checkedBy?' ('+esc(p.checkedBy)+')':''):'')+(p.opened==='opened'?' · вскрыто':p.opened==='sealed'?' · целое':'')+' · <span class="go">в реестре →</span></div>'+issuedHtml(p)+'</div>'+((photos[p.id]||[]).length?thumbsHtml(p.id,true,false):'')}).join(''):'')+'</td>';
-      h+='<td class="hidecol raw">'+esc(r.unit)+(r.supplier?' · '+esc(r.supplier):'')+(r.note?' · '+esc(r.note.length>60?r.note.slice(0,60)+'…':r.note):'')+'</td></tr>';
+      h+='<td class="hidecol raw">'+esc(r.unit)+(r.supplier?' · '+esc(r.supplier):'')+(r.note?' · '+noteHtml(r.note):'')+'</td></tr>';
     });
     h+='</table></div>';
   });
@@ -1867,6 +1895,7 @@ var drop=$('drop');
 ['dragleave','drop'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.remove('over')})});
 drop.addEventListener('drop',function(e){handleFiles(e.dataTransfer.files)});
 $('file').addEventListener('change',function(e){handleFiles(e.target.files);e.target.value=''});
+$('btnLegend').addEventListener('click',function(){var on=$('legend').classList.toggle('on');$('btnLegend').setAttribute('aria-expanded',on?'true':'false')});
 $('btnClear').addEventListener('click',function(){state.files=[];state.picked={};render()});
 $('btnSet').addEventListener('click',function(){$('shSet').classList.add('on')});$('shSetClose').addEventListener('click',function(){$('shSet').classList.remove('on')});
 $('btnReg').addEventListener('click',function(){renderRegister();$('shReg').classList.add('on');syncRegBar()});$('shRegClose').addEventListener('click',function(){$('shReg').classList.remove('on')});
