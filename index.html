@@ -157,6 +157,7 @@ details.unm ul{margin:4px 0 6px;padding-left:18px}
 .form .place{display:flex;gap:6px}.form .place select{flex:0 0 auto}.form .place input{flex:1}
 .form .act{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 input.inl{width:130px}input.inl.n{width:64px}
+button.edt{color:var(--acc);border-color:transparent;background:none;white-space:nowrap;padding:5px 8px}
 button.del{color:var(--dng);border-color:transparent;background:none;white-space:nowrap;padding:5px 8px}
 .reg .om{display:none}
 @media (pointer:coarse){.form input,.form select,input.inl{font-size:16px;padding:7px 8px}.regbar input[type=search]{font-size:16px}.cats button{min-height:34px}}
@@ -176,7 +177,7 @@ button.del{color:var(--dng);border-color:transparent;background:none;white-space
   table.reg td.r-ser::before{display:none}
   table.reg td.r-del{order:20;margin-left:auto}
   table.reg td.r-del::before{display:none}
-  table.reg td.r-del button.del{min-height:0;padding:2px 4px;font-size:12px}
+  table.reg td.r-del button.del,table.reg td.r-del button.edt{min-height:0;padding:2px 4px;font-size:12px}
   table.reg td.r-dmp{order:30}table.reg td.r-tip{order:40}table.reg td.r-art{order:50}
   table.reg td.r-tip:empty,table.reg td.r-art:empty,table.reg td.r-dmp:empty{display:none}
   table.reg tr.none{display:block;text-align:center;color:var(--t2)}
@@ -307,7 +308,8 @@ button.del{color:var(--dng);border-color:transparent;background:none;white-space
 </div></div>
 
 <div class="sheet" id="shAdd"><div class="panel"><button class="xclose" data-close="shAdd" title="Закрыть (Esc)" aria-label="Закрыть">✕</button><div class="handle"></div>
-  <h2>Новая позиция в реестр</h2>
+  <h2 id="aTitle">Новая позиция в реестр</h2>
+  <div class="small" id="aMeta"></div>
   <div class="form">
     <label class="wide">раздел<select id="aCat"></select></label>
     <label class="f-rail">серия<select id="aSer"></select></label>
@@ -318,7 +320,7 @@ button.del{color:var(--dng);border-color:transparent;background:none;white-space
     <label class="f-oth">размер / длина<input type="text" id="aSize" placeholder="если есть" autocomplete="off"></label>
     <label><span id="aQtyL">кол-во, компл.</span><input type="number" id="aQty" inputmode="numeric" min="0" value="1"></label>
     <label>артикул<input type="text" id="aArt" placeholder="если виден" autocomplete="off"></label>
-    <label class="wide">место<span class="place"><select id="aPlT"><option value="box">коробка заказа</option><option value="zone">зона типов, полка</option></select><input type="text" id="aPl" placeholder="код заказа или полка" autocomplete="off"></span></label>
+    <label class="wide">место<span class="place"><select id="aPlT"><option value="box">коробка заказа</option><option value="zone">зона типов, полка</option><option value="free">как написано</option></select><input type="text" id="aPl" placeholder="код заказа или полка" autocomplete="off"></span></label>
     <label>откуда пришло<select id="aOrg"><option>опись Якоби</option><option>зелёные заказы</option><option>оцифровка 22.09</option><option>возврат со сборки</option><option>неизвестно</option></select></label>
     <label>упаковка<select id="aOp"><option value="">?</option><option value="sealed">целое</option><option value="opened">вскрыто</option></select></label>
     <label class="wide">примечание<input type="text" id="aNote" autocomplete="off"></label>
@@ -1756,7 +1758,7 @@ function renderRegister(){
     '<td class="r-place" data-l="место"><input class="inl" data-place="'+esc(p.id)+'" placeholder="коробка / полка" value="'+esc(p.place||'')+'">'+(p.origin?'<div class="small">'+esc(p.origin)+'</div>':'')+'</td>'+
     '<td class="r-op" data-l="упаковка"><select class="sel" data-op="'+esc(p.id)+'"><option value=""'+(!p.opened?' selected':'')+'>?</option><option value="sealed"'+(p.opened==='sealed'?' selected':'')+'>целое</option><option value="opened"'+(p.opened==='opened'?' selected':'')+'>вскрыто</option></select></td>'+
     '<td class="r-ph" data-l="фото">'+thumbsHtml(p.id,false,true)+'</td><td class="r-chk" data-l="проверено"><input type="checkbox" data-id="'+esc(p.id)+'" '+(p.checked?'checked':'')+'>'+(p.checkedAt?'<div class="small">'+esc(p.checkedAt)+(p.checkedBy?' · '+esc(p.checkedBy):'')+'</div>':'')+'</td>'+
-    '<td class="r-del" data-l=""><button class="del" data-del="'+esc(p.id)+'">✕ удалить</button></td></tr>'});
+    '<td class="r-del" data-l=""><button class="edt" data-edit="'+esc(p.id)+'" title="изменить позицию">✎ изменить</button><button class="del" data-del="'+esc(p.id)+'">✕ удалить</button></td></tr>'});
   h+='</table>';$('regTable').innerHTML=h;bindThumbs($('regTable'));renderIssInfo();syncRegBar();
   Array.prototype.forEach.call($('regTable').querySelectorAll('[data-op]'),function(sl){sl.addEventListener('change',function(){var p=state.register.filter(function(x){return x.id===sl.getAttribute('data-op')})[0];if(p){p.opened=sl.value||null;p.updatedAt=Date.now();saveRegister();schedulePush()}})});
   $('regMeta').textContent=state.register.length+' позиций'+(rows.length!==state.register.length?', показано '+rows.length:'')+'. Поля по Х5: серия · длина · доводчик · TIP-ON · кол-во · место · проверено.';
@@ -1769,6 +1771,7 @@ function renderRegister(){
     p.qty=v;p.updatedAt=Date.now();saveRegister();render();schedulePush();toast('Кол-во: '+titleOf(p)+' → '+v)})});
   Array.prototype.forEach.call($('regTable').querySelectorAll('[data-place]'),function(inp){inp.addEventListener('change',function(){var p=byId(inp.getAttribute('data-place'));if(!p)return;
     p.place=inp.value.trim();p.updatedAt=Date.now();saveRegister();render();schedulePush();toast('Место сохранено')})});
+  Array.prototype.forEach.call($('regTable').querySelectorAll('[data-edit]'),function(b){b.addEventListener('click',function(){openEdit(b.getAttribute('data-edit'))})});
   Array.prototype.forEach.call($('regTable').querySelectorAll('[data-del]'),function(b){b.addEventListener('click',function(){var p=byId(b.getAttribute('data-del'));if(!p)return;
     if(!confirm('Удалить '+titleOf(p)+' ('+p.qty+' '+unitOf(p)+')? Фото тоже удалятся.'))return;
     markDel(p.id);(photos[p.id]||[]).forEach(function(ph){markDel(ph.id);dbDel(ph.id).catch(function(){});if(FB_PH){try{FB_PH.doc(ph.id).delete().catch(function(){})}catch(e){}}});delete photos[p.id];
@@ -1779,8 +1782,26 @@ function setAddCat(){var c=$('aCat').value,bl=c==='rails'||c==='boxes';
   Array.prototype.forEach.call(document.querySelectorAll('#shAdd .f-oth'),function(el){el.hidden=bl});
   if(bl){var cur=$('aSer').value;$('aSer').innerHTML=SERIES_BY_CAT[c].map(function(x){return '<option'+(x===cur?' selected':'')+'>'+x+'</option>'}).join('')}
   $('aQtyL').textContent=bl?'кол-во, компл.':'кол-во, шт.';$('aHint').textContent=''}
-function openAdd(){$('aCat').innerHTML=CATS.map(function(c){return '<option value="'+c[0]+'">'+c[1]+'</option>'}).join('');
-  $('aCat').value=state.regCat!=='all'&&CAT_LABEL[state.regCat]?state.regCat:'rails';setAddCat();$('shAdd').classList.add('on')}
+function fillCats(){$('aCat').innerHTML=CATS.map(function(c){return '<option value="'+c[0]+'">'+c[1]+'</option>'}).join('')}
+function setSel(id,val){var el=$(id);if(val==null)val='';if(!Array.prototype.some.call(el.options,function(o){return o.value===String(val)})){var o=document.createElement('option');o.value=o.textContent=String(val);el.appendChild(o)}el.value=String(val)}
+function openAdd(){
+  if(state.editId){state.editId=null;['aLen','aArt','aNote','aName','aSize','aPl'].forEach(function(id){$(id).value=''});$('aQty').value='1'}   // после правки — чистая форма
+  $('aTitle').textContent='Новая позиция в реестр';$('aAdd').textContent='Добавить';$('aMeta').textContent='';
+  fillCats();$('aCat').value=state.regCat!=='all'&&CAT_LABEL[state.regCat]?state.regCat:'rails';setAddCat();$('shAdd').classList.add('on')}
+// правка любой позиции — встроенной (оцифровка) и добавленной людьми: та же форма, заполненная
+function openEdit(id){var p=state.register.filter(function(x){return x.id===id})[0];if(!p)return;state.editId=id;
+  fillCats();var c=catOf(p),bl=c==='rails'||c==='boxes';$('aCat').value=c;setAddCat();
+  if(bl){setSel('aSer',p.series||'');$('aLen').value=p.len==null?'':p.len;setSel('aDmp',p.damper||'');$('aTip').value=p.tipon?'1':'0'}
+  $('aName').value=p.name||(!bl?p.series||'':'');$('aSize').value=p.size||'';
+  $('aQty').value=p.qty==null?'':p.qty;$('aArt').value=p.art||'';$('aNote').value=p.note||'';
+  var pl=p.place||'',pt=p.placeType;
+  if(pt==='box'&&pl.indexOf('коробка ')===0){$('aPlT').value='box';$('aPl').value=pl.slice(8)}
+  else if(pt==='zone'&&pl.indexOf('зона типов, ')===0){$('aPlT').value='zone';$('aPl').value=pl.slice(12)}
+  else{$('aPlT').value='free';$('aPl').value=pl}
+  setSel('aOrg',p.origin||'неизвестно');$('aOp').value=p.opened||'';
+  $('aTitle').textContent='Изменить позицию';$('aAdd').textContent='Сохранить';
+  $('aMeta').textContent=(p.addedBy?'добавил '+p.addedBy+(p.addedAt?' '+p.addedAt:''):'встроенная'+(p.origin?' · '+p.origin:''))+(p.editedBy?' · изменил '+p.editedBy+' '+(p.editedAt||''):'');
+  $('aHint').textContent='';$('shAdd').classList.add('on')}
 function showRegItem(id){var tr=$('regTable').querySelector('tr[data-row="'+id+'"]');if(!tr)return;
   setTimeout(function(){if(tr.scrollIntoView)tr.scrollIntoView({block:'center',behavior:'smooth'});tr.classList.remove('flash');void tr.offsetWidth;tr.classList.add('flash')},60)}
 // открыть реестр на конкретной позиции (клик по позиции склада в результате сверки)
@@ -1792,8 +1813,19 @@ function addPosition(){
   else{name=$('aName').value.trim();if(!name){$('aHint').textContent='впишите наименование';$('aName').focus();return}}
   var qty=$('aQty').value.trim()===''?1:Number($('aQty').value);if(isNaN(qty)||qty<0){$('aHint').textContent='кол-во — число от 0';$('aQty').focus();return}
   var ser=bl?$('aSer').value:'',plT=$('aPlT').value,pl=$('aPl').value.trim();
+  var place=plT==='box'?'коробка '+pl:plT==='zone'?'зона типов, '+pl:pl;
+  if(state.editId){var e=state.register.filter(function(x){return x.id===state.editId})[0];state.editId=null;
+    if(!e){$('shAdd').classList.remove('on');toast('Позиция уже удалена');return}
+    // id, фото, «проверено», следы списаний и кто добавил — не трогаем
+    e.cat=cat;e.type=cat==='rails'?'rail':cat==='boxes'?'box':cat;e.series=ser;e.len=len;e.damper=bl?($('aDmp').value||null):null;e.tipon=bl&&$('aTip').value==='1';
+    if(bl){delete e.name;delete e.size}else{e.name=name;e.size=$('aSize').value.trim()}
+    e.qty=qty;e.unit=bl?'компл':'шт';e.art=$('aArt').value.trim();e.note=$('aNote').value.trim();e.place=place;e.placeType=plT;e.origin=$('aOrg').value;e.opened=$('aOp').value||null;
+    e.editedBy=who;e.editedAt=new Date().toISOString().slice(0,10);e.updatedAt=Date.now();
+    saveRegister();['aLen','aArt','aNote','aName','aSize','aPl'].forEach(function(id){$(id).value=''});$('aQty').value='1';$('aHint').textContent='';
+    $('shAdd').classList.remove('on');state.regQ='';$('regQ').value='';if(state.regCat!=='all'&&state.regCat!==cat){state.regCat=cat;lsSet('sverka.regcat',cat)}
+    renderRegister();render();schedulePush();toast('Сохранено: '+titleOf(e));showRegItem(e.id);return}
   var p={id:'P'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),type:cat==='rails'?'rail':cat==='boxes'?'box':cat,cat:cat,series:ser,len:len,damper:bl?($('aDmp').value||null):null,tipon:bl&&$('aTip').value==='1',side:null,
-    qty:qty,unit:bl?'компл':'шт',art:$('aArt').value.trim(),note:$('aNote').value.trim(),place:plT==='box'?'коробка '+pl:'зона типов, '+pl,placeType:plT,origin:$('aOrg').value,opened:$('aOp').value||null,
+    qty:qty,unit:bl?'компл':'шт',art:$('aArt').value.trim(),note:$('aNote').value.trim(),place:place,placeType:plT,origin:$('aOrg').value,opened:$('aOp').value||null,
     checked:false,checkedAt:null,addedBy:who,addedAt:new Date().toISOString().slice(0,10),updatedAt:Date.now()};
   if(!bl){p.name=name;p.size=$('aSize').value.trim()}
   state.register.push(p);saveRegister();
