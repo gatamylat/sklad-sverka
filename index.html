@@ -244,6 +244,8 @@ button.del{color:var(--dng);border-color:transparent;background:none;white-space
   .sheet .panel{border-radius:14px 14px 0 0}
   .viewer .vb button{min-width:120px}
 }
+  .pill.part{background:var(--warnbg);color:var(--warn)} .addon{margin-top:6px;padding:6px 8px;border-radius:8px;background:var(--warnbg);font-size:12.5px;line-height:1.45} .addon-h{font-weight:600;margin-bottom:2px} .addon b{font-family:ui-monospace,Menlo,Consolas,monospace}
+  .blum{font-size:12.5px;margin-top:3px;color:inherit} .blum b{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.02em}
 </style>
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#FAF9F5">
@@ -267,6 +269,7 @@ button.del{color:var(--dng);border-color:transparent;background:none;white-space
   <div class="legend" id="legend">
     <span><span class="pill green">есть</span> проверено, можно выдавать</span>
     <span><span class="pill orange">есть, не проверено</span> лежит, состояние не проверяли</span>
+    <span><span class="pill part">частично</span> направляющая со склада, к ней докупить детали комплекта (список в строке)</span>
     <span><span class="pill yellow">похожее</span> серия и длина те, признак другой или не ясен</span>
     <span><span class="pill grey">нет</span> закупка</span>
     <span><span class="pill skip">вне пилота</span> ящики, замки, чужие бренды</span>
@@ -444,15 +447,16 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     }
 
     // Blum заводской: 560H4500B / 560F2500C / 550H3000B / 760H4500S / 760H4500T (+ опечатка 760H40000S)
-    if ((m = /^(550H|550F|560H|560F|760H|766H)(\d{3,5})([SBCTE])?(?![A-Z0-9])/.exec(a))) {
+    if ((m = /^(550H|550F|560H|560F|760H|766H)(\d{3,5})([SBCTE])?(U)?(?![A-Z0-9])/.exec(a))) {
       var pre = m[1], suf = m[3] || '', digits = m[2];
       r = base(); r.type = 'rail';
-      r.series = (pre === '760H' || pre === '766H') ? 'MOVENTO' : pre === '560H' ? 'TANDEM 560H' : pre === '560F' ? 'TANDEM 560F' : pre === '550F' ? 'TANDEM+ 550F' : 'TANDEM+ 550H';
+      r.series = (pre === '760H' || pre === '766H') ? (m[4] ? 'MOVENTO SU' : 'MOVENTO') : pre === '560H' ? 'TANDEM 560H' : pre === '560F' ? 'TANDEM 560F' : pre === '550F' ? 'TANDEM+ 550F' : 'TANDEM+ 550H';
       if (digits.length === 3) { r.notes.push('в артикуле 3 цифры длины — читаю как ' + digits); digits = digits + '0'; }
       if (!suf) r.notes.push('артикул без суффикса — признак не определён');
       if (pre === '766H') r.load = 60; else if (pre === '760H') r.load = 40;
       if (digits.length === 5) { r.notes.push('в артикуле 5 цифр длины — вероятно опечатка'); digits = digits.slice(0, 4); }
       r.len = parseInt(digits, 10) / 10;
+      if (suf === 'C' && /^5[56]/.test(pre)) { r.legacy = true; r.notes.push('исполнение «C» (TANDEM под отдельный TIP-ON) — в каталогах Blum 2024/25 и 2027/28 его нет'); }
       if (suf === 'S' || suf === 'B') { r.damper = 'BLUMOTION'; r.tipon = false; }
       else if (suf === 'C' || suf === 'E') { r.damper = 'NONE'; r.tipon = false; }
       else if (suf === 'T') { r.damper = 'NONE'; r.tipon = true; r.notes.push('суффикс T у Blum читаю как TIP-ON без BLUMOTION — подтвердить по каталогу'); }
@@ -467,7 +471,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       if (m[4]) { r.damper = 'BLUMOTION'; r.tipon = true; }
       else if (m[2] === 'S') { r.damper = 'BLUMOTION'; r.tipon = false; }
       else if (m[2] === 'T') { r.damper = 'NONE'; r.tipon = true; }
-      else { r.notes.push('код Гинис MO?U (к дну) — признак из кода не ясен'); }
+      else { r.series = 'MOVENTO SU'; r.damper = 'BLUMOTION'; r.tipon = false; r.notes.push('код Гинис MO4U = 760H…SU (отдельное исполнение, не путать с 760H…S)'); }
       r.src = 'art'; r.conf = 'high';
       return r;
     }
@@ -476,14 +480,15 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       r = base(); r.type = 'rail'; r.series = 'MOVENTO'; r.len = parseInt(m[1], 10) * 10;
       r.notes.push('короткий код MOV — признак не определён'); r.src = 'art'; r.conf = 'low'; return r;
     }
-    if ((m = /^TN(HB|BF|B|TF|T)(\d{2})$/.exec(a))) {
-      r = base(); r.type = 'rail';
-      r.series = m[1] === 'HB' ? 'TANDEM+ 550H' : 'TANDEM 560H';
-      r.len = parseInt(m[2], 10) * 10;
-      if (m[1] === 'T' || m[1] === 'TF') { r.damper = 'NONE'; r.tipon = true; r.notes.push('код Гинис TNT — TIP-ON без доводчика (по аналогии с MO4T) — подтвердить'); }
-      else { r.damper = 'BLUMOTION'; r.tipon = false; }
-      if (m[1] === 'BF') r.notes.push('TNBF: вариант кода Гинис — уточнить, чем отличается от TNB');
-      r.src = 'art'; r.conf = 'high';
+    // Коды Гинис TANDEM — по составам всех 66 комплектов ginis.ru (24.09.2026), комплект = направляющая + замки T51.1700.04:
+    // TNB→560H…B  TNBF→560F…B  TNF→560F…C  TNT→560H…T  TNTF→560F…T  TNH→550H…(без доводчика)  TNHB→550H…B  TNHT→550H…T  TNFB→550F…B  TNFT→550F…T
+    if ((m = /^TN(BF|B|FB|FT|F|HB|HT|H|TF|T)(\d{2})$/.exec(a))) {
+      var TN = { B: ['TANDEM 560H', 'BLUMOTION', false], BF: ['TANDEM 560F', 'BLUMOTION', false], F: ['TANDEM 560F', 'NONE', false],
+                 T: ['TANDEM 560H', 'NONE', true], TF: ['TANDEM 560F', 'NONE', true],
+                 H: ['TANDEM+ 550H', 'NONE', false], HB: ['TANDEM+ 550H', 'BLUMOTION', false], HT: ['TANDEM+ 550H', 'NONE', true],
+                 FB: ['TANDEM+ 550F', 'BLUMOTION', false], FT: ['TANDEM+ 550F', 'NONE', true] }[m[1]];
+      r = base(); r.type = 'rail'; r.series = TN[0]; r.damper = TN[1]; r.tipon = TN[2];
+      r.len = parseInt(m[2], 10) * 10; r.src = 'art'; r.conf = 'high';
       return r;
     }
     // Ящики
@@ -719,19 +724,31 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     if (norm.len === 250 || norm.len === 270) notes.push('нетипичная длина ' + norm.len + ' — проверить, не ошибка ли');
     if (liveSeries && liveSeries.length && liveSeries.indexOf(norm.series) < 0) notes.push('серия ' + norm.series + ' не в списке живых — вопрос конструктору');
 
-    var exact = [], similar = [];
+    // факты каталога Blum 2024/25 и 2027/28 (Склад МБ/Каталог Blum): 560F и 550F — «только по запросу»;
+    // TANDEM с буквой C (под отдельный TIP-ON) в каталогах нет — не подставлять вместо современных.
+    if (/560F|550F/.test(norm.series || '')) notes.push('у Blum серия ' + norm.series.replace(/^TANDEM\+? /, '') + ' — «только по запросу» (каталог 2027/28, стр. 454–456)');
+    var exact = [], similar = [], railOnly = [], legacy = [];
     for (var i = 0; i < register.length; i++) {
       var p = register[i];
       if (p.type !== 'rail' || p.series !== norm.series || p.len !== norm.len || !(p.qty > 0)) continue;
-      if (norm.damper && p.damper === norm.damper) exact.push(p); else similar.push(p);
+      if (/^5[56][01][HF]\d{4}C$/.test(String(p.art || '').toUpperCase()) && !norm.legacy) { legacy.push(p); continue; }
+      if (norm.damper && p.damper === norm.damper) {
+        // 24.09: заявлен комплект TIP-ON (MO4S50TB = рельс + замки + механизм TIP-ON BLUMOTION),
+        // а на полке обычная направляющая — не подставляем: механизм отдельно не купить.
+        if (norm.tipon === true && p.tipon !== true) { if (/^MOVENTO/.test(norm.series)) railOnly.push(p); else similar.push(p); } else exact.push(p);
+      } else similar.push(p);
     }
     var need = norm.qty || 0;
+    if (!exact.length && railOnly.length) {
+      // 24.09: рельс внутри комплекта TIP-ON тот же (MO4S50TB = 760H5000S + замки + T60L7540 + T60.1125W, состав с ginis.ru).
+      // Берём рельс с полки, остальное докупается — артикулы даёт addonsFor(), чтобы снабженец не подбирал сам.
+      return { status: 'part', label: 'частично', hits: railOnly, notes: notes };
+    }
     if (exact.length) {
       var checked = exact.filter(function (p) { return p.checked; });
       var pool = checked.length ? checked : exact;
       var have = pool.reduce(function (a, p) { return a + p.qty; }, 0);
       var label = 'на складе ' + have + ' компл.' + (need ? (have >= need ? ' — хватает' : ' из ' + need) : '');
-      if (norm.tipon) notes.push('заявлен TIP-ON — на полке направляющая с доводчиком, блок T60 нужен отдельно');
       if (!checked.length) return { status: 'orange', label: label + ', состояние не проверено', hits: exact, notes: notes };
       if (checked.length < exact.length) notes.push('часть позиций не проверена по состоянию — в счёт не идёт');
       return { status: 'green', label: label, hits: pool, notes: notes };
@@ -740,6 +757,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       var why = norm.damper ? 'на полке та же серия и длина, но признак другой' : 'признак доводчика в заявке не ясен — на полке есть серия и длина';
       return { status: 'yellow', label: 'есть похожее', hits: similar, notes: notes.concat([why]) };
     }
+    if (legacy.length) notes.push('на полке ' + legacy.reduce(function (a, p) { return a + p.qty; }, 0) + ' компл. ' + legacy.map(function (p) { return p.art; }).join(', ') + ' — старое исполнение «C» (в каталоге Blum нет; у Гиниса 560H…C заменена на 560H…T, механизм T55.7151S продают только в комплекте с направляющими) — не подставлять');
     return { status: 'grey', label: 'нет на складе', hits: [], notes: notes };
   }
 
@@ -765,7 +783,86 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     });
   }
 
-  var api = { parseWorkbook: parseWorkbook, matchRow: matchRow, crossCheck: crossCheck, orderCode: orderCode };
+  // Остаток один на все строки всех заявок сессии: раньше каждая строка сверялась с полным
+  // реестром, и 3 комплекта «хватало» и строке на 4, и строке на 1 (заявка 26-04-01-01, 24.09).
+  // Порядок: заявки по порядку загрузки, строки по порядку. Выдача по позициям реестра: сначала проверенные.
+  function matchAll(files, register, liveSeries) {
+    var left = {}; register.forEach(function (p) { left[p.id] = p.qty || 0; });
+    var taken = {};                                   // id позиции → [{order, n, q}]
+    // два прохода: сначала точные совпадения (закрываются целиком, без докупки), потом «частично» (рельс + докупка)
+    var queue = [[], []];
+    files.forEach(function (f) { if (!f.ok) return; f.rows.forEach(function (r) {
+      var m = r.norm ? matchRow(r.norm, register, liveSeries) : null; r.match = m;
+      if (!m || (m.status !== 'green' && m.status !== 'orange' && m.status !== 'part')) return;
+      queue[m.status === 'part' ? 1 : 0].push({ f: f, r: r, m: m });
+    }); });
+    queue[0].concat(queue[1]).forEach(function (it) { var f = it.f, r = it.r, m = it.m; (function () {
+      var need = r.norm.qty || r.qty || 0, pool = m.hits.slice().sort(function (a, b) { return (b.checked ? 1 : 0) - (a.checked ? 1 : 0); });
+      var total = pool.reduce(function (a, p) { return a + (p.qty || 0); }, 0);
+      var avail = pool.reduce(function (a, p) { return a + Math.max(0, left[p.id]); }, 0);
+      var want = need || avail, take = 0, before = [];
+      pool.forEach(function (p) { (taken[p.id] || []).forEach(function (x) { before.push(x); }); });
+      pool.forEach(function (p) { var q = Math.min(Math.max(0, left[p.id]), want - take); if (q > 0) { left[p.id] -= q; take += q; (taken[p.id] = taken[p.id] || []).push({ order: f.order || f.fileName, n: r.n, q: q }); } });
+      m.take = take; m.total = total;
+      var tail = (m.status === 'orange' || (m.status === 'part' && !pool.some(function (p) { return p.checked; }))) ? ', состояние не проверено' : '';
+      var ad = addonsFor(r.norm, r.name, r.art);
+      if (m.status !== 'part') { ad.items = ad.items.filter(function (x) { return x.ifMissing; }); ad.unsure = ''; }
+      m.addons = (ad.items.length || ad.unsure) ? ad : null;
+      if (!take) {
+        m.status = 'grey'; m.addons = null;
+        m.label = 'на полке ' + total + ' компл. — все уже отданы другим строкам';
+      } else {
+        if (m.status === 'part') m.label = 'рельс с полки: ' + take + (need ? ' из ' + need : '') + ' компл.' + (need && take < need ? '; ещё ' + (need - take) + ' — комплектом ' + (r.art || '') + ' в закупку' : '') + tail + ' (на полке ' + total + ')';
+        else m.label = 'на полке ' + total + ' компл. · этой строке ' + take + (need ? (take >= need ? ' — хватает' : ' из ' + need + ', остальное в закупку') : '') + tail;
+      }
+      if (before.length) m.notes.push('из этого остатка уже взяли: ' + before.map(function (x) { return x.order + ' поз. ' + x.n + ' (' + x.q + ')'; }).join(', '));
+    })(); });
+  }
+
+  // Что докупить к голой направляющей с полки, чтобы получилось ровно то, что в комплекте поставщика.
+  // Составы проверены по всем 117 комплектам ginis.ru 24.09.2026 (51 MOVENTO + 66 TANDEM), правило совпало на всех:
+  //   MOVENTO MO4/MO6 (S|T|U)LL : направляющая 760H/766H + замки T51.7601 лев+прав
+  //   …TB (TIP-ON BLUMOTION)     : + механизм T60L7140 (S1: 40 кг, 270–300 мм) / T60L7540 (L3: 40 кг, 350–600 мм) /
+  //                                T60L7570 (L5: MO6 = 766H, 450–750 мм) + вал синхронизации T60.1125W
+  //   TANDEM TN…                  : направляющая 560H/560F/550H/550F + замки T51.1700.04 лев+прав; TIP-ON встроен в направляющую (…T)
+  // Цены розницы Гинис на 24.09: T60L7140/7540/7570 — 3 455 ₽, T60.1125W — 944 ₽, T51.7601 — 334 ₽/шт, T51.1700.04 — 194 ₽/шт.
+  // Возвращает { items: [{art, name, per, unit, ifMissing}], unsure: '' }. per — на один комплект направляющих.
+  function addonsFor(n, rowName, rowArt) {
+    var out = { items: [], unsure: '' }, art = String(rowArt || '').toUpperCase().replace(/\s+/g, ''), name = String(rowName || '');
+    if (!n || n.type !== 'rail') return out;
+    var ginis = /^(MO[46][STU]\d{2}(TB)?|TN[A-Z]{1,2}\d{2})$/.test(art);
+    var locks = ginis || /с\s*замк/i.test(name);
+    if (/^MOVENTO/.test(n.series || '')) {
+      if (locks) { out.items.push({ art: 'T51.7601 L', name: 'MOVENTO замок с регулировкой по ширине, левый', per: 1, unit: 'шт', ifMissing: true });
+                   out.items.push({ art: 'T51.7601 R', name: 'MOVENTO замок с регулировкой по ширине, правый', per: 1, unit: 'шт', ifMissing: true }); }
+      if (n.tipon && n.damper === 'BLUMOTION') {
+        var heavy = /^MO6/.test(art) || (n.load && n.load > 40), unit = null;
+        if (heavy) { if (n.len >= 450 && n.len <= 750) unit = ['T60L7570', 'TIP-ON BLUMOTION для LEGRABOX/MOVENTO, L5, 450–750 мм, 35–70 кг (лев.+прав.)']; }
+        else if (n.len >= 270 && n.len < 350) unit = ['T60L7140', 'TIP-ON BLUMOTION для LEGRABOX/MOVENTO, S1, 270–349 мм, 10–20 кг (лев.+прав.)'];
+        else if (n.len >= 350 && n.len <= 750) unit = ['T60L7540', 'TIP-ON BLUMOTION для LEGRABOX/MOVENTO, L3, 350–750 мм, 15–40 кг (лев.+прав.)'];
+        if (unit) out.items.push({ art: unit[0], name: unit[1], per: 1, unit: 'компл' });
+        else out.unsure = 'у Гиниса нет комплекта TIP-ON BLUMOTION на ' + n.len + ' мм' + (heavy ? ' / 60–70 кг' : '') + ' — механизм подобрать с конструктором';
+        out.items.push({ art: 'T60.1125W', name: 'Вал синхронизации TIP-ON BLUMOTION, 1125 мм (режется по ширине ящика)', per: 1, unit: 'шт' });
+      }
+    } else if (/^TANDEM/.test(n.series || '')) {
+      if (locks) { out.items.push({ art: 'T51.1700.04 L', name: 'замок TANDEM, левый', per: 1, unit: 'шт', ifMissing: true });
+                   out.items.push({ art: 'T51.1700.04 R', name: 'замок TANDEM, правый', per: 1, unit: 'шт', ifMissing: true }); }
+    }
+    return out;
+  }
+
+  // Артикул Blum, как на коробке: MO4S50 (Гинис) → 760H5000S. Для глаз: в заявке один код, на полке другой.
+  function blumArticle(n) {
+    if (!n || n.type !== 'rail' || !n.series || !n.len) return '';
+    var pre = n.series === 'MOVENTO' || n.series === 'MOVENTO SU' ? (n.load && n.load > 40 ? '766H' : '760H') : n.series === 'TANDEM 560H' ? '560H' : n.series === 'TANDEM 560F' ? '560F' : n.series === 'TANDEM+ 550H' ? '550H' : n.series === 'TANDEM+ 550F' ? '550F' : '';
+    if (!pre) return '';
+    var len = String(Math.round(n.len * 10)); while (len.length < 4) len = '0' + len;
+    var suf = n.damper === 'BLUMOTION' ? (pre.charAt(0) === '7' ? (n.series === 'MOVENTO SU' ? 'SU' : 'S') : 'B') : (n.damper === 'NONE' && n.tipon ? 'T' : (n.damper === 'NONE' && pre === '560F' ? 'C' : ''));
+    if (!suf) return pre + len + '?';
+    return pre + len + suf + (n.damper === 'BLUMOTION' && n.tipon ? ' + механизм TIP-ON BLUMOTION' : '');
+  }
+
+  var api = { parseWorkbook: parseWorkbook, matchRow: matchRow, matchAll: matchAll, blumArticle: blumArticle, addonsFor: addonsFor, crossCheck: crossCheck, orderCode: orderCode };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Core = api;
 })(typeof window !== 'undefined' ? window : this);
 
@@ -1578,7 +1675,7 @@ var REGISTER_DATE = '22.09.2026';
 'use strict';
 var $=function(id){return document.getElementById(id)};
 var LS_REG='sverka.register.v1', LS_LIVE='sverka.live.v1', LS_SHOWALL='sverka.showall', LS_THEME='sverka.theme';
-var ALL_SERIES=['MOVENTO','TANDEM 560H','TANDEM 560F','TANDEM+ 550H','TANDEM+ 550F'];
+var ALL_SERIES=['MOVENTO','MOVENTO SU','TANDEM 560H','TANDEM 560F','TANDEM+ 550H','TANDEM+ 550F'];
 var state={files:[],register:[],live:['MOVENTO','TANDEM 560H'],showAll:false,picked:{}};
 
 function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
@@ -1863,33 +1960,37 @@ function handleFiles(list){
 
 // ── рендер ──
 // подсказки к цветным меткам (при наведении) и ссылки в примечании вместо длинного адреса
-var PILL_TIP={green:'есть: проверено, можно выдавать',orange:'есть, не проверено: лежит, состояние не проверяли',yellow:'похожее: серия и длина те, признак другой или не ясен',grey:'нет: в закупку',skip:'вне пилота: ящики, замки, чужие бренды'};
+var PILL_TIP={part:'частично: направляющая со склада, остальное из комплекта докупить по списку',green:'есть: проверено, можно выдавать',orange:'есть, не проверено: лежит, состояние не проверяли',yellow:'похожее: серия и длина те, признак другой или не ясен',grey:'нет: в закупку',skip:'вне пилота: ящики, замки, чужие бренды'};
 function noteHtml(t){var out='',last=0,re=/https?:\/\/[^\s]+/g,m;while((m=re.exec(t))){out+=esc(t.slice(last,m.index))+'<a href="'+esc(m[0])+'" target="_blank" rel="noopener" title="'+esc(m[0])+'">🔗 ссылка</a>';last=m.index+m[0].length}
   var rest=t.slice(last);return out+esc(rest.length>60?rest.slice(0,60)+'…':rest)}
 function render(){
   var out=$('out'); $('tools').classList.toggle('on',state.files.length>0); $('drop').classList.toggle('compact',state.files.length>0); if(!state.files.length){out.innerHTML='';updateBar();return;}
   var h='';
+  Core.matchAll(state.files,state.register,state.live);
   state.files.forEach(function(f){
     h+='<div class="card"><div class="hd"><div><h2><span class="code">'+esc(f.order||'—')+'</span>'+esc(cardTitle(f))+'</h2><div class="meta">'+esc(noCode(f.fileName,f.order))+(f.ok?' · лист «'+esc(f.sheet)+'» · вариант '+f.variant+(f.warnings.length?' · '+esc(f.warnings.join('; ')):''):'')+'</div></div><button class="ghost" data-rm="'+f.id+'">убрать</button></div>';
     if(!f.ok){h+='<div class="empty">'+esc(f.error)+'</div></div>';return;}
-    var rows=f.rows.map(function(r){r.match=r.norm?Core.matchRow(r.norm,state.register,state.live):null;return r});
+    var rows=f.rows;
     var shown=rows.filter(function(r){return state.showAll||(r.match&&r.match.status!=='skip')||(r.norm&&r.norm.type==='rail')});
     if(!shown.length){h+='<div class="empty">Направляющих Blum в заявке нет'+(state.showAll?'':' — включите «показывать все строки» в настройках, чтобы увидеть остальное')+'</div></div>';return;}
     h+='<table class="res"><tr class="th"><th class="chk">выдать</th><th>статус</th><th>позиция из заявки</th><th>нужно</th><th>на складе</th><th class="hidecol">в заявке</th></tr>';
     shown.forEach(function(r){
       if(r.isHeader){h+='<tr class="hdr"><td></td><td colspan="5">'+esc(r.name||r.art)+'</td></tr>';return;}
       var m=r.match,n=r.norm,st=m?m.status:null;
-      var pid=f.id+':'+r.n, can=st==='green'||st==='orange'||(st==='yellow'&&m.hits.length>0);
+      var pid=f.id+':'+r.n, can=st==='green'||st==='orange'||st==='part'||(st==='yellow'&&m.hits.length>0);
+      if(!can&&state.picked[pid])state.picked[pid]=false;
       h+='<tr'+(st==='skip'||!m?' class="dim"':'')+'>';
       h+='<td class="chk">'+(can?'<input type="checkbox" data-pick="'+pid+'" '+(state.picked[pid]?'checked':'')+(st==='yellow'?' title="выдать похожее — если на полке подходит"':'')+'>':'')+'</td>';
-      h+='<td class="c-st">'+(m?'<span class="pill '+st+'" title="'+esc(PILL_TIP[st]||'')+'">'+esc(st==='green'?'есть':st==='orange'?'есть, не проверено':st==='yellow'?(m.label==='не разобрал'?'не разобрал':'похожее'):st==='grey'?'нет':'вне пилота')+'</span>'+(actHint(m)?'<div class="act-hint">'+esc(actHint(m))+'</div>':''):'')+'</td>';
+      h+='<td class="c-st">'+(m?'<span class="pill '+st+'" title="'+esc(PILL_TIP[st]||'')+'">'+esc(st==='part'?'частично':st==='green'?'есть':st==='orange'?'есть, не проверено':st==='yellow'?(m.label==='не разобрал'?'не разобрал':'похожее'):st==='grey'?'нет':'вне пилота')+'</span>'+(actHint(m)?'<div class="act-hint">'+esc(actHint(m))+'</div>':''):'')+'</td>';
       h+='<td class="c-pos">'+(n&&n.key?'<div class="key">'+esc(n.key)+'</div>':'<div>'+esc(n&&n.type!=='other'?n.type:'')+'</div>')+'<div class="raw">'+esc(r.art)+(r.art&&r.name?' · ':'')+esc(r.name)+'</div>';
+      var ba=n&&n.type==='rail'?Core.blumArticle(n):'';
+      if(ba&&ba.split(' ')[0].replace('?','')!==String(r.art||'').toUpperCase().replace(/\s+/g,'').slice(0,ba.split(' ')[0].replace('?','').length)){var bp=ba.split(' + ');h+='<div class="blum">артикул Blum (как на коробке): <b>'+esc(bp[0])+'</b>'+(bp[1]?' + '+esc(bp[1]):'')+'</div>';}
       if(r.incomplete)h+='<div class="note bad">в заявке нет единицы и количества</div>';
       if(r.dup)h+='<div class="note bad">'+esc(r.dup)+'</div>';
       if(m&&m.notes.length)h+='<div class="note">'+esc(m.notes.join(' · '))+'</div>';
       h+='</td>';
       h+='<td class="c-need">'+(r.qty!=null?esc(r.qty)+' '+esc(n&&n.unit?n.unit:r.unit):'<span class="note bad">—</span>')+'</td>';
-      h+='<td class="c-stk">'+(m&&m.status!=='skip'?'<div>'+esc(m.label)+'</div>'+m.hits.map(function(p){return '<div class="hitline" data-reg="'+esc(p.id)+'" title="открыть в реестре"><div class="key">'+esc(stockKey(p))+'</div><div class="hit"><b>'+p.qty+' '+esc(unitOf(p))+'</b> · '+esc(p.art||'')+' · '+esc(p.place||'')+(p.checked?' · проверено '+esc(p.checkedAt||'')+(p.checkedBy?' ('+esc(p.checkedBy)+')':''):'')+(p.opened==='opened'?' · вскрыто':p.opened==='sealed'?' · целое':'')+' · <span class="go">в реестре →</span></div>'+issuedHtml(p)+'</div>'+((photos[p.id]||[]).length?thumbsHtml(p.id,true,false):'')}).join(''):'')+'</td>';
+      h+='<td class="c-stk">'+(m&&m.status!=='skip'?'<div>'+esc(m.label)+'</div>'+addonsHtml(m,r)+m.hits.map(function(p){return '<div class="hitline" data-reg="'+esc(p.id)+'" title="открыть в реестре"><div class="key">'+esc(stockKey(p))+'</div><div class="hit"><b>'+p.qty+' '+esc(unitOf(p))+'</b> · '+esc(p.art||'')+' · '+esc(p.place||'')+(p.checked?' · проверено '+esc(p.checkedAt||'')+(p.checkedBy?' ('+esc(p.checkedBy)+')':''):'')+(p.opened==='opened'?' · вскрыто':p.opened==='sealed'?' · целое':'')+' · <span class="go">в реестре →</span></div>'+issuedHtml(p)+'</div>'+((photos[p.id]||[]).length?thumbsHtml(p.id,true,false):'')}).join(''):'')+'</td>';
       h+='<td class="hidecol raw">'+esc(r.unit)+(r.supplier?' · '+esc(r.supplier):'')+(r.note?' · '+noteHtml(r.note):'')+'</td></tr>';
     });
     h+='</table></div>';
@@ -1905,7 +2006,12 @@ function noCode(t,code){t=String(t||'');if(!code)return t;var re=new RegExp('^\\
 function cardTitle(f){var t=noCode(f.title,f.order).trim();return t||noCode(f.fileName,f.order).replace(/\.xls[xm]?$/i,'')||f.fileName}
 function stockKey(p){return isBlum(p)?p.series+' · '+p.len+' · '+Normalizer.featureLabel(p):titleOf(p)}
 // подсказка «что делать» под статусом
+function addonsHtml(m,r){var a=m&&m.addons;if(!a||(!a.items.length&&!a.unsure))return '';var q=m.take||0;
+  var h='<div class="addon"><div class="addon-h">'+(m.status==='part'?'докупить у Гиниса вместо '+esc(r.art||'комплекта')+' × '+q+':':'к направляющей с полки:')+'</div>';
+  a.items.forEach(function(x){h+='<div><b>'+esc(x.art)+'</b> × '+(x.per*q)+' '+(x.unit||'шт')+' — '+esc(x.name)+(x.ifMissing?' <i>(если в коробке нет)</i>':'')+'</div>'});
+  if(a.unsure)h+='<div class="note bad">'+esc(a.unsure)+'</div>';return h+'</div>'}
 function actHint(m){if(!m)return '';var st=m.status;
+  if(st==='part')return 'проверьте рельс на полке; в счёте заменить комплект на рельс со склада + докупку';
   if(st==='orange')return 'проверьте на полке и отметьте «проверено» в реестре';
   if(st==='yellow')return m.hits.length?'сравните признак с полкой — если подходит, отметьте «выдать»':'разберите строку заявки вручную';
   if(st==='grey')return 'в закупку';return ''}
@@ -1915,7 +2021,14 @@ function summaryText(){
   var p=pickedRows(),lines=[];
   p.forEach(function(x){var r=x.r,m=r.match;var box=m.hits.map(function(h){return h.place}).filter(function(v,i,a){return v&&a.indexOf(v)===i}).join(', ');
     var sim=m.status==='yellow',art=sim?m.hits.map(function(h){return h.art}).filter(function(v,i,a){return v&&a.indexOf(v)===i}).join(', '):((m.hits[0]&&m.hits[0].art)||'');
-    lines.push([x.f.order,sim?'Выдать похожее — сверить признак':'Выдать со склада',r.norm.key,(r.qty!=null?r.qty+' '+(r.norm.unit||'компл'):''),art,box].join('\t'))});
+    if(m.status==='part'){var q=m.take||0,ba=Core.blumArticle(r.norm).split(' + ')[0];
+      lines.push([x.f.order,'Выдать со склада',ba+' (рельс вместо '+r.art+')',q+' компл',(m.hits[0]&&m.hits[0].art)||ba,box].join('\t'));
+      (m.addons?m.addons.items:[]).forEach(function(a){lines.push([x.f.order,'Докупить (вместо '+r.art+')',a.name+(a.ifMissing?' — если в коробке нет':''),(a.per*q)+' '+(a.unit||'шт'),a.art,''].join('\t'))});
+      if(m.addons&&m.addons.unsure)lines.push([x.f.order,'Подобрать',m.addons.unsure,'','',''].join('\t'));
+      if(r.qty&&r.qty>q)lines.push([x.f.order,'Купить комплектом',r.name,(r.qty-q)+' компл',r.art,''].join('\t'));
+      return;}
+    lines.push([x.f.order,sim?'Выдать похожее — сверить признак':'Выдать со склада',r.norm.key,((m.take!=null?m.take:r.qty)!=null?(m.take!=null?m.take:r.qty)+' '+(r.norm.unit||'компл'):''),art,box].join('\t'));
+    (m.addons?m.addons.items:[]).forEach(function(a){lines.push([x.f.order,'Докупить, если в коробке нет',a.name,(a.per*(m.take||0))+' '+(a.unit||'шт'),a.art,''].join('\t'))});});
   return 'заказ\tстатус\tпозиция\tкол-во\tартикул\tгде лежит\n'+lines.join('\n');
 }
 function copySummary(){var t=summaryText();if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast('Скопировано — вставьте в «Закупки»')},function(){fallback(t)})}else fallback(t);
