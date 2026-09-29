@@ -246,6 +246,49 @@ button.del{color:var(--dng);border-color:transparent;background:none;white-space
 }
   .pill.part{background:var(--warnbg);color:var(--warn)} .addon{margin-top:6px;padding:6px 8px;border-radius:8px;background:var(--warnbg);font-size:12.5px;line-height:1.45} .addon-h{font-weight:600;margin-bottom:2px} .addon b{font-family:ui-monospace,Menlo,Consolas,monospace}
   .blum{font-size:12.5px;margin-top:3px;color:inherit} .blum b{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.02em}
+.hit .addr{white-space:nowrap}
+
+/* ═══ план склада (v16) ═══ */
+:root{--pz-order:#cfe0f3;--pz-rail:#f2b98c;--pz-mix:#fbe4d1;--pz-bin:#d6ead0;--pz-cons:#e9dff1;--pz-empty:#e4e2dc;--pz-long:#f3e7b8;--pz-line:#3a372f}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--pz-order:#223a55;--pz-rail:#7a4424;--pz-mix:#4a3527;--pz-bin:#2c4a2a;--pz-cons:#3f3150;--pz-empty:#34322e;--pz-long:#4d4424;--pz-line:#d8d4ca}}
+:root[data-theme="dark"]{--pz-order:#223a55;--pz-rail:#7a4424;--pz-mix:#4a3527;--pz-bin:#2c4a2a;--pz-cons:#3f3150;--pz-empty:#34322e;--pz-long:#4d4424;--pz-line:#d8d4ca}
+.plbox{overflow-x:auto;margin:8px 0 4px;-webkit-overflow-scrolling:touch}
+svg.plan{display:block;width:100%;min-width:560px;height:auto}
+svg.plan .rk{cursor:pointer}
+svg.plan .rk rect.b{stroke:var(--pz-line);stroke-width:1.4}
+svg.plan .rk:hover rect.b,svg.plan .rk:focus-visible rect.b{stroke:var(--acc);stroke-width:3}
+svg.plan .rk:focus{outline:none}
+svg.plan .rk.dim{opacity:.2}
+svg.plan .rk.hit rect.b{stroke:var(--acc);stroke-width:3.5}
+svg.plan text{font-family:var(--ff);fill:var(--t1)}
+svg.plan .num{font-weight:700}
+svg.plan .cnt circle{fill:var(--acc)}svg.plan .cnt text{fill:#fff;font-size:11px;font-weight:700}
+.plracks{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:8px 0 2px}.plracks button{min-width:36px;min-height:32px;padding:3px 6px;font-variant-numeric:tabular-nums}.plracks button.dim{opacity:.35}.plracks .small{margin-right:4px}
+.pllegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--t2);margin:6px 0 2px}
+.pllegend i{display:inline-block;width:14px;height:10px;border:1px solid var(--pz-line);border-radius:2px;margin-right:5px;vertical-align:-1px}
+#plQ{width:100%;font-family:inherit;font-size:14px;border:1.5px solid var(--brd);border-radius:8px;padding:8px 10px;background:var(--surf);color:var(--t1)}
+.plhits{margin-top:6px;display:grid;gap:2px}
+.plhit{display:flex;gap:10px;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:13px}
+.plhit:hover{background:var(--accbg)}
+.plhit .a{font-weight:700;min-width:44px;font-variant-numeric:tabular-nums;color:var(--acc)}
+.plnav{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:4px 0 8px}
+.plzone{color:var(--t2);font-size:13px;margin-bottom:6px}
+.plshelf{border-top:1px solid var(--brd);padding:10px 4px;border-radius:6px}
+.plsh-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.plsh-h .a{font-weight:700;font-size:17px;min-width:52px;font-variant-numeric:tabular-nums}
+.plsh-h .n{color:var(--t2);font-size:12px;flex:1}
+.plsh-h button{padding:4px 10px;min-height:0;font-size:12.5px}
+.plnote{font-size:13px;color:var(--t2);margin:4px 0 4px;white-space:pre-wrap}
+.plnote textarea{width:100%;min-height:70px;font-family:inherit;font-size:14px;border:1.5px solid var(--brd);border-radius:8px;padding:8px;background:var(--surf);color:var(--t1)}
+.pit{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:5px 0 5px 10px;border-left:3px solid var(--acc);margin:5px 0}
+.pit.chk{border-left-color:var(--ok)}
+.pit .pt{flex:1 1 200px;min-width:0;font-size:13.5px}
+.pit .pt .small{display:block}
+.pit .pc{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.pit input.inl.pl{width:120px}
+.hit .addr[data-go]{cursor:pointer;color:var(--acc)}
+table.reg button.go{border:none;background:none;padding:2px 4px;min-height:0;cursor:pointer}
+@media (pointer:coarse){.pit input.inl{flex:0 0 auto}.pit input.inl.n{width:70px}.pit input.inl.pl{width:120px}}
 </style>
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#FAF9F5">
@@ -258,8 +301,8 @@ button.del{color:var(--dng);border-color:transparent;background:none;white-space
 <body>
 <div class="wrap">
   <header>
-    <div class="hl"><div class="ttl"><h1>Сверка склад ↔ заявка</h1><button class="who" id="btnWho" title="Кто работает — нажмите, чтобы сменить">—</button></div><div class="sub">Направляющие Blum · пилот · работает без сети</div></div>
-    <div class="acts"><button class="btn-reg" id="btnReg">📋 Реестр</button><button class="btn-ico" id="btnSet" title="Настройки" aria-label="Настройки">⚙️</button></div>
+    <div class="hl"><div class="ttl"><h1>Сверка склад ↔ заявка</h1><button class="who" id="btnWho" title="Кто работает — нажмите, чтобы сменить">—</button></div><div class="sub">Фурнитура склада · адрес «стеллаж-полка» · работает без сети · v16</div></div>
+    <div class="acts"><button class="btn-reg" id="btnPlan">🗺 План</button><button class="btn-reg" id="btnReg">📋 Реестр</button><button class="btn-ico" id="btnSet" title="Настройки" aria-label="Настройки">⚙️</button></div>
     <div class="status"><span class="dot" id="syncDot"></span><span id="syncInfo">локально</span></div>
   </header>
 
@@ -270,9 +313,9 @@ button.del{color:var(--dng);border-color:transparent;background:none;white-space
     <span><span class="pill green">есть</span> проверено, можно выдавать</span>
     <span><span class="pill orange">есть, не проверено</span> лежит, состояние не проверяли</span>
     <span><span class="pill part">частично</span> направляющая со склада, к ней докупить детали комплекта (список в строке)</span>
-    <span><span class="pill yellow">похожее</span> серия и длина те, признак другой или не ясен</span>
+    <span><span class="pill yellow">похожее</span> серия и длина те, признак другой · или артикул тот, цвет другой</span>
     <span><span class="pill grey">нет</span> закупка</span>
-    <span><span class="pill skip">вне пилота</span> ящики, замки, чужие бренды</span>
+    <span><span class="pill skip">не сверяется</span> строка без артикула</span>
   </div>
   <div id="out"></div>
 </div>
@@ -285,7 +328,7 @@ button.del{color:var(--dng);border-color:transparent;background:none;white-space
   <h2>Настройки</h2>
   <div class="small">Живые серии — что конструкторы ещё закладывают. Утверждает Кирпичев. Строки с серией вне списка получают пометку, но сверяются.</div>
   <div class="row" id="liveList"></div>
-  <div class="row"><label class="chip"><input type="checkbox" id="showAll"> показывать все строки заявки (плиту, крепёж, ленты)</label></div>
+  <div class="row"><label class="chip"><input type="checkbox" id="showAll"> показывать все строки заявки (и строки без артикула)</label></div>
   <div class="row"><label class="chip"><input type="checkbox" id="darkMode"> тёмная тема</label></div>
   <div class="row"><button id="btnPull">Загрузить из облака ⬇️</button><button id="btnPush">Отправить в облако ☁️</button><span class="small" id="syncDetail"></span></div>
   <div class="row"><button id="shSetClose">Готово</button></div>
@@ -299,7 +342,7 @@ button.del{color:var(--dng);border-color:transparent;background:none;white-space
   <div class="row">
     <label class="chip"><input type="file" id="regFile" accept=".json,.xlsx" style="display:none"><span>Загрузить реестр (json / xlsx)</span></label>
     <button id="regExport">Скачать реестр (json)</button>
-    <button id="regReset" class="ghost">Вернуть встроенный</button>
+    <button id="regReset" class="ghost">Перезагрузить из облака</button>
   </div>
   <div class="small">Галочка «проверено» — состояние прогнано руками (Х9). Без неё позиция не бывает зелёной. Фото коробки и дорожки — кнопка «+» (с телефона откроется камера). Отметки и фото сохраняются в этом браузере; чтобы передать другому — «Скачать реестр (json)», фото уходят вместе с ним.</div>
   <div class="regbar" id="regBar">
@@ -308,6 +351,11 @@ button.del{color:var(--dng);border-color:transparent;background:none;white-space
   </div>
   <div id="regTable" style="margin-top:4px"></div>
   <div class="row"><button id="shRegClose">Закрыть</button></div>
+</div></div>
+
+<div class="sheet" id="shPlan"><div class="panel"><button class="xclose" data-close="shPlan" title="Закрыть (Esc)" aria-label="Закрыть">✕</button><div class="handle"></div>
+  <h2 id="plTitle">План склада</h2>
+  <div id="plBody"></div>
 </div></div>
 
 <div class="sheet" id="shAdd"><div class="panel"><button class="xclose" data-close="shAdd" title="Закрыть (Esc)" aria-label="Закрыть">✕</button><div class="handle"></div>
@@ -321,10 +369,10 @@ button.del{color:var(--dng);border-color:transparent;background:none;white-space
     <label class="f-rail">TIP-ON<select id="aTip"><option value="0">нет</option><option value="1">да</option></select></label>
     <label class="f-oth wide">наименование<input type="text" id="aName" placeholder="например: корзина-карго 150, подъёмник AVENTOS HK" autocomplete="off"></label>
     <label class="f-oth">размер / длина<input type="text" id="aSize" placeholder="если есть" autocomplete="off"></label>
-    <label><span id="aQtyL">кол-во, компл.</span><input type="number" id="aQty" inputmode="numeric" min="0" value="1"></label>
+    <label><span id="aQtyL">кол-во, компл.</span><input type="number" id="aQty" inputmode="numeric" min="0" value="1" placeholder="не считали"></label>
     <label>артикул<input type="text" id="aArt" placeholder="если виден" autocomplete="off"></label>
-    <label class="wide">место<span class="place"><select id="aPlT"><option value="box">коробка заказа</option><option value="zone">зона типов, полка</option><option value="free">как написано</option></select><input type="text" id="aPl" placeholder="код заказа или полка" autocomplete="off"></span></label>
-    <label>откуда пришло<select id="aOrg"><option>опись Якоби</option><option>зелёные заказы</option><option>оцифровка 22.09</option><option>возврат со сборки</option><option>неизвестно</option></select></label>
+    <label class="wide">место<span class="place"><select id="aPlT"><option value="addr">стеллаж-полка</option><option value="box">коробка заказа</option><option value="zone">зона типов, полка</option><option value="free">как написано</option></select><input type="text" id="aPl" placeholder="например 24-3" autocomplete="off"></span></label>
+    <label>откуда пришло<select id="aOrg"><option>опись Якоби</option><option>зелёные заказы</option><option>оцифровка 22.09</option><option>фото 25.09</option><option>возврат со сборки</option><option>неизвестно</option></select></label>
     <label>упаковка<select id="aOp"><option value="">?</option><option value="sealed">целое</option><option value="opened">вскрыто</option></select></label>
     <label class="wide">примечание<input type="text" id="aNote" autocomplete="off"></label>
     <div class="wide act"><button class="primary" id="aAdd">Добавить</button><button id="aCancel" data-close="shAdd">Отмена</button><span class="small" id="aHint"></span></div>
@@ -730,7 +778,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     var exact = [], similar = [], railOnly = [], legacy = [];
     for (var i = 0; i < register.length; i++) {
       var p = register[i];
-      if (p.type !== 'rail' || p.series !== norm.series || p.len !== norm.len || !(p.qty > 0)) continue;
+      if (p.type !== 'rail' || p.series !== norm.series || p.len !== norm.len || !(p.qty > 0 || p.qty == null)) continue;
       if (/^5[56][01][HF]\d{4}C$/.test(String(p.art || '').toUpperCase()) && !norm.legacy) { legacy.push(p); continue; }
       if (norm.damper && p.damper === norm.damper) {
         // 24.09: заявлен комплект TIP-ON (MO4S50TB = рельс + замки + механизм TIP-ON BLUMOTION),
@@ -747,7 +795,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     if (exact.length) {
       var checked = exact.filter(function (p) { return p.checked; });
       var pool = checked.length ? checked : exact;
-      var have = pool.reduce(function (a, p) { return a + p.qty; }, 0);
+      var have = pool.reduce(function (a, p) { return a + (p.qty || 0); }, 0);
       var label = 'на складе ' + have + ' компл.' + (need ? (have >= need ? ' — хватает' : ' из ' + need) : '');
       if (!checked.length) return { status: 'orange', label: label + ', состояние не проверено', hits: exact, notes: notes };
       if (checked.length < exact.length) notes.push('часть позиций не проверена по состоянию — в счёт не идёт');
@@ -783,37 +831,102 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     });
   }
 
+  // ── сверка по артикулу: всё, что не направляющие Blum (петли, подъёмники, комплектующие, свет, крепёж…) ──
+  // Ключ — первое слово артикула без точек и дефисов; цвет (ONS, NI, OG…) и вариант Arlight «(2)» сравниваются отдельно:
+  // совпал ключ, а цвет/вариант другой → «похожее». Хвост из букв (70T3550.TL ↔ 70T3550.TLMB) → «похожее».
+  var LAT = { 'А': 'A', 'В': 'B', 'Е': 'E', 'К': 'K', 'М': 'M', 'Н': 'H', 'О': 'O', 'Р': 'P', 'С': 'C', 'Т': 'T', 'Х': 'X', 'У': 'Y' };
+  var COLOR = /^(ONS|ONI|NI|OG|SEIW|R?9005|R?9006|R73[67]|TGR|OBI)$/;
+  function artParts(src) {
+    var t = String(src == null ? '' : src).toUpperCase().replace(/[АВЕКМНОРСТХУ]/g, function (c) { return LAT[c]; }).replace(/ /g, ' ').trim();
+    if (!t || !/\d/.test(t)) return null;
+    var toks = t.split(/\s+/), head = toks[0], color = '';
+    toks.slice(1).forEach(function (x) { x = x.replace(/^[-.]+/, ''); if (!color && COLOR.test(x)) color = x.replace(/^R(?=900)/, ''); });
+    var mc = /^(.*\d.*?)-(OG|ONS|ONI|NI|SEIW)$/.exec(head); if (mc) { head = mc[1]; color = color || mc[2]; }
+    var mv = /\((\d+)\)$/.exec(head), variant = mv ? mv[1] : ''; head = head.replace(/\(\d+\)$/, '');
+    var key = head.replace(/[^A-Z0-9]/g, '');
+    if (key.length < 4 || !/\d/.test(key)) return null;
+    return { key: key, color: color, variant: variant };
+  }
+  function matchArt(r, register) {
+    var a = artParts(r.art); if (!a) return null;
+    var nm = String(r.name || '');
+    if (!a.color) { if (/оникс/i.test(nm)) a.color = 'ONS'; else if (/никел/i.test(nm) && !/черн/i.test(nm)) a.color = 'NI'; }
+    var exact = [], similar = [], why = {};
+    register.forEach(function (p) {
+      if (p.type === 'rail' || !(p.qty == null || p.qty > 0)) return;
+      (p.arts && p.arts.length ? p.arts : [p.art]).forEach(function (k) {
+        var b = artParts(k); if (!b) return; var hit = '';
+        if (b.key === a.key) {
+          if (a.variant && b.variant && a.variant !== b.variant) hit = 'вариант в заявке (' + a.variant + '), на полке (' + b.variant + ')';
+          else if (a.color && b.color && a.color !== b.color) hit = 'цвет в заявке ' + a.color + ', на полке ' + b.color;
+          else hit = '=';
+        } else if ((a.key.indexOf(b.key) === 0 && /^[A-Z]{1,4}$/.test(a.key.slice(b.key.length))) ||
+                   (b.key.indexOf(a.key) === 0 && /^[A-Z]{1,4}$/.test(b.key.slice(a.key.length)))) hit = 'артикул почти тот же: на полке ' + k;
+        if (!hit) return;
+        if (hit === '=') { if (exact.indexOf(p) < 0) exact.push(p); }
+        else if (exact.indexOf(p) < 0 && similar.indexOf(p) < 0) { similar.push(p); why[p.id] = hit; }
+      });
+    });
+    similar = similar.filter(function (p) { return exact.indexOf(p) < 0; });
+    if (exact.length) {
+      var notes = [], ru = (r.norm && r.norm.unit) || '', pu = exact[0].unit || 'шт', mism = false;
+      if (ru && pu !== ru && !(/^(шт|компл)$/.test(ru) && /^(шт|компл)$/.test(pu))) { mism = true; notes.push('в заявке ' + ru + ', на складе считаем в ' + pu + ' — пересчитать'); }
+      var chk = exact.filter(function (p) { return p.checked; });
+      return { status: chk.length ? 'green' : 'orange', label: '', hits: chk.length ? chk : exact, notes: notes, byArt: true, unit: pu, unitMismatch: mism };
+    }
+    if (similar.length) {
+      var ws = []; similar.forEach(function (p) { if (ws.indexOf(why[p.id]) < 0) ws.push(why[p.id]); });
+      return { status: 'yellow', label: 'есть похожее', hits: similar, notes: ws, byArt: true, unit: similar[0].unit || 'шт' };
+    }
+    return null;
+  }
+
   // Остаток один на все строки всех заявок сессии: раньше каждая строка сверялась с полным
   // реестром, и 3 комплекта «хватало» и строке на 4, и строке на 1 (заявка 26-04-01-01, 24.09).
   // Порядок: заявки по порядку загрузки, строки по порядку. Выдача по позициям реестра: сначала проверенные.
+  // v15: кол-во пусто (null) = «есть, не считали» — строке выдаём сколько просит, остаток не уменьшаем.
   function matchAll(files, register, liveSeries) {
-    var left = {}; register.forEach(function (p) { left[p.id] = p.qty || 0; });
+    var left = {}; register.forEach(function (p) { left[p.id] = p.qty == null ? null : (p.qty || 0); });
     var taken = {};                                   // id позиции → [{order, n, q}]
     // два прохода: сначала точные совпадения (закрываются целиком, без докупки), потом «частично» (рельс + докупка)
     var queue = [[], []];
     files.forEach(function (f) { if (!f.ok) return; f.rows.forEach(function (r) {
-      var m = r.norm ? matchRow(r.norm, register, liveSeries) : null; r.match = m;
+      var m = r.norm ? matchRow(r.norm, register, liveSeries) : null;
+      if (r.norm && r.norm.type !== 'rail') {
+        var a = matchArt(r, register);
+        if (a) m = a; else if (artParts(r.art)) m = { status: 'grey', label: 'нет на складе', hits: [], notes: [], byArt: true };
+      }
+      r.match = m;
       if (!m || (m.status !== 'green' && m.status !== 'orange' && m.status !== 'part')) return;
       queue[m.status === 'part' ? 1 : 0].push({ f: f, r: r, m: m });
     }); });
     queue[0].concat(queue[1]).forEach(function (it) { var f = it.f, r = it.r, m = it.m; (function () {
-      var need = r.norm.qty || r.qty || 0, pool = m.hits.slice().sort(function (a, b) { return (b.checked ? 1 : 0) - (a.checked ? 1 : 0); });
-      var total = pool.reduce(function (a, p) { return a + (p.qty || 0); }, 0);
-      var avail = pool.reduce(function (a, p) { return a + Math.max(0, left[p.id]); }, 0);
+      var need = (r.norm && r.norm.qty) || r.qty || 0, pool = m.hits.slice().sort(function (a, b) { return (b.checked ? 1 : 0) - (a.checked ? 1 : 0); });
+      var unit = m.byArt ? (m.unit || 'шт') : 'компл', ord = f.order || f.fileName;
+      var known = pool.filter(function (p) { return left[p.id] != null && !m.unitMismatch; });
+      var unknown = pool.filter(function (p) { return left[p.id] == null || m.unitMismatch; });
+      var total = known.reduce(function (a, p) { return a + (p.qty || 0); }, 0);
+      var avail = known.reduce(function (a, p) { return a + Math.max(0, left[p.id]); }, 0);
       var want = need || avail, take = 0, before = [];
       pool.forEach(function (p) { (taken[p.id] || []).forEach(function (x) { before.push(x); }); });
-      pool.forEach(function (p) { var q = Math.min(Math.max(0, left[p.id]), want - take); if (q > 0) { left[p.id] -= q; take += q; (taken[p.id] = taken[p.id] || []).push({ order: f.order || f.fileName, n: r.n, q: q }); } });
-      m.take = take; m.total = total;
+      known.forEach(function (p) { var q = Math.min(Math.max(0, left[p.id]), want - take); if (q > 0) { left[p.id] -= q; take += q; (taken[p.id] = taken[p.id] || []).push({ order: ord, n: r.n, q: q }); } });
+      var uncounted = unknown.length > 0, counted = take;
+      if (uncounted && need > take) { (taken[unknown[0].id] = taken[unknown[0].id] || []).push({ order: ord, n: r.n, q: need - take }); take = need; }
+      m.take = take; m.total = total; m.uncounted = uncounted;
+      var stock = (total ? total + ' ' + unit : '') + (uncounted ? (total ? ' + ' : '') + 'есть, кол-во не считали' : '');
       var tail = (m.status === 'orange' || (m.status === 'part' && !pool.some(function (p) { return p.checked; }))) ? ', состояние не проверено' : '';
-      var ad = addonsFor(r.norm, r.name, r.art);
+      var ad = m.byArt ? { items: [], unsure: '' } : addonsFor(r.norm, r.name, r.art);
       if (m.status !== 'part') { ad.items = ad.items.filter(function (x) { return x.ifMissing; }); ad.unsure = ''; }
       m.addons = (ad.items.length || ad.unsure) ? ad : null;
-      if (!take) {
+      if (!take && !uncounted) {
         m.status = 'grey'; m.addons = null;
-        m.label = 'на полке ' + total + ' компл. — все уже отданы другим строкам';
+        m.label = total ? 'на полке ' + total + ' ' + unit + ' — все уже отданы другим строкам' : 'на полке 0';
+      } else if (!take) {
+        m.label = 'на полке: ' + stock + ' · в заявке нет количества' + tail;
       } else {
-        if (m.status === 'part') m.label = 'рельс с полки: ' + take + (need ? ' из ' + need : '') + ' компл.' + (need && take < need ? '; ещё ' + (need - take) + ' — комплектом ' + (r.art || '') + ' в закупку' : '') + tail + ' (на полке ' + total + ')';
-        else m.label = 'на полке ' + total + ' компл. · этой строке ' + take + (need ? (take >= need ? ' — хватает' : ' из ' + need + ', остальное в закупку') : '') + tail;
+        var guess = uncounted && take > counted ? ' — хватит ли, проверить на полке' : '';
+        if (m.status === 'part') m.label = 'рельс с полки: ' + take + (need ? ' из ' + need : '') + ' компл.' + (need && take < need ? '; ещё ' + (need - take) + ' — комплектом ' + (r.art || '') + ' в закупку' : '') + tail + ' (на полке ' + stock + ')' + guess;
+        else m.label = 'на полке ' + stock + ' · этой строке ' + take + (need ? (take >= need ? (guess || ' — хватает') : ' из ' + need + ', остальное в закупку') : '') + tail;
       }
       if (before.length) m.notes.push('из этого остатка уже взяли: ' + before.map(function (x) { return x.order + ' поз. ' + x.n + ' (' + x.q + ')'; }).join(', '));
     })(); });
@@ -862,813 +975,15 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     return pre + len + suf + (n.damper === 'BLUMOTION' && n.tipon ? ' + механизм TIP-ON BLUMOTION' : '');
   }
 
-  var api = { parseWorkbook: parseWorkbook, matchRow: matchRow, matchAll: matchAll, blumArticle: blumArticle, addonsFor: addonsFor, crossCheck: crossCheck, orderCode: orderCode };
+  var api = { parseWorkbook: parseWorkbook, matchRow: matchRow, matchAll: matchAll, matchArt: matchArt, artParts: artParts, blumArticle: blumArticle, addonsFor: addonsFor, crossCheck: crossCheck, orderCode: orderCode };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Core = api;
 })(typeof window !== 'undefined' ? window : this);
 
 </script>
 <script>
-var REGISTER_BUILTIN = [
-{
-"id": "R01",
-"type": "rail",
-"series": "TANDEM+ 550H",
-"len": 300,
-"damper": null,
-"tipon": true,
-"side": null,
-"qty": 1,
-"unit": "компл",
-"art": "550H3000B",
-"note": "частичное выдвижение — отдельная линейка, не опечатка",
-"price": 1789,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R02",
-"type": "rail",
-"series": "TANDEM+ 550H",
-"len": 500,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 1,
-"unit": "компл",
-"art": "550H5000B",
-"note": "частичное выдвижение",
-"price": 1690.05,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R03",
-"type": "rail",
-"series": "TANDEM+ 550H",
-"len": 550,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 3,
-"unit": "компл",
-"art": "550H5500B",
-"note": "частичное выдвижение",
-"price": 1846.42,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R04",
-"type": "rail",
-"series": "TANDEM 560H",
-"len": 250,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 3,
-"unit": "компл",
-"art": "560H2500B",
-"note": "",
-"price": 3510.57,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R05",
-"type": "rail",
-"series": "TANDEM 560H",
-"len": 250,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": "L",
-"qty": 2,
-"unit": "компл",
-"art": "560H2500B",
-"note": "лево/право отдельно не меняет базовый артикул",
-"price": 3510.57,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R06",
-"type": "rail",
-"series": "TANDEM 560H",
-"len": 250,
-"damper": "NONE",
-"tipon": false,
-"side": null,
-"qty": 3,
-"unit": "компл",
-"art": "560H2500C",
-"note": "боковины 17-19мм",
-"price": 2773.35,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R07",
-"type": "rail",
-"series": "TANDEM 560H",
-"len": 450,
-"damper": "NONE",
-"tipon": false,
-"side": null,
-"qty": 7,
-"unit": "компл",
-"art": "560H4500C",
-"note": "боковины 17-19мм",
-"price": 2426.55,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R08",
-"type": "rail",
-"series": "TANDEM 560F",
-"len": 250,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 23,
-"unit": "компл",
-"art": "560F2500B",
-"note": "",
-"price": 3204.68,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R09",
-"type": "rail",
-"series": "TANDEM 560F",
-"len": 270,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 6,
-"unit": "компл",
-"art": "560F2700B",
-"note": "",
-"price": 3204.68,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R10",
-"type": "rail",
-"series": "TANDEM 560F",
-"len": 300,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 3,
-"unit": "компл",
-"art": "560F3000B",
-"note": "",
-"price": 3204.68,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R11",
-"type": "rail",
-"series": "TANDEM 560F",
-"len": 300,
-"damper": null,
-"tipon": true,
-"side": null,
-"qty": 1,
-"unit": "компл",
-"art": "560F3000B",
-"note": "механизм Типона обычно докупается отдельно к обычной 560F...B",
-"price": 3532,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R12",
-"type": "rail",
-"series": "TANDEM 560F",
-"len": 300,
-"damper": "NONE",
-"tipon": false,
-"side": null,
-"qty": 3,
-"unit": "компл",
-"art": "560F3000C",
-"note": "боковины 17-19мм",
-"price": 2531.7,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R13",
-"type": "rail",
-"series": "TANDEM 560F",
-"len": 350,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 10,
-"unit": "компл",
-"art": "560F3500B",
-"note": "",
-"price": 3204.68,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R14",
-"type": "rail",
-"series": "TANDEM 560F",
-"len": 400,
-"damper": "NONE",
-"tipon": false,
-"side": null,
-"qty": 8,
-"unit": "компл",
-"art": "560F4000C",
-"note": "боковины 17-19мм",
-"price": 2587.62,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R15",
-"type": "rail",
-"series": "TANDEM 560F",
-"len": 450,
-"damper": "NONE",
-"tipon": false,
-"side": null,
-"qty": 1,
-"unit": "компл",
-"art": "560F4500C",
-"note": "боковины 17-19мм",
-"price": 2756.43,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R16",
-"type": "rail",
-"series": "TANDEM 560F",
-"len": 450,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 6,
-"unit": "компл",
-"art": "560F4500B",
-"note": "",
-"price": 3489.15,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R17",
-"type": "rail",
-"series": "TANDEM 560F",
-"len": 450,
-"damper": null,
-"tipon": true,
-"side": null,
-"qty": 2,
-"unit": "компл",
-"art": "560F4500B",
-"note": "механизм Типона обычно докупается отдельно",
-"price": 3612,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R18",
-"type": "rail",
-"series": "TANDEM 560F",
-"len": 500,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": "R",
-"qty": 2,
-"unit": "компл",
-"art": "560F5000B",
-"note": "",
-"price": 3363.02,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R19",
-"type": "rail",
-"series": "TANDEM 560F",
-"len": 550,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 2,
-"unit": "компл",
-"art": "560F5500B",
-"note": "",
-"price": 3198.8,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R20",
-"type": "rail",
-"series": "TANDEM 560F",
-"len": 550,
-"damper": null,
-"tipon": true,
-"side": null,
-"qty": 1,
-"unit": "компл",
-"art": "560F5500B",
-"note": "механизм Типона обычно докупается отдельно",
-"price": 5968.6,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R21",
-"type": "rail",
-"series": "TANDEM 560H",
-"len": 300,
-"damper": "NONE",
-"tipon": false,
-"side": null,
-"qty": 8,
-"unit": "компл",
-"art": "560H3000C",
-"note": "боковины 17-19мм",
-"price": 2773.35,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R22",
-"type": "rail",
-"series": "TANDEM 560H",
-"len": 400,
-"damper": "NONE",
-"tipon": false,
-"side": null,
-"qty": 13,
-"unit": "компл",
-"art": "560H4000C",
-"note": "боковины 17-19мм",
-"price": 2322.23,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R23",
-"type": "rail",
-"series": "TANDEM 560H",
-"len": 450,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 3,
-"unit": "компл",
-"art": "560H4500B",
-"note": "",
-"price": 3071.58,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R24",
-"type": "rail",
-"series": "TANDEM 560H",
-"len": 500,
-"damper": "NONE",
-"tipon": false,
-"side": null,
-"qty": 1,
-"unit": "компл",
-"art": "560H5000C",
-"note": "боковины 17-19мм",
-"price": 2533.32,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R25",
-"type": "rail",
-"series": "TANDEM 560H",
-"len": 500,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 1,
-"unit": "компл",
-"art": "560H5000B",
-"note": "",
-"price": 3206.73,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R26",
-"type": "rail",
-"series": "TANDEM 560H",
-"len": 550,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 1,
-"unit": "компл",
-"art": "560H5500B",
-"note": "",
-"price": 3265,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R27",
-"type": "rail",
-"series": "TANDEM 560H",
-"len": 550,
-"damper": "NONE",
-"tipon": false,
-"side": null,
-"qty": 1,
-"unit": "компл",
-"art": "560H5500C",
-"note": "боковины 17-19мм",
-"price": 2579.35,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R28",
-"type": "box",
-"series": "LEGRABOX",
-"len": 400,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 3,
-"unit": "компл",
-"art": "750.4001S",
-"note": "формат на листе '750.400.01-A2' не совпадает с реальным Blum ('750.4001S/M/T')",
-"price": 3147.43,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R29",
-"type": "box",
-"series": "LEGRABOX",
-"len": 400,
-"damper": null,
-"tipon": true,
-"side": null,
-"qty": 2,
-"unit": "компл",
-"art": "750.4001T",
-"note": "суффикс T подтверждён для Legrabox отдельно (750.5001T найден в вебе)",
-"price": 7170.59,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R30",
-"type": "box",
-"series": "LEGRABOX",
-"len": 450,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 4,
-"unit": "компл",
-"art": "750.4501S",
-"note": "",
-"price": 3183.33,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R31",
-"type": "box",
-"series": "LEGRABOX",
-"len": 500,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 13,
-"unit": "компл",
-"art": "750.5001S",
-"note": "",
-"price": 3293.86,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R32",
-"type": "rail",
-"series": "MOVENTO",
-"len": 250,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 1,
-"unit": "компл",
-"art": "760H2500S",
-"note": "",
-"price": 3770.2,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R33",
-"type": "rail",
-"series": "MOVENTO",
-"len": 400,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 4,
-"unit": "компл",
-"art": "760H4000S",
-"note": "",
-"price": 4360.68,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R34",
-"type": "rail",
-"series": "MOVENTO",
-"len": 400,
-"damper": null,
-"tipon": true,
-"side": null,
-"qty": 1,
-"unit": "компл",
-"art": "760H4000T",
-"note": "суффикс T подтверждён отдельно для Movento (760H3500T найден в закупках)",
-"price": 5495.17,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R35",
-"type": "rail",
-"series": "MOVENTO",
-"len": 450,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 3,
-"unit": "компл",
-"art": "760H4500S",
-"note": "",
-"price": 4173.32,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R36",
-"type": "rail",
-"series": "MOVENTO",
-"len": 500,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 3,
-"unit": "компл",
-"art": "760H5000S",
-"note": "",
-"price": 3990.71,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R37",
-"type": "rail",
-"series": "MOVENTO",
-"len": 550,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 1,
-"unit": "компл",
-"art": "760H5500S",
-"note": "",
-"price": 4347.47,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R38",
-"type": "box",
-"series": "TANDEMBOX",
-"len": 270,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 2,
-"unit": "компл",
-"art": "578.2701M",
-"note": "суффикс M подтверждён только для 500мм; для других длин — по аналогии",
-"price": 2323.8,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R39",
-"type": "box",
-"series": "TANDEMBOX",
-"len": 350,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 3,
-"unit": "компл",
-"art": "578.3501M",
-"note": "суффикс M — по аналогии, не подтверждено для этой длины",
-"price": 2411.49,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R40",
-"type": "box",
-"series": "TANDEMBOX",
-"len": 400,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 6,
-"unit": "компл",
-"art": "578.4001M",
-"note": "суффикс M — по аналогии, не подтверждено для этой длины",
-"price": 2225.02,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R41",
-"type": "box",
-"series": "TANDEMBOX",
-"len": 450,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 2,
-"unit": "компл",
-"art": "578.4501M",
-"note": "суффикс M — по аналогии, не подтверждено для этой длины",
-"price": 2370.76,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-},
-{
-"id": "R42",
-"type": "box",
-"series": "TANDEMBOX",
-"len": 500,
-"damper": "BLUMOTION",
-"tipon": false,
-"side": null,
-"qty": 24,
-"unit": "компл",
-"art": "578.5001M",
-"note": "подтверждено: 578.5001M найден в закупках",
-"price": 2322.82,
-"place": "зона направляющих (оцифровка 22.09)",
-"origin": "оцифровка 22.09.2026",
-"checked": false,
-"checkedAt": null,
-"opened": null
-}
-];
-var REGISTER_DATE = '22.09.2026';
+// v15: встроенного реестра нет — данные приходят из облака или из файла (Реестр → «Загрузить реестр»)
+var REGISTER_BUILTIN = [];
+
 </script>
 <script>
 (function(){
@@ -1751,8 +1066,10 @@ function mergeRemote(r){var need=false,k;
   var localIds={};Object.keys(photos).forEach(function(pos){photos[pos].forEach(function(p){localIds[p.id]=p;if(!p.url)need=true})});
   Object.keys(pm).forEach(function(id){if(DEL[id])return;if(!localIds[id]){var m=pm[id];var o={id:m.id,pos:m.pos,at:m.at,name:m.name||'',url:m.url,by:m.by||'',data:null};(photos[o.pos]=photos[o.pos]||[]).push(o);dbPut(o).catch(function(){})}});
   Object.keys(localIds).forEach(function(id){if(DEL[id]&&DEL[id]>=(new Date(localIds[id].at).getTime()||0)){dbDel(id);Object.keys(photos).forEach(function(k){photos[k]=photos[k].filter(function(p){return p.id!==id})})}});
+  var rs=r.shelves||{};Object.keys(rs).forEach(function(k){var a=rs[k],b=state.shelves[k];if(a&&(!b||(a.at||0)>(b.at||0)))state.shelves[k]=a});
+  Object.keys(state.shelves).forEach(function(k){if(!rs[k]||(rs[k].at||0)<(state.shelves[k].at||0))need=true});saveShelves();
   loadRegister();renderRegister();render();return need}
-function localPayload(){var ph=[];Object.keys(photos).forEach(function(k){photos[k].forEach(function(p){if(p.url)ph.push({id:p.id,pos:p.pos,at:p.at,name:p.name||'',url:p.url,by:p.by||''})})});return {items:state.register,photos:ph,del:DEL}}
+function localPayload(){var ph=[];Object.keys(photos).forEach(function(k){photos[k].forEach(function(p){if(p.url)ph.push({id:p.id,pos:p.pos,at:p.at,name:p.name||'',url:p.url,by:p.by||''})})});return {items:state.register,photos:ph,del:DEL,shelves:state.shelves}}
 function schedulePush(){_unsent++;if(!fbEnabled||!_firstSyncDone){setSync('','офлайн · '+_unsent+' не отправлено');return}if(_pushTimer)clearTimeout(_pushTimer);_pushTimer=setTimeout(pushNow,2000)}
 function flushPush(){if(_pushTimer){clearTimeout(_pushTimer);_pushTimer=null}if(_unsent>0&&fbEnabled&&_firstSyncDone)pushNow()}
 function pushNow(){if(!fbEnabled||!_firstSyncDone||_pushing)return;_pushing=true;setSync('warn','отправляю…');
@@ -1817,22 +1134,23 @@ function issuedHtml(p){var l=p.issued||[];if(!l.length)return '';var sum=0,last=
 
 // ── реестр ──
 function loadRegister(){
-  var saved=lsGet(LS_REG); var src='встроенный';
+  var saved=lsGet(LS_REG); var src='';
   if(saved){try{var o=JSON.parse(saved);if(o&&o.items&&o.items.length){state.register=o.items;state.regSource=o.source||'встроенный';src=(o.source||'встроенный')+', отметки от '+(o.loadedAt||'');}}catch(e){}}
   if(!state.register.length) state.register=JSON.parse(JSON.stringify(REGISTER_BUILTIN));
-  var rails=state.register.filter(function(p){return p.type==='rail'});
-  var q=rails.reduce(function(a,p){return a+(p.qty||0)},0), chk=rails.filter(function(p){return p.checked}).length;
-  $('regInfo').textContent='реестр: '+rails.length+' поз., '+q+' компл., проверено '+chk+' · '+src+' (оцифровка '+REGISTER_DATE+')';
+  var n=state.register.length,rails=state.register.filter(function(p){return p.type==='rail'});
+  var q=rails.reduce(function(a,p){return a+(p.qty||0)},0), chk=state.register.filter(function(p){return p.checked}).length, nq=state.register.filter(function(p){return p.qty==null}).length;
+  $('regInfo').textContent=n?'реестр: '+n+' поз. (направляющие Blum: '+rails.length+' поз., '+q+' компл.) · проверено '+chk+' · без счёта '+nq+(src?' · '+src:''):'реестр пуст — загрузите файл кнопкой «Загрузить реестр» или дождитесь загрузки из облака';
 }
-function saveRegister(){lsSet(LS_REG,JSON.stringify({loadedAt:new Date().toLocaleString('ru-RU'),source:state.regSource||'встроенный',items:state.register}));loadRegister();}
+function saveRegister(){lsSet(LS_REG,JSON.stringify({loadedAt:new Date().toLocaleString('ru-RU'),source:state.regSource||'это устройство',items:state.register}));loadRegister();}
 // ── рубрикатор реестра ──
-var CATS=[['rails','Направляющие'],['boxes','Ящики'],['baskets','Корзины'],['lifts','Подъёмники'],['hangers','Подвесы'],['shelf','Мензолодержатели'],['light','Свет, диоды'],['profiles','Профили'],['other','Прочее']];
+var CATS=[['rails','Направляющие'],['rails2','Направляющие Hettich, Häfele'],['boxes','Ящики'],['boxparts','Комплектующие ящиков'],['mech','Механизмы TIP-ON, замки'],['hinges','Петли'],['lifts','Подъёмники'],['covers','Накладки, заглушки'],['orga','ORGA-LINE'],['baskets','Корзины'],['hangers','Подвесы'],['shelf','Мензолодержатели'],['light','Свет, диоды'],['profiles','Профили'],['fasteners','Крепёж, метизы'],['other','Прочее']];
 var CAT_LABEL={};CATS.forEach(function(c){CAT_LABEL[c[0]]=c[1]});
 var SERIES_BY_CAT={rails:['MOVENTO','TANDEM 560H','TANDEM 560F','TANDEM+ 550H','TANDEM+ 550F'],boxes:['LEGRABOX','TANDEMBOX']};
 function catOf(p){return p.cat&&CAT_LABEL[p.cat]?p.cat:p.type==='rail'?'rails':p.type==='box'?'boxes':'other'}
 function isBlum(p){var c=catOf(p);return c==='rails'||c==='boxes'}
 function titleOf(p){return isBlum(p)?(p.series||'')+' · '+(p.len==null?'':p.len):(p.name||p.series||'позиция')+(p.size?' · '+p.size:'')}
 function unitOf(p){return p.unit||'компл'}
+function qtyTxt(p){return p.qty==null?'кол-во не считали':p.qty+' '+unitOf(p)}
 state.regCat=lsGet('sverka.regcat')||'all';state.regQ='';
 function regMatches(p,q){if(!q)return true;var hay=[titleOf(p),p.series,p.name,p.len,p.size,p.art,p.place,p.note,p.origin,CAT_LABEL[catOf(p)],isBlum(p)?Normalizer.featureLabel(p):''].join(' ').toLowerCase().replace(/ё/g,'е');
   return q.split(/\s+/).every(function(t){return !t||hay.indexOf(t)>=0})}
@@ -1851,12 +1169,12 @@ function renderRegister(){
   var h='<table class="reg"><tr class="th"><th>серия</th><th>длина</th><th>доводчик</th><th>TIP-ON</th><th>кол-во</th><th>артикул</th><th>место</th><th>упаковка</th><th>фото</th><th>проверено</th><th></th></tr>';
   if(!rows.length)h+='<tr class="none"><td colspan="11">'+(q?'Ничего не найдено по «'+esc(state.regQ.trim())+'»':'В разделе «'+esc(CAT_LABEL[state.regCat]||'')+'» пока пусто — «＋ Добавить»')+'</td></tr>';
   rows.forEach(function(p){var bl=isBlum(p);h+='<tr data-row="'+esc(p.id)+'"'+(p.type==='box'?' class="dim"':'')+'><td class="r-ser" data-l="серия">'+(bl?esc(p.series)+'<span class="om"> · '+esc(p.len)+'</span>':esc(p.name||p.series||'')+(p.size?'<span class="om"> · '+esc(p.size)+'</span>':''))+'</td><td class="r-len hm" data-l="длина">'+esc(bl?p.len:(p.size||''))+'</td><td class="r-dmp" data-l="доводчик">'+(bl?(p.damper==='BLUMOTION'?'да':p.damper==='NONE'?'нет':'?'):'')+'</td><td class="r-tip" data-l="TIP-ON">'+(p.tipon?'да':'')+'</td>'+
-    '<td class="r-qty" data-l="кол-во"><input type="number" inputmode="numeric" min="0" class="inl n" data-qty="'+esc(p.id)+'" value="'+esc(p.qty)+'"></td><td class="r-art" data-l="артикул">'+esc(p.art||'')+'</td>'+
-    '<td class="r-place" data-l="место"><input class="inl" data-place="'+esc(p.id)+'" placeholder="коробка / полка" value="'+esc(p.place||'')+'">'+(p.origin?'<div class="small">'+esc(p.origin)+'</div>':'')+'</td>'+
+    '<td class="r-qty" data-l="кол-во"><input type="number" inputmode="numeric" min="0" class="inl n" data-qty="'+esc(p.id)+'" value="'+esc(p.qty==null?'':p.qty)+'" placeholder="?"></td><td class="r-art" data-l="артикул">'+esc(p.art||'')+'</td>'+
+    '<td class="r-place" data-l="место"><input class="inl" data-place="'+esc(p.id)+'" placeholder="стеллаж-полка" value="'+esc(p.place||'')+'">'+(addrsOf(p.place).length?'<button class="go" data-goreg="'+esc(p.id)+'" title="показать на плане">🗺</button>':'')+(p.origin?'<div class="small">'+esc(p.origin)+'</div>':'')+'</td>'+
     '<td class="r-op" data-l="упаковка"><select class="sel" data-op="'+esc(p.id)+'"><option value=""'+(!p.opened?' selected':'')+'>?</option><option value="sealed"'+(p.opened==='sealed'?' selected':'')+'>целое</option><option value="opened"'+(p.opened==='opened'?' selected':'')+'>вскрыто</option></select></td>'+
     '<td class="r-ph" data-l="фото">'+thumbsHtml(p.id,false,true)+'</td><td class="r-chk" data-l="проверено"><input type="checkbox" data-id="'+esc(p.id)+'" '+(p.checked?'checked':'')+'>'+(p.checkedAt?'<div class="small">'+esc(p.checkedAt)+(p.checkedBy?' · '+esc(p.checkedBy):'')+'</div>':'')+'</td>'+
     '<td class="r-del" data-l=""><button class="edt" data-edit="'+esc(p.id)+'" title="изменить позицию">✎ изменить</button><button class="del" data-del="'+esc(p.id)+'">✕ удалить</button></td></tr>'});
-  h+='</table>';$('regTable').innerHTML=h;bindThumbs($('regTable'));renderIssInfo();syncRegBar();
+  h+='</table>';$('regTable').innerHTML=h;bindThumbs($('regTable'));renderIssInfo();syncRegBar();if($('shPlan').classList.contains('on')&&!state.planEdit)renderPlan();
   Array.prototype.forEach.call($('regTable').querySelectorAll('[data-op]'),function(sl){sl.addEventListener('change',function(){var p=state.register.filter(function(x){return x.id===sl.getAttribute('data-op')})[0];if(p){p.opened=sl.value||null;p.updatedAt=Date.now();saveRegister();schedulePush()}})});
   $('regMeta').textContent=state.register.length+' позиций'+(rows.length!==state.register.length?', показано '+rows.length:'')+'. Поля по Х5: серия · длина · доводчик · TIP-ON · кол-во · место · проверено.';
   Array.prototype.forEach.call($('regTable').querySelectorAll('input[type=checkbox]'),function(cb){cb.addEventListener('change',function(){
@@ -1864,10 +1182,11 @@ function renderRegister(){
     p.checked=cb.checked; p.checkedAt=cb.checked?new Date().toISOString().slice(0,10):null; p.checkedBy=cb.checked?who:''; p.updatedAt=Date.now(); saveRegister(); render(); schedulePush();})});
   var byId=function(id){return state.register.filter(function(x){return x.id===id})[0]};
   Array.prototype.forEach.call($('regTable').querySelectorAll('[data-qty]'),function(inp){inp.addEventListener('change',function(){var p=byId(inp.getAttribute('data-qty'));if(!p)return;
-    var v=inp.value.trim()===''?NaN:Number(inp.value);if(isNaN(v)||v<0){inp.value=p.qty;toast('Кол-во — число от 0');return}
-    p.qty=v;p.updatedAt=Date.now();saveRegister();render();schedulePush();toast('Кол-во: '+titleOf(p)+' → '+v)})});
+    var v=inp.value.trim()===''?null:Number(inp.value);if(v!==null&&(isNaN(v)||v<0)){inp.value=p.qty==null?'':p.qty;toast('Кол-во — число от 0 или пусто (не считали)');return}
+    p.qty=v;p.updatedAt=Date.now();saveRegister();render();schedulePush();toast('Кол-во: '+titleOf(p)+' → '+(v==null?'не считали':v))})});
   Array.prototype.forEach.call($('regTable').querySelectorAll('[data-place]'),function(inp){inp.addEventListener('change',function(){var p=byId(inp.getAttribute('data-place'));if(!p)return;
-    p.place=inp.value.trim();p.updatedAt=Date.now();saveRegister();render();schedulePush();toast('Место сохранено')})});
+    p.place=inp.value.trim();delete p.placeSrc;if(addrsOf(p.place).length)p.placeType='addr';p.updatedAt=Date.now();saveRegister();render();schedulePush();toast('Место сохранено')})});
+  Array.prototype.forEach.call($('regTable').querySelectorAll('[data-goreg]'),function(bt){bt.addEventListener('click',function(){var p=byId(bt.getAttribute('data-goreg'));if(p)goPlace(p.place)})});
   Array.prototype.forEach.call($('regTable').querySelectorAll('[data-edit]'),function(b){b.addEventListener('click',function(){openEdit(b.getAttribute('data-edit'))})});
   Array.prototype.forEach.call($('regTable').querySelectorAll('[data-del]'),function(b){b.addEventListener('click',function(){var p=byId(b.getAttribute('data-del'));if(!p)return;
     if(!confirm('Удалить '+titleOf(p)+' ('+p.qty+' '+unitOf(p)+')? Фото тоже удалятся.'))return;
@@ -1892,7 +1211,8 @@ function openEdit(id){var p=state.register.filter(function(x){return x.id===id})
   $('aName').value=p.name||(!bl?p.series||'':'');$('aSize').value=p.size||'';
   $('aQty').value=p.qty==null?'':p.qty;$('aArt').value=p.art||'';$('aNote').value=p.note||'';
   var pl=p.place||'',pt=p.placeType;
-  if(pt==='box'&&pl.indexOf('коробка ')===0){$('aPlT').value='box';$('aPl').value=pl.slice(8)}
+  if(pt==='addr'){$('aPlT').value='addr';$('aPl').value=pl}
+  else if(pt==='box'&&pl.indexOf('коробка ')===0){$('aPlT').value='box';$('aPl').value=pl.slice(8)}
   else if(pt==='zone'&&pl.indexOf('зона типов, ')===0){$('aPlT').value='zone';$('aPl').value=pl.slice(12)}
   else{$('aPlT').value='free';$('aPl').value=pl}
   setSel('aOrg',p.origin||'неизвестно');$('aOp').value=p.opened||'';
@@ -1908,15 +1228,15 @@ function addPosition(){
   var cat=$('aCat').value,bl=cat==='rails'||cat==='boxes',len=null,name='';
   if(bl){len=parseInt($('aLen').value,10);if(!(len>=200&&len<=800)){$('aHint').textContent='длина 200–800 мм';$('aLen').focus();return}}
   else{name=$('aName').value.trim();if(!name){$('aHint').textContent='впишите наименование';$('aName').focus();return}}
-  var qty=$('aQty').value.trim()===''?1:Number($('aQty').value);if(isNaN(qty)||qty<0){$('aHint').textContent='кол-во — число от 0';$('aQty').focus();return}
+  var qty=$('aQty').value.trim()===''?null:Number($('aQty').value);if(qty!==null&&(isNaN(qty)||qty<0)){$('aHint').textContent='кол-во — число от 0 или пусто';$('aQty').focus();return}
   var ser=bl?$('aSer').value:'',plT=$('aPlT').value,pl=$('aPl').value.trim();
-  var place=plT==='box'?'коробка '+pl:plT==='zone'?'зона типов, '+pl:pl;
+  var place=plT==='box'?'коробка '+pl:plT==='zone'?'зона типов, '+pl:pl;if(plT==='addr')place=pl;
   if(state.editId){var e=state.register.filter(function(x){return x.id===state.editId})[0];state.editId=null;
     if(!e){$('shAdd').classList.remove('on');toast('Позиция уже удалена');return}
     // id, фото, «проверено», следы списаний и кто добавил — не трогаем
     e.cat=cat;e.type=cat==='rails'?'rail':cat==='boxes'?'box':cat;e.series=ser;e.len=len;e.damper=bl?($('aDmp').value||null):null;e.tipon=bl&&$('aTip').value==='1';
     if(bl){delete e.name;delete e.size}else{e.name=name;e.size=$('aSize').value.trim()}
-    e.qty=qty;e.unit=bl?'компл':'шт';e.art=$('aArt').value.trim();e.note=$('aNote').value.trim();e.place=place;e.placeType=plT;e.origin=$('aOrg').value;e.opened=$('aOp').value||null;
+    e.qty=qty;e.unit=bl?'компл':'шт';e.art=$('aArt').value.trim();e.note=$('aNote').value.trim();if(e.place!==place)delete e.placeSrc;e.place=place;e.placeType=plT;e.origin=$('aOrg').value;e.opened=$('aOp').value||null;
     e.editedBy=who;e.editedAt=new Date().toISOString().slice(0,10);e.updatedAt=Date.now();
     saveRegister();['aLen','aArt','aNote','aName','aSize','aPl'].forEach(function(id){$(id).value=''});$('aQty').value='1';$('aHint').textContent='';
     $('shAdd').classList.remove('on');state.regQ='';$('regQ').value='';if(state.regCat!=='all'&&state.regCat!==cat){state.regCat=cat;lsSet('sverka.regcat',cat)}
@@ -1934,7 +1254,11 @@ function addPosition(){
 }
 function importRegisterFile(file){
   var rd=new FileReader();
-  if(/\.json$/i.test(file.name)){rd.onload=function(){try{var o=JSON.parse(rd.result);var items=o.items||o;if(!Array.isArray(items))throw 0;items.forEach(function(it){it.updatedAt=Date.now()});state.register=items;state.regSource='файл '+file.name;saveRegister();schedulePush();
+  if(/\.json$/i.test(file.name)){rd.onload=function(){var o0;try{o0=JSON.parse(rd.result)}catch(e){toast('Не смог прочитать json');return}
+      if(o0&&o0.format==='sklad-sverka/import'){importPack(o0,file.name);return}
+      var n0=(Array.isArray(o0&&o0.items)?o0.items:Array.isArray(o0)?o0:[]).length;
+      if(!confirm('Это полная копия реестра: она заменит весь реестр ('+n0+' поз.). Продолжить?'))return;
+      try{var o=o0;var items=o.items||o;if(!Array.isArray(items))throw 0;items.forEach(function(it){it.updatedAt=Date.now()});state.register=items;state.regSource='файл '+file.name;saveRegister();schedulePush();
       var ph=o.photos||[];var chain=Promise.resolve();ph.forEach(function(p){if(p&&p.id&&p.pos&&p.data)chain=chain.then(function(){return dbPut(p)})});chain.then(loadPhotos).then(function(){renderRegister();render();toast('Реестр загружен: '+items.length+' поз.'+(ph.length?', фото: '+ph.length:''))})}catch(e){toast('Не смог прочитать json')}};rd.readAsText(file);}
   else{rd.onload=function(){try{var wb=XLSX.read(rd.result,{type:'array'});var ws=wb.Sheets[wb.SheetNames[0]];var rows=XLSX.utils.sheet_to_json(ws,{defval:null});var items=[];
       rows.forEach(function(r,i){var ser=r['Серия']||r['series'],len=r['Длина, мм']||r['Длина']||r['len'],pr=String(r['Признак (с листа)']||r['Признак']||r['damper']||''),q=r['Кол-во, шт']||r['Кол-во']||r['qty'];
@@ -1942,7 +1266,135 @@ function importRegisterFile(file){
         var s2=smap[ser]||ser; items.push({id:'U'+(i+1),type:(/LEGRA|TANDEMBOX/.test(s2)?'box':'rail'),series:s2,len:parseInt(len,10),damper:(/без/i.test(pr)?'NONE':/довод|BLUMOTION/i.test(pr)?'BLUMOTION':null),tipon:/типон|tip/i.test(pr),qty:parseInt(q,10)||0,unit:'компл',art:r['Артикул Blum (выведен по формуле)']||r['Артикул']||r['art']||'',place:r['Место']||r['place']||'',checked:/да|yes|true|1/i.test(String(r['Проверено']||r['checked']||'')),origin:'файл '+file.name})});
       if(!items.length)throw 0; items.forEach(function(it){it.updatedAt=Date.now()});state.register=items;state.regSource='файл '+file.name;saveRegister();schedulePush();renderRegister();render();toast('Реестр загружен: '+items.length+' поз.')}catch(e){toast('Не смог прочитать xlsx реестра')}};rd.readAsArrayBuffer(file);}
 }
-function exportRegister(){var ph=[];Object.keys(photos).forEach(function(k){photos[k].forEach(function(p){ph.push(p)})});var blob=new Blob([JSON.stringify({loadedAt:new Date().toISOString(),source:state.regSource||'встроенный',items:state.register,photos:ph},null,1)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='реестр_направляющие_'+new Date().toISOString().slice(0,10)+'.json';a.click();}
+// Пакет «sklad-sverka/import»: добавляет новые позиции и дописывает место в уже заведённые.
+// У заведённых не трогаем кол-во, «проверено», фото, списания и место, которое правили руками.
+var OLD_PLACE=/^зона направляющих/;
+function artKeyOf(p){var b=Core.artParts((p.arts&&p.arts[0])||p.art);return b?b.key+'|'+(b.color||'')+'|'+(b.variant||''):''}
+function importPack(o,fname){
+  if(!Array.isArray(o.items)){toast('В файле нет списка позиций');return}
+  var byId={},byArt={},now=Date.now(),today=new Date().toISOString().slice(0,10),add=0,upd=0,same=0,del=0,kept=0;
+  state.register.forEach(function(p){byId[p.id]=p;if(p.type!=='rail'){var k=artKeyOf(p);if(k&&!byArt[catOf(p)+'#'+k])byArt[catOf(p)+'#'+k]=p}});
+  o.items.forEach(function(it){if(!it||!it.id)return;
+    if(DEL[it.id]){del++;return}
+    var ex=byId[it.id];
+    if(!ex&&it.type!=='rail'){var k=artKeyOf(it);if(k)ex=byArt[catOf(it)+'#'+k]}   // эту позицию уже завели руками
+    if(ex){var ch=false;
+      if(it.place&&it.place!==ex.place){if(!ex.place||OLD_PLACE.test(ex.place)||ex.placeSrc==='import'){ex.place=it.place;ex.placeType=it.placeType||'addr';ex.placeSrc='import';ch=true}else kept++}
+      ['art','name','size','price','cat','arts'].forEach(function(f){if(it[f]!=null&&it[f]!==''&&(ex[f]==null||ex[f]==='')){ex[f]=it[f];ch=true}});
+      if(it.note&&it.note!==ex.note&&(!ex.note||it.note.indexOf(ex.note)===0)){ex.note=it.note;ch=true}
+      if(ex.qty==null&&it.qty!=null&&!(ex.issued&&ex.issued.length)){ex.qty=it.qty;ch=true}
+      if(ch){ex.updatedAt=now;upd++}else same++;return}
+    var p=JSON.parse(JSON.stringify(it));p.checked=false;p.checkedAt=null;p.placeSrc='import';p.addedBy=who||'';p.addedAt=today;p.importedFrom=(o.date||'')+' '+fname;p.updatedAt=now;
+    state.register.push(p);byId[p.id]=p;add++});
+  var sh=o.shelves&&o.shelves.notes,shA=0,shU=0;
+  if(sh&&typeof sh==='object')Object.keys(sh).forEach(function(k){var cur=state.shelves[k];if(!cur||!cur.t){state.shelves[k]={t:sh[k],at:now,by:o.shelves.source||'файл',src:'import'};shA++}else if(cur.src==='import'&&cur.t!==sh[k]){cur.t=sh[k];cur.at=now;shU++}});
+  if(shA||shU)saveShelves();
+  state.regSource='файл '+fname;saveRegister();renderRegister();render();schedulePush();
+  var msg='Загружено из «'+fname+'»: новых '+add+', дополнено '+upd+', без изменений '+same+(shA||shU?', заметок к полкам: новых '+shA+', обновлено '+shU:'')+(kept?', место правили руками — не тронуто: '+kept:'')+(del?', удалённые раньше — пропущено: '+del:'');
+  $('regMeta').textContent=msg;toast('Новых '+add+', дополнено '+upd+(fbEnabled?' — отправляю в облако':' — отправлю, когда будет сеть'));
+}
+function exportRegister(){var ph=[];Object.keys(photos).forEach(function(k){photos[k].forEach(function(p){ph.push(p)})});var blob=new Blob([JSON.stringify({loadedAt:new Date().toISOString(),source:state.regSource||'это устройство',items:state.register,photos:ph},null,1)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='реестр_склад_'+new Date().toISOString().slice(0,10)+'.json';a.click();}
+
+
+// ═══ ПЛАН СКЛАДА (v16): схема из «Адресного плана», на полках — позиции реестра по месту «стеллаж-полка» + заметка к полке ═══
+// [стеллаж, x, y, w, h, зона, полок, что на нём]
+var RACKS=[[1,26,185,22,195,'long',5,'длинномер, условно 5 полок'],
+ [2,34.0,22,93.6,48,'order',5,'места хранения под заказы'],[3,127.6,22,93.6,48,'order',5,'места хранения под заказы'],[4,221.1,22,93.6,48,'order',5,'места хранения под заказы'],
+ [5,314.7,22,93.6,48,'order',5,'места хранения под заказы'],[6,408.3,22,93.6,48,'order',5,'места хранения под заказы'],[7,501.9,22,93.6,48,'order',5,'места хранения под заказы'],[8,595.4,22,93.6,48,'order',5,'места хранения под заказы'],
+ [9,748,20,44,58,'bin',5,'кюветы с метизами, кейсы инструмента'],[10,748,78,44,60,'bin',5,'кюветы, петли, инструмент'],[11,748,138,44,60,'bin',5,'кюветы, петли, инструмент'],
+ [12,748,198,44,60,'bin',5,'кюветы, петли, инструмент'],[13,748,258,44,62,'bin',5,'кюветы, механизмы, инструмент'],[14,748,320,44,66,'bin',5,'кюветы с метизами'],
+ [15,650,412,100,58,'cons',5,'метизы, расходники, фрезы (секции шкафов)'],[16,543,412,107,58,'cons',5,'метизы, расходники, фрезы'],[17,416,412,127,58,'cons',5,'метизы, расходники, фрезы'],[18,312,412,104,58,'cons',8,'метизы, расходники, фрезы'],
+ [20,163,133,43,78,'empty',5,'пустые коробки, корзины сверху'],[21,206,133,43,78,'mix',5,'направляющие по типам и места под заказ'],[19,163,211,43,80,'empty',5,'пустые коробки, корзины сверху'],[22,206,211,43,80,'mix',5,'направляющие по типам и места под заказ'],
+ [25,326,133,38,72,'rail',5,'направляющие по типам'],[26,364,133,38,72,'bin',5,'комплектующие ящиков'],[24,326,205,38,80,'rail',5,'направляющие по типам'],[27,364,205,38,80,'bin',5,'накладки, комплектующие ящиков'],
+ [23,326,285,76,26,'bin',5,'торцевой: механизмы TIP-ON, AVENTOS, мелочь'],
+ [30,495,136,52,80,'bin',5,'подъёмники, кюветы с крепежом'],[31,547,136,52,80,'bin',5,'кюветы, фронтхалтеры, ленты Arlight'],[29,495,216,52,88,'bin',5,'AVENTOS, крепёж, корзины'],[32,547,216,52,88,'bin',5,'подвесы, петли, ORGA-LINE, метизы'],[28,495,304,52,80,'cons',5,'рулоны, крепёж, профили, ATRV'],[33,547,304,52,80,'cons',5,'метизы, петли, ORGA-LINE']];
+var PZ={order:['Коробки заказов','--pz-order'],rail:['Направляющие по типам','--pz-rail'],mix:['Направляющие + заказы','--pz-mix'],bin:['Кюветы, комплектующие','--pz-bin'],cons:['Метизы, расходники','--pz-cons'],empty:['Пустые коробки','--pz-empty'],long:['Длинномер','--pz-long']};
+var RACK={};RACKS.forEach(function(r){RACK[r[0]]=r});
+var LS_SH='sverka.shelves.v1';
+state.shelves=(function(){try{var o=JSON.parse(lsGet(LS_SH)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return {}}})();   // «24-3» или «24» → {t, at, by, src}
+function saveShelves(){lsSet(LS_SH,JSON.stringify(state.shelves))}
+state.planRack=null;state.planShelf=null;state.planQ='';
+// адреса из поля «место»: «24-3», «25-1, 25-3», «24-3 или 24-2», «пол у 23». Коды заказов (25-39-02-04) не адрес.
+function addrsOf(place){var s=String(place||''),out=[],re=/(^|[^\d-])(\d{1,2})-(\d)(?![\d-])/g,m;
+  while((m=re.exec(s))){var a=(+m[2])+'-'+(+m[3]);if(RACK[+m[2]]&&out.indexOf(a)<0)out.push(a)}
+  if(!out.length){var r=/(?:\bу|стеллаж[аеу]?)\s+(\d{1,2})\b/.exec(s);if(r&&RACK[+r[1]])out.push(String(+r[1]))}
+  return out}
+function planIndex(){var by={},none=[];state.register.forEach(function(p){var a=addrsOf(p.place);if(!a.length){none.push(p);return}a.forEach(function(k){(by[k]=by[k]||[]).push(p)})});return {by:by,none:none}}
+function rackKeys(n){var r=RACK[n],k=[String(n)];for(var i=1;i<=r[6];i++)k.push(n+'-'+i);return k}
+function noteOf(k){var o=state.shelves[k];return o&&o.t?o.t:''}
+function planHay(p){return [titleOf(p),p.series,p.name,p.len,p.size,p.art,p.place,p.note,CAT_LABEL[catOf(p)]].join(' ').toLowerCase().replace(/ё/g,'е')}
+function planSearch(q){var ix=planIndex(),hits=[],racks={};if(!q)return {hits:hits,racks:racks};var ts=q.split(/\s+/).filter(Boolean);
+  Object.keys(ix.by).forEach(function(k){ix.by[k].forEach(function(p){var h=planHay(p);if(ts.every(function(t){return h.indexOf(t)>=0})){hits.push({k:k,p:p});racks[k.split('-')[0]]=1}})});
+  Object.keys(state.shelves).forEach(function(k){var t=noteOf(k).toLowerCase().replace(/ё/g,'е');if(t&&ts.every(function(x){return t.indexOf(x)>=0})&&RACK[+k.split('-')[0]]){hits.push({k:k,note:noteOf(k)});racks[k.split('-')[0]]=1}});
+  RACKS.forEach(function(r){if(ts.length===1&&String(r[0])===ts[0])racks[r[0]]=1});
+  hits.sort(function(a,b){var x=a.k.split('-'),y=b.k.split('-');return (+x[0]-+y[0])||((+x[1]||0)-(+y[1]||0))||(a.note?1:0)-(b.note?1:0)});
+  return {hits:hits,racks:racks}}
+function openPlan(rack,shelf){state.planRack=rack||null;state.planShelf=shelf||null;renderPlan();$('shPlan').classList.add('on');
+  if(shelf)setTimeout(function(){var el=$('plBody').querySelector('[data-shelf="'+rack+'-'+shelf+'"]');if(el){el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}},80)}
+function goPlace(place){var a=addrsOf(place)[0];if(!a){toast('У этой позиции нет адреса «стеллаж-полка»');return}var x=a.split('-');openPlan(+x[0],x[1]?+x[1]:null)}
+function planSvg(q){var sr=planSearch(q),ix=planIndex(),NS='http://www.w3.org/2000/svg';
+  var h='<svg class="plan" viewBox="0 0 820 520" role="img" aria-label="План склада"><rect x="20" y="10" width="790" height="470" fill="none" stroke="var(--pz-line)" stroke-width="3"/>'+
+    '<line x1="70" y1="480" x2="190" y2="480" stroke="var(--surf)" stroke-width="6"/><path d="M70 480 A120 120 0 0 1 190 480" fill="none" stroke="var(--t2)" stroke-dasharray="4 4"/><text x="104" y="505" font-size="15" style="fill:var(--t2)">дверь</text>'+
+    '<rect x="205" y="352" width="44" height="104" fill="none" stroke="var(--t2)" stroke-dasharray="3 3"/><text x="227" y="408" text-anchor="middle" font-size="12" style="fill:var(--t2)" transform="rotate(-90 227 408)">стол + комп.</text>';
+  RACKS.forEach(function(r){var n=r[0],x=r[1],y=r[2],w=r[3],hh=r[4],cnt=0;rackKeys(n).forEach(function(k){cnt+=(ix.by[k]||[]).length});
+    var cls='rk'+(q?(sr.racks[n]?' hit':' dim'):''),fs=Math.min(20,Math.max(13,Math.min(w,hh)*.42));
+    h+='<g class="'+cls+'" data-rack="'+n+'" tabindex="0" role="button" aria-label="Стеллаж '+n+(cnt?', позиций '+cnt:'')+'"><rect class="b" x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="3" style="fill:var('+PZ[r[5]][1]+')"/>'+
+      '<text class="num" x="'+(x+w/2)+'" y="'+(y+hh/2+6)+'" text-anchor="middle" font-size="'+fs+'">'+n+'</text>'+
+      (cnt?'<g class="cnt"><circle cx="'+(x+w-8)+'" cy="'+(y+9)+'" r="8.5"/><text x="'+(x+w-8)+'" y="'+(y+13)+'" text-anchor="middle">'+(cnt>99?'99':cnt)+'</text></g>':'')+'<title>Стеллаж '+n+' · '+esc(r[7])+(cnt?' · позиций реестра: '+cnt:'')+'</title></g>'});
+  return {svg:h+'</svg>',sr:sr,ix:ix}}
+function itemRow(p){return '<div class="pit'+(p.checked?' chk':'')+'"><div class="pt"><b>'+esc(stockKey(p))+'</b>'+(function(){var t=[p.art&&p.art!==stockKey(p)?p.art:'',p.note].filter(Boolean).join(' · ');return t?'<span class="small">'+esc(t.slice(0,140))+'</span>':''})()+'</div>'+
+  '<div class="pc"><input type="number" inputmode="numeric" min="0" class="inl n" data-pqty="'+esc(p.id)+'" value="'+esc(p.qty==null?'':p.qty)+'" placeholder="?" title="кол-во; пусто — не считали"><span class="small">'+esc(unitOf(p))+'</span>'+
+  '<input class="inl pl" data-pplace="'+esc(p.id)+'" value="'+esc(p.place||'')+'" title="место; впишите другую полку — позиция переедет">'+(p.checked?'<span class="small" title="проверено">✓</span>':'')+
+  '<button class="edt" data-pedit="'+esc(p.id)+'" title="изменить позицию">✎</button></div></div>'}
+function noteBlock(k,edit){var t=noteOf(k),o=state.shelves[k];
+  if(edit)return '<div class="plnote"><textarea data-ntext="'+esc(k)+'" placeholder="что лежит на полке — своими словами">'+esc(t)+'</textarea><div class="plnav"><button class="primary" data-nsave="'+esc(k)+'">Сохранить заметку</button><button data-ncancel="1">Отмена</button></div></div>';
+  return t?'<div class="plnote">'+esc(t)+(o&&o.by?' <span class="small">· '+esc(o.src==='import'?o.by:(o.by+(o.at?' '+new Date(o.at).toLocaleDateString('ru-RU'):'')))+'</span>':'')+'</div>':''}
+function renderPlan(){var b=$('plBody');if(!b)return;var ix=planIndex(),h='';
+  if(state.planRack==='none'){
+    $('plTitle').textContent='Без адреса';
+    h+='<div class="plnav"><button data-pback="1">← План</button><span class="small">Впишите место «стеллаж-полка» (например 24-3) — позиция встанет на план.</span></div>';
+    h+=ix.none.length?ix.none.map(itemRow).join(''):'<div class="small">Все позиции реестра с адресом.</div>';
+  }else if(state.planRack){var n=state.planRack,r=RACK[n];
+    $('plTitle').textContent='Стеллаж '+n;
+    h+='<div class="plnav"><button data-pback="1">← План</button>'+(RACK[n-1]?'<button data-prack="'+(n-1)+'">‹ '+(n-1)+'</button>':'')+(RACK[n+1]?'<button data-prack="'+(n+1)+'">'+(n+1)+' ›</button>':'')+'</div>';
+    h+='<div class="plzone">'+esc(PZ[r[5]][0])+' · '+esc(r[7])+' · полки снизу вверх, верхняя — '+r[6]+'</div>';
+    var rk=String(n),rit=ix.by[rk]||[];
+    if(rit.length||noteOf(rk)||state.planEdit===rk){h+='<div class="plshelf" data-shelf="'+n+'"><div class="plsh-h"><span class="a">'+n+'-?</span><span class="n">точная полка не известна</span><button data-nedit="'+rk+'">✎ заметка</button></div>'+noteBlock(rk,state.planEdit===rk)+rit.map(itemRow).join('')+'</div>'}
+    for(var i=r[6];i>=1;i--){var k=n+'-'+i,it=ix.by[k]||[],nt=noteOf(k);
+      h+='<div class="plshelf" data-shelf="'+k+'"><div class="plsh-h"><span class="a">'+k+'</span><span class="n">'+(it.length?'позиций: '+it.length:'')+'</span><button data-padd="'+k+'">＋ на полку</button><button data-nedit="'+k+'">✎ заметка</button></div>'+
+        noteBlock(k,state.planEdit===k)+it.map(itemRow).join('')+(!it.length&&!nt&&state.planEdit!==k?'<div class="small">'+(r[5]==='order'&&n>5?'на фото 25.09 не снято':'пусто или не описано')+'</div>':'')+'</div>'}
+  }else{
+    $('plTitle').textContent='План склада';
+    var P=planSvg(state.planQ.trim().toLowerCase().replace(/ё/g,'е')),placed=state.register.length-ix.none.length;
+    h+='<div class="small">На плане '+placed+' поз. реестра'+(ix.none.length?' · <a href="#" data-pnone="1">без адреса: '+ix.none.length+'</a>':'')+'. Нажмите на стеллаж — полки, позиции и заметки; там же «＋ на полку» и перенос.</div>';
+    h+='<div style="margin-top:8px"><input type="search" id="plQ" placeholder="Найти на складе: артикул, название, код заказа…" autocomplete="off" enterkeyhint="search" value="'+esc(state.planQ)+'"></div>';
+    h+='<div class="plbox">'+P.svg+'</div><div class="pllegend">'+Object.keys(PZ).map(function(z){return '<span><i style="background:var('+PZ[z][1]+')"></i>'+PZ[z][0]+'</span>'}).join('')+'<span><i style="background:var(--acc);border-color:var(--acc);border-radius:50%;width:10px"></i>позиций реестра</span></div>'+
+      '<div class="plracks"><span class="small">Стеллаж:</span>'+RACKS.slice().sort(function(a,b){return a[0]-b[0]}).map(function(r){return '<button data-prack="'+r[0]+'"'+(state.planQ.trim()&&!P.sr.racks[r[0]]?' class="dim"':'')+'>'+r[0]+'</button>'}).join('')+'</div>';
+    if(state.planQ.trim()){var hs=P.sr.hits;
+      h+='<div class="plhits">'+(hs.length?hs.slice(0,80).map(function(x){return '<div class="plhit" data-pgo="'+esc(x.k)+'"><span class="a">'+esc(x.k.indexOf('-')<0?x.k+'-?':x.k)+'</span><span>'+(x.p?'<b>'+esc(stockKey(x.p))+'</b> · '+esc(qtyTxt(x.p))+(x.p.art?' · '+esc(x.p.art):''):'<span class="small">заметка:</span> '+esc(x.note.slice(0,160)))+'</span></div>'}).join('')+(hs.length>80?'<div class="small">и ещё '+(hs.length-80)+'…</div>':''):'<div class="small">Ничего не найдено</div>')+'</div>'}
+  }
+  b.innerHTML=h;bindPlan()}
+function bindPlan(){var b=$('plBody'),byId=function(id){return state.register.filter(function(x){return x.id===id})[0]};
+  var q=$('plQ');if(q){q.addEventListener('input',function(){state.planQ=q.value;var pos=q.selectionStart;renderPlan();var q2=$('plQ');q2.focus();try{q2.setSelectionRange(pos,pos)}catch(e){}})}
+  Array.prototype.forEach.call(b.querySelectorAll('[data-rack]'),function(g){var go=function(){var hs=state.planQ.trim()?planSearch(state.planQ.trim().toLowerCase().replace(/ё/g,'е')).hits.filter(function(x){return x.k.split('-')[0]===g.getAttribute('data-rack')&&x.k.indexOf('-')>0}):[];openPlan(+g.getAttribute('data-rack'),hs.length?+hs[0].k.split('-')[1]:null)};
+    g.addEventListener('click',go);g.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}})});
+  Array.prototype.forEach.call(b.querySelectorAll('[data-pgo]'),function(el){el.addEventListener('click',function(){var x=el.getAttribute('data-pgo').split('-');openPlan(+x[0],x[1]?+x[1]:null)})});
+  Array.prototype.forEach.call(b.querySelectorAll('[data-pback]'),function(el){el.addEventListener('click',function(){state.planRack=null;state.planEdit=null;renderPlan();$('shPlan').querySelector('.panel').scrollTop=0})});
+  Array.prototype.forEach.call(b.querySelectorAll('[data-prack]'),function(el){el.addEventListener('click',function(){state.planEdit=null;openPlan(+el.getAttribute('data-prack'));$('shPlan').querySelector('.panel').scrollTop=0})});
+  Array.prototype.forEach.call(b.querySelectorAll('[data-pnone]'),function(el){el.addEventListener('click',function(e){e.preventDefault();state.planRack='none';renderPlan()})});
+  Array.prototype.forEach.call(b.querySelectorAll('[data-padd]'),function(el){el.addEventListener('click',function(){openAdd();$('aPlT').value='addr';$('aPl').value=el.getAttribute('data-padd');$('aTitle').textContent='Новая позиция на полку '+el.getAttribute('data-padd')})});
+  Array.prototype.forEach.call(b.querySelectorAll('[data-pedit]'),function(el){el.addEventListener('click',function(){openEdit(el.getAttribute('data-pedit'))})});
+  Array.prototype.forEach.call(b.querySelectorAll('[data-pqty]'),function(inp){inp.addEventListener('change',function(){var p=byId(inp.getAttribute('data-pqty'));if(!p)return;
+    var v=inp.value.trim()===''?null:Number(inp.value);if(v!==null&&(isNaN(v)||v<0)){inp.value=p.qty==null?'':p.qty;toast('Кол-во — число от 0 или пусто (не считали)');return}
+    p.qty=v;p.updatedAt=Date.now();saveRegister();render();schedulePush();toast('Кол-во: '+titleOf(p)+' → '+(v==null?'не считали':v))})});
+  Array.prototype.forEach.call(b.querySelectorAll('[data-pplace]'),function(inp){inp.addEventListener('change',function(){var p=byId(inp.getAttribute('data-pplace'));if(!p)return;var v=inp.value.trim(),was=p.place;
+    p.place=v;p.placeType=addrsOf(v).length?'addr':'free';delete p.placeSrc;p.editedBy=who;p.editedAt=new Date().toISOString().slice(0,10);p.updatedAt=Date.now();saveRegister();render();schedulePush();renderPlan();
+    toast((addrsOf(v).length?'Перенесено: ':'Место: ')+titleOf(p)+' → '+(v||'без места'))})});
+  Array.prototype.forEach.call(b.querySelectorAll('[data-nedit]'),function(el){el.addEventListener('click',function(){state.planEdit=el.getAttribute('data-nedit');renderPlan();var ta=$('plBody').querySelector('[data-ntext]');if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)}})});
+  Array.prototype.forEach.call(b.querySelectorAll('[data-ncancel]'),function(el){el.addEventListener('click',function(){state.planEdit=null;renderPlan()})});
+  Array.prototype.forEach.call(b.querySelectorAll('[data-nsave]'),function(el){el.addEventListener('click',function(){var k=el.getAttribute('data-nsave'),ta=$('plBody').querySelector('[data-ntext]');
+    state.shelves[k]={t:ta?ta.value.trim():'',at:Date.now(),by:who||''};saveShelves();state.planEdit=null;schedulePush();renderPlan();toast('Заметка к полке '+k+' сохранена')})});
+}
 
 // ── настройки ──
 function loadSettings(){var l=lsGet(LS_LIVE);if(l){try{state.live=JSON.parse(l)}catch(e){}}state.showAll=lsGet(LS_SHOWALL)==='1';var th=lsGet(LS_THEME);if(th)document.documentElement.setAttribute('data-theme',th);
@@ -1960,7 +1412,7 @@ function handleFiles(list){
 
 // ── рендер ──
 // подсказки к цветным меткам (при наведении) и ссылки в примечании вместо длинного адреса
-var PILL_TIP={part:'частично: направляющая со склада, остальное из комплекта докупить по списку',green:'есть: проверено, можно выдавать',orange:'есть, не проверено: лежит, состояние не проверяли',yellow:'похожее: серия и длина те, признак другой или не ясен',grey:'нет: в закупку',skip:'вне пилота: ящики, замки, чужие бренды'};
+var PILL_TIP={part:'частично: направляющая со склада, остальное из комплекта докупить по списку',green:'есть: проверено, можно выдавать',orange:'есть, не проверено: лежит, состояние не проверяли',yellow:'похожее: серия и длина те, признак другой · или артикул тот, цвет/вариант другой',grey:'нет: в закупку',skip:'не сверяется: строка без артикула'};
 function noteHtml(t){var out='',last=0,re=/https?:\/\/[^\s]+/g,m;while((m=re.exec(t))){out+=esc(t.slice(last,m.index))+'<a href="'+esc(m[0])+'" target="_blank" rel="noopener" title="'+esc(m[0])+'">🔗 ссылка</a>';last=m.index+m[0].length}
   var rest=t.slice(last);return out+esc(rest.length>60?rest.slice(0,60)+'…':rest)}
 function render(){
@@ -1972,7 +1424,7 @@ function render(){
     if(!f.ok){h+='<div class="empty">'+esc(f.error)+'</div></div>';return;}
     var rows=f.rows;
     var shown=rows.filter(function(r){return state.showAll||(r.match&&r.match.status!=='skip')||(r.norm&&r.norm.type==='rail')});
-    if(!shown.length){h+='<div class="empty">Направляющих Blum в заявке нет'+(state.showAll?'':' — включите «показывать все строки» в настройках, чтобы увидеть остальное')+'</div></div>';return;}
+    if(!shown.length){h+='<div class="empty">В заявке нет строк с артикулом'+(state.showAll?'':' — включите «показывать все строки» в настройках, чтобы увидеть остальное')+'</div></div>';return;}
     h+='<table class="res"><tr class="th"><th class="chk">выдать</th><th>статус</th><th>позиция из заявки</th><th>нужно</th><th>на складе</th><th class="hidecol">в заявке</th></tr>';
     shown.forEach(function(r){
       if(r.isHeader){h+='<tr class="hdr"><td></td><td colspan="5">'+esc(r.name||r.art)+'</td></tr>';return;}
@@ -1981,8 +1433,8 @@ function render(){
       if(!can&&state.picked[pid])state.picked[pid]=false;
       h+='<tr'+(st==='skip'||!m?' class="dim"':'')+'>';
       h+='<td class="chk">'+(can?'<input type="checkbox" data-pick="'+pid+'" '+(state.picked[pid]?'checked':'')+(st==='yellow'?' title="выдать похожее — если на полке подходит"':'')+'>':'')+'</td>';
-      h+='<td class="c-st">'+(m?'<span class="pill '+st+'" title="'+esc(PILL_TIP[st]||'')+'">'+esc(st==='part'?'частично':st==='green'?'есть':st==='orange'?'есть, не проверено':st==='yellow'?(m.label==='не разобрал'?'не разобрал':'похожее'):st==='grey'?'нет':'вне пилота')+'</span>'+(actHint(m)?'<div class="act-hint">'+esc(actHint(m))+'</div>':''):'')+'</td>';
-      h+='<td class="c-pos">'+(n&&n.key?'<div class="key">'+esc(n.key)+'</div>':'<div>'+esc(n&&n.type!=='other'?n.type:'')+'</div>')+'<div class="raw">'+esc(r.art)+(r.art&&r.name?' · ':'')+esc(r.name)+'</div>';
+      h+='<td class="c-st">'+(m?'<span class="pill '+st+'" title="'+esc(PILL_TIP[st]||'')+'">'+esc(st==='part'?'частично':st==='green'?'есть':st==='orange'?'есть, не проверено':st==='yellow'?(m.label==='не разобрал'?'не разобрал':'похожее'):st==='grey'?'нет':'не сверяется')+'</span>'+(actHint(m)?'<div class="act-hint">'+esc(actHint(m))+'</div>':''):'')+'</td>';
+      h+='<td class="c-pos">'+(n&&n.key?'<div class="key">'+esc(n.key)+'</div>':m&&m.byArt&&r.art?'<div class="key">'+esc(r.art)+'</div>':'')+'<div class="raw">'+esc(r.art)+(r.art&&r.name?' · ':'')+esc(r.name)+'</div>';
       var ba=n&&n.type==='rail'?Core.blumArticle(n):'';
       if(ba&&ba.split(' ')[0].replace('?','')!==String(r.art||'').toUpperCase().replace(/\s+/g,'').slice(0,ba.split(' ')[0].replace('?','').length)){var bp=ba.split(' + ');h+='<div class="blum">артикул Blum (как на коробке): <b>'+esc(bp[0])+'</b>'+(bp[1]?' + '+esc(bp[1]):'')+'</div>';}
       if(r.incomplete)h+='<div class="note bad">в заявке нет единицы и количества</div>';
@@ -1990,13 +1442,14 @@ function render(){
       if(m&&m.notes.length)h+='<div class="note">'+esc(m.notes.join(' · '))+'</div>';
       h+='</td>';
       h+='<td class="c-need">'+(r.qty!=null?esc(r.qty)+' '+esc(n&&n.unit?n.unit:r.unit):'<span class="note bad">—</span>')+'</td>';
-      h+='<td class="c-stk">'+(m&&m.status!=='skip'?'<div>'+esc(m.label)+'</div>'+addonsHtml(m,r)+m.hits.map(function(p){return '<div class="hitline" data-reg="'+esc(p.id)+'" title="открыть в реестре"><div class="key">'+esc(stockKey(p))+'</div><div class="hit"><b>'+p.qty+' '+esc(unitOf(p))+'</b> · '+esc(p.art||'')+' · '+esc(p.place||'')+(p.checked?' · проверено '+esc(p.checkedAt||'')+(p.checkedBy?' ('+esc(p.checkedBy)+')':''):'')+(p.opened==='opened'?' · вскрыто':p.opened==='sealed'?' · целое':'')+' · <span class="go">в реестре →</span></div>'+issuedHtml(p)+'</div>'+((photos[p.id]||[]).length?thumbsHtml(p.id,true,false):'')}).join(''):'')+'</td>';
+      h+='<td class="c-stk">'+(m&&m.status!=='skip'?'<div>'+esc(m.label)+'</div>'+addonsHtml(m,r)+m.hits.map(function(p){return '<div class="hitline" data-reg="'+esc(p.id)+'" title="открыть в реестре"><div class="key">'+esc(stockKey(p))+'</div><div class="hit">'+(p.place?'<b class="addr"'+(addrsOf(p.place).length?' data-go="'+esc(p.place)+'" title="показать на плане"':'')+'>📍 '+esc(p.place)+'</b> · ':'')+'<b>'+esc(qtyTxt(p))+'</b> · '+esc(p.art||'')+(p.checked?' · проверено '+esc(p.checkedAt||'')+(p.checkedBy?' ('+esc(p.checkedBy)+')':''):'')+(p.opened==='opened'?' · вскрыто':p.opened==='sealed'?' · целое':'')+' · <span class="go">в реестре →</span></div>'+issuedHtml(p)+'</div>'+((photos[p.id]||[]).length?thumbsHtml(p.id,true,false):'')}).join(''):'')+'</td>';
       h+='<td class="hidecol raw">'+esc(r.unit)+(r.supplier?' · '+esc(r.supplier):'')+(r.note?' · '+noteHtml(r.note):'')+'</td></tr>';
     });
     h+='</table></div>';
   });
   out.innerHTML=h;bindThumbs(out);
   Array.prototype.forEach.call(out.querySelectorAll('[data-rm]'),function(b){b.addEventListener('click',function(){state.files=state.files.filter(function(f){return f.id!==b.getAttribute('data-rm')});Core.crossCheck(state.files);render()})});
+  Array.prototype.forEach.call(out.querySelectorAll('[data-go]'),function(el){el.addEventListener('click',function(e){e.stopPropagation();goPlace(el.getAttribute('data-go'))})});
   Array.prototype.forEach.call(out.querySelectorAll('[data-reg]'),function(el){el.addEventListener('click',function(){openRegItem(el.getAttribute('data-reg'))})});
   Array.prototype.forEach.call(out.querySelectorAll('[data-pick]'),function(cb){cb.addEventListener('change',function(){state.picked[cb.getAttribute('data-pick')]=cb.checked;updateBar()})});
   updateBar();
@@ -2027,7 +1480,7 @@ function summaryText(){
       if(m.addons&&m.addons.unsure)lines.push([x.f.order,'Подобрать',m.addons.unsure,'','',''].join('\t'));
       if(r.qty&&r.qty>q)lines.push([x.f.order,'Купить комплектом',r.name,(r.qty-q)+' компл',r.art,''].join('\t'));
       return;}
-    lines.push([x.f.order,sim?'Выдать похожее — сверить признак':'Выдать со склада',r.norm.key,((m.take!=null?m.take:r.qty)!=null?(m.take!=null?m.take:r.qty)+' '+(r.norm.unit||'компл'):''),art,box].join('\t'));
+    lines.push([x.f.order,sim?'Выдать похожее — сверить признак':'Выдать со склада',r.norm.key||r.art||r.name,((m.take!=null?m.take:r.qty)!=null?(m.take!=null?m.take:r.qty)+' '+(r.norm.unit||(m.byArt?(m.unit||'шт'):'компл')):''),art,box].join('\t'));
     (m.addons?m.addons.items:[]).forEach(function(a){lines.push([x.f.order,'Докупить, если в коробке нет',a.name,(a.per*(m.take||0))+' '+(a.unit||'шт'),a.art,''].join('\t'))});});
   return 'заказ\tстатус\tпозиция\tкол-во\tартикул\tгде лежит\n'+lines.join('\n');
 }
@@ -2043,9 +1496,10 @@ $('file').addEventListener('change',function(e){handleFiles(e.target.files);e.ta
 $('btnLegend').addEventListener('click',function(){var on=$('legend').classList.toggle('on');$('btnLegend').setAttribute('aria-expanded',on?'true':'false')});
 $('btnClear').addEventListener('click',function(){state.files=[];state.picked={};render()});
 $('btnSet').addEventListener('click',function(){$('shSet').classList.add('on')});$('shSetClose').addEventListener('click',function(){$('shSet').classList.remove('on')});
-$('btnReg').addEventListener('click',function(){renderRegister();$('shReg').classList.add('on');syncRegBar()});$('shRegClose').addEventListener('click',function(){$('shReg').classList.remove('on')});
+$('btnReg').addEventListener('click',function(){renderRegister();$('shReg').classList.add('on');syncRegBar()});
+$('btnPlan').addEventListener('click',function(){openPlan(state.planRack==='none'?null:state.planRack)});$('shRegClose').addEventListener('click',function(){$('shReg').classList.remove('on')});
 Array.prototype.forEach.call(document.querySelectorAll('[data-close]'),function(b){b.addEventListener('click',function(){$(b.getAttribute('data-close')).classList.remove('on')})});
-[$('shSet'),$('shReg'),$('shWho'),$('shAdd')].forEach(function(sh){sh.addEventListener('click',function(e){if(e.target===sh)sh.classList.remove('on')})});
+[$('shSet'),$('shReg'),$('shPlan'),$('shWho'),$('shAdd')].forEach(function(sh){sh.addEventListener('click',function(e){if(e.target===sh)sh.classList.remove('on')})});
 $('showAll').addEventListener('change',function(e){state.showAll=e.target.checked;lsSet(LS_SHOWALL,state.showAll?'1':'0');render()});
 $('darkMode').addEventListener('change',function(e){var th=e.target.checked?'dark':'light';document.documentElement.setAttribute('data-theme',th);lsSet(LS_THEME,th)});
 $('regFile').addEventListener('change',function(e){if(e.target.files[0])importRegisterFile(e.target.files[0]);e.target.value=''});
@@ -2053,11 +1507,11 @@ $('regExport').addEventListener('click',exportRegister);$('aAdd').addEventListen
 $('btnAdd').addEventListener('click',openAdd);$('aCat').addEventListener('change',setAddCat);
 $('regQ').addEventListener('input',function(){state.regQ=$('regQ').value;renderRegister()});
 window.addEventListener('resize',syncRegBar);
-$('regReset').addEventListener('click',function(){try{localStorage.removeItem(LS_REG)}catch(e){}state.register=[];state.regSource='встроенный';loadRegister();renderRegister();render();toast('Встроенный реестр восстановлен')});
+$('regReset').addEventListener('click',function(){if(!fbEnabled){toast('Облако недоступно — нет сети');return}if(!confirm('Заменить реестр на этом устройстве тем, что лежит в облаке?'))return;forcePull()});
 $('btnCopy').addEventListener('click',copySummary);
 $('btnWho').addEventListener('click',askWho);$('whoOk').addEventListener('click',confirmWho);$('whoPin').addEventListener('keydown',function(e){if(e.key==='Enter')confirmWho()});$('shWhoClose').addEventListener('click',function(){$('shWho').classList.remove('on')});$('btnPull').addEventListener('click',forcePull);$('btnPush').addEventListener('click',function(){_unsent++;pushNow()});
 document.addEventListener('keydown',function(e){if(e.key!=='Escape'&&e.key!=='Esc')return;if($('viewer').classList.contains('on')){$('viewer').classList.remove('on');return}
-  var open=['shWho','shAdd','shReg','shSet'].filter(function(id){return $(id).classList.contains('on')});if(open.length){$(open[0]).classList.remove('on');e.preventDefault()}});
+  var open=['shWho','shAdd','shPlan','shReg','shSet'].filter(function(id){return $(id).classList.contains('on')});if(open.length){$(open[0]).classList.remove('on');e.preventDefault()}});
 $('viewerClose').addEventListener('click',function(){$('viewer').classList.remove('on')});
 $('viewer').addEventListener('click',function(e){if(e.target===$('viewer'))$('viewer').classList.remove('on')});
 $('viewerDel').addEventListener('click',function(){var id=$('viewer')._id;if(!id)return;if(!confirm('Удалить это фото?'))return;dbDel(id).then(function(){Object.keys(photos).forEach(function(k){photos[k]=photos[k].filter(function(p){return p.id!==id})});$('viewer').classList.remove('on');renderRegister();render();fbDeletePhoto(id);toast('Фото удалено')})});
