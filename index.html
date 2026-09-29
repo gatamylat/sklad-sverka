@@ -263,6 +263,8 @@ svg.plan .rk.hit rect.b{stroke:var(--acc);stroke-width:3.5}
 svg.plan text{font-family:var(--ff);fill:var(--t1)}
 svg.plan .num{font-weight:700}
 svg.plan .cnt circle{fill:var(--acc)}svg.plan .cnt text{fill:#fff;font-size:11px;font-weight:700}
+#shSet .sth{font-weight:600;font-size:14px;margin:16px 0 4px}#shSet .sth:first-of-type{margin-top:4px}
+.pit .pph{flex-basis:100%;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.pit .pph .thumbs{margin:0}.shph .thumbs{margin:4px 0}a.lnk{font-size:12.5px;color:var(--acc);text-decoration:none;white-space:nowrap}.hit a.lnk{font-size:inherit}
 .plracks{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:8px 0 2px}.plracks button{min-width:36px;min-height:32px;padding:3px 6px;font-variant-numeric:tabular-nums}.plracks button.dim{opacity:.35}.plracks .small{margin-right:4px}
 .pllegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--t2);margin:6px 0 2px}
 .pllegend i{display:inline-block;width:14px;height:10px;border:1px solid var(--pz-line);border-radius:2px;margin-right:5px;vertical-align:-1px}
@@ -301,7 +303,7 @@ table.reg button.go{border:none;background:none;padding:2px 4px;min-height:0;cur
 <body>
 <div class="wrap">
   <header>
-    <div class="hl"><div class="ttl"><h1>Сверка склад ↔ заявка</h1><button class="who" id="btnWho" title="Кто работает — нажмите, чтобы сменить">—</button></div><div class="sub">Фурнитура склада · адрес «стеллаж-полка» · работает без сети · v16</div></div>
+    <div class="hl"><div class="ttl"><h1>Сверка склад ↔ заявка</h1><button class="who" id="btnWho" title="Кто работает — нажмите, чтобы сменить">—</button></div><div class="sub">Фурнитура склада · адрес «стеллаж-полка» · работает без сети · v18</div></div>
     <div class="acts"><button class="btn-reg" id="btnPlan">🗺 План</button><button class="btn-reg" id="btnReg">📋 Реестр</button><button class="btn-ico" id="btnSet" title="Настройки" aria-label="Настройки">⚙️</button></div>
     <div class="status"><span class="dot" id="syncDot"></span><span id="syncInfo">локально</span></div>
   </header>
@@ -326,11 +328,17 @@ table.reg button.go{border:none;background:none;padding:2px 4px;min-height:0;cur
 
 <div class="sheet" id="shSet"><div class="panel"><button class="xclose" data-close="shSet" title="Закрыть (Esc)" aria-label="Закрыть">✕</button><div class="handle"></div>
   <h2>Настройки</h2>
-  <div class="small">Живые серии — что конструкторы ещё закладывают. Утверждает Кирпичев. Строки с серией вне списка получают пометку, но сверяются.</div>
+  <div class="sth">1. Живые серии направляющих</div>
+  <div class="small">Отметьте серии Blum, которые конструкторы сейчас закладывают в новые изделия. Если в заявке придёт неотмеченная серия, в строке появится пометка «не в списке живых — вопрос конструктору»: уточните у конструктора, не ошибка ли это. Со складом такая строка сверяется всё равно. Отметки хранятся на этом устройстве.</div>
   <div class="row" id="liveList"></div>
-  <div class="row"><label class="chip"><input type="checkbox" id="showAll"> показывать все строки заявки (и строки без артикула)</label></div>
-  <div class="row"><label class="chip"><input type="checkbox" id="darkMode"> тёмная тема</label></div>
+  <div class="sth">2. Что показывать в заявке</div>
+  <div class="small">Обычно на экране только строки с артикулом — их можно сверить со складом. Включите, чтобы видеть заявку целиком, со строками без артикула.</div>
+  <div class="row"><label class="chip"><input type="checkbox" id="showAll"> показывать все строки заявки</label></div>
+  <div class="sth">3. Облако</div>
+  <div class="small">Приложение само отправляет ваши правки и забирает чужие. Кнопки — на случай, если коллега не видит ваших изменений: нажмите «Отправить» у себя, а он — «Загрузить» у себя.</div>
   <div class="row"><button id="btnPull">Загрузить из облака ⬇️</button><button id="btnPush">Отправить в облако ☁️</button><span class="small" id="syncDetail"></span></div>
+  <div class="sth">4. Вид</div>
+  <div class="row"><label class="chip"><input type="checkbox" id="darkMode"> тёмная тема</label></div>
   <div class="row"><button id="shSetClose">Готово</button></div>
 </div></div>
 
@@ -372,9 +380,11 @@ table.reg button.go{border:none;background:none;padding:2px 4px;min-height:0;cur
     <label><span id="aQtyL">кол-во, компл.</span><input type="number" id="aQty" inputmode="numeric" min="0" value="1" placeholder="не считали"></label>
     <label>артикул<input type="text" id="aArt" placeholder="если виден" autocomplete="off"></label>
     <label class="wide">место<span class="place"><select id="aPlT"><option value="addr">стеллаж-полка</option><option value="box">коробка заказа</option><option value="zone">зона типов, полка</option><option value="free">как написано</option></select><input type="text" id="aPl" placeholder="например 24-3" autocomplete="off"></span></label>
-    <label>откуда пришло<select id="aOrg"><option>опись Якоби</option><option>зелёные заказы</option><option>оцифровка 22.09</option><option>фото 25.09</option><option>возврат со сборки</option><option>неизвестно</option></select></label>
+    <label>откуда пришло<select id="aOrg"><option>опись</option><option>зелёные заказы</option><option>оцифровка 22.09</option><option>фото 25.09</option><option>возврат со сборки</option><option>неизвестно</option></select></label>
     <label>упаковка<select id="aOp"><option value="">?</option><option value="sealed">целое</option><option value="opened">вскрыто</option></select></label>
     <label class="wide">примечание<input type="text" id="aNote" autocomplete="off"></label>
+    <label class="wide">ссылка на фурнитуру<input type="url" id="aUrl" inputmode="url" placeholder="https://… — сайт поставщика, каталог" autocomplete="off"></label>
+    <label class="wide">фото<input type="file" id="aPh" accept="image/*" multiple></label>
     <div class="wide act"><button class="primary" id="aAdd">Добавить</button><button id="aCancel" data-close="shAdd">Отмена</button><span class="small" id="aHint"></span></div>
   </div>
 </div></div>
@@ -1015,7 +1025,7 @@ function shrink(file){return new Promise(function(res,rej){var img=new Image();v
 function addPhotos(pos,files){var list=Array.prototype.slice.call(files);if(!list.length)return;var chain=Promise.resolve();list.forEach(function(f){chain=chain.then(function(){return shrink(f).then(function(data){var o={id:pos+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),pos:pos,data:data,at:new Date().toISOString(),name:f.name,by:who,url:null};return dbPut(o).then(function(){(photos[pos]=photos[pos]||[]).push(o)})})})});
   chain.then(function(){toast('Фото добавлено: '+list.length);renderRegister();render();schedulePush()}).catch(function(e){toast('Не удалось сохранить фото: '+(e.message||e))})}
 function openViewer(id){var ph=null;Object.keys(photos).forEach(function(k){photos[k].forEach(function(p){if(p.id===id)ph=p})});if(!ph)return;var pos=state.register.filter(function(x){return x.id===ph.pos})[0];
-  $('viewerImg').src=ph.data||'';$('viewerCap').textContent=(pos?pos.series+' · '+pos.len+' · '+(pos.art||''):'')+' · '+ph.at.slice(0,10)+(ph.by?' · '+ph.by:'')+(ph.name?' · '+ph.name:'');$('viewer').classList.add('on');$('viewer')._id=id}
+  $('viewerImg').src=ph.data||'';$('viewerCap').textContent=(pos?titleOf(pos)+(pos.art?' · '+pos.art:''):String(ph.pos).indexOf('shelf:')===0?'полка '+ph.pos.slice(6):'')+' · '+ph.at.slice(0,10)+(ph.by?' · '+ph.by:'')+(ph.name?' · '+ph.name:'');$('viewer').classList.add('on');$('viewer')._id=id}
 function thumbsHtml(pos,small,withAdd){var l=photos[pos]||[];var h='<div class="thumbs">'+l.map(function(p){return p.data?'<img class="thumb'+(small?' sm':'')+'" src="'+p.data+'" data-ph="'+p.id+'" alt="" loading="lazy">':'<span class="thumb'+(small?' sm':'')+'" title="фото в облаке, нет сети"></span>'}).join('');
   if(withAdd)h+='<label class="addph" title="добавить фото"><input type="file" accept="image/*" multiple capture="environment" data-addph="'+esc(pos)+'">+</label>';return h+'</div>'}
 function bindThumbs(root){Array.prototype.forEach.call(root.querySelectorAll('[data-ph]'),function(im){im.addEventListener('click',function(){openViewer(im.getAttribute('data-ph'))})});
@@ -1066,6 +1076,7 @@ function mergeRemote(r){var need=false,k;
   var localIds={};Object.keys(photos).forEach(function(pos){photos[pos].forEach(function(p){localIds[p.id]=p;if(!p.url)need=true})});
   Object.keys(pm).forEach(function(id){if(DEL[id])return;if(!localIds[id]){var m=pm[id];var o={id:m.id,pos:m.pos,at:m.at,name:m.name||'',url:m.url,by:m.by||'',data:null};(photos[o.pos]=photos[o.pos]||[]).push(o);dbPut(o).catch(function(){})}});
   Object.keys(localIds).forEach(function(id){if(DEL[id]&&DEL[id]>=(new Date(localIds[id].at).getTime()||0)){dbDel(id);Object.keys(photos).forEach(function(k){photos[k]=photos[k].filter(function(p){return p.id!==id})})}});
+  if(migrateNames())need=true;
   var rs=r.shelves||{};Object.keys(rs).forEach(function(k){var a=rs[k],b=state.shelves[k];if(a&&(!b||(a.at||0)>(b.at||0)))state.shelves[k]=a});
   Object.keys(state.shelves).forEach(function(k){if(!rs[k]||(rs[k].at||0)<(state.shelves[k].at||0))need=true});saveShelves();
   loadRegister();renderRegister();render();return need}
@@ -1143,16 +1154,24 @@ function loadRegister(){
 }
 function saveRegister(){lsSet(LS_REG,JSON.stringify({loadedAt:new Date().toLocaleString('ru-RU'),source:state.regSource||'это устройство',items:state.register}));loadRegister();}
 // ── рубрикатор реестра ──
-var CATS=[['rails','Направляющие'],['rails2','Направляющие Hettich, Häfele'],['boxes','Ящики'],['boxparts','Комплектующие ящиков'],['mech','Механизмы TIP-ON, замки'],['hinges','Петли'],['lifts','Подъёмники'],['covers','Накладки, заглушки'],['orga','ORGA-LINE'],['baskets','Корзины'],['hangers','Подвесы'],['shelf','Мензолодержатели'],['light','Свет, диоды'],['profiles','Профили'],['fasteners','Крепёж, метизы'],['other','Прочее']];
+var CATS=[['rails','Направляющие'],['rails2','Направляющие Hettich, Hafele'],['boxes','Ящики'],['boxparts','Комплектующие ящиков'],['mech','Механизмы TIP-ON, замки'],['hinges','Петли'],['lifts','Подъёмники'],['covers','Накладки, заглушки'],['orga','ORGA-LINE'],['baskets','Корзины'],['hangers','Подвесы'],['shelf','Мензолодержатели'],['light','Свет, диоды'],['profiles','Профили'],['fasteners','Крепёж, метизы'],['other','Прочее']];
 var CAT_LABEL={};CATS.forEach(function(c){CAT_LABEL[c[0]]=c[1]});
 var SERIES_BY_CAT={rails:['MOVENTO','TANDEM 560H','TANDEM 560F','TANDEM+ 550H','TANDEM+ 550F'],boxes:['LEGRABOX','TANDEMBOX']};
 function catOf(p){return p.cat&&CAT_LABEL[p.cat]?p.cat:p.type==='rail'?'rails':p.type==='box'?'boxes':'other'}
 function isBlum(p){var c=catOf(p);return c==='rails'||c==='boxes'}
 function titleOf(p){return isBlum(p)?(p.series||'')+' · '+(p.len==null?'':p.len):(p.name||p.series||'позиция')+(p.size?' · '+p.size:'')}
 function unitOf(p){return p.unit||'компл'}
+function normUrl(u){u=String(u||'').trim();if(!u)return '';if(!/^https?:\/\//i.test(u))u='https://'+u;return u}
+function urlHtml(p){return p&&p.url?'<a class="lnk" href="'+esc(p.url)+'" target="_blank" rel="noopener" title="'+esc(p.url)+'">🔗 ссылка</a>':''}
+function fold(t){return String(t==null?'':t).toLowerCase().replace(/ё/g,'е').replace(/[äàá]/g,'a').replace(/[öóò]/g,'o').replace(/[üúù]/g,'u').replace(/[éèë]/g,'e')}
+// 29.09: «Häfele»/«Kesseböhmer» в названиях → без умляутов, как пишут люди (поиск «hafele»)
+function deUmlaut(t){return String(t).replace(/Häfele/g,'Hafele').replace(/HÄFELE/g,'HAFELE').replace(/Kesseböhmer/g,'Kessebohmer')}
+function migrateNames(){var ch=0;state.register.forEach(function(p){['name','note','series'].forEach(function(f){if(p[f]&&/[äÄö]/.test(p[f])){var v=deUmlaut(p[f]);if(v!==p[f]){p[f]=v;p.updatedAt=Date.now();ch++}}})});
+  if(state.shelves)Object.keys(state.shelves).forEach(function(k){var o=state.shelves[k];if(o&&o.t&&/[äÄö]/.test(o.t)){var v=deUmlaut(o.t);if(v!==o.t){o.t=v;o.at=Date.now();ch++}}});
+  return ch}
 function qtyTxt(p){return p.qty==null?'кол-во не считали':p.qty+' '+unitOf(p)}
 state.regCat=lsGet('sverka.regcat')||'all';state.regQ='';
-function regMatches(p,q){if(!q)return true;var hay=[titleOf(p),p.series,p.name,p.len,p.size,p.art,p.place,p.note,p.origin,CAT_LABEL[catOf(p)],isBlum(p)?Normalizer.featureLabel(p):''].join(' ').toLowerCase().replace(/ё/g,'е');
+function regMatches(p,q){if(!q)return true;var hay=fold([titleOf(p),p.series,p.name,p.len,p.size,p.art,p.place,p.note,p.origin,CAT_LABEL[catOf(p)],isBlum(p)?Normalizer.featureLabel(p):''].join(' '));q=fold(q);
   return q.split(/\s+/).every(function(t){return !t||hay.indexOf(t)>=0})}
 function renderCats(){var cnt={all:state.register.length};state.register.forEach(function(p){var c=catOf(p);cnt[c]=(cnt[c]||0)+1});
   var h='<button data-cat="all"'+(state.regCat==='all'?' class="on"':'')+'>Все<span class="n">'+cnt.all+'</span></button>';
@@ -1170,7 +1189,7 @@ function renderRegister(){
   if(!rows.length)h+='<tr class="none"><td colspan="11">'+(q?'Ничего не найдено по «'+esc(state.regQ.trim())+'»':'В разделе «'+esc(CAT_LABEL[state.regCat]||'')+'» пока пусто — «＋ Добавить»')+'</td></tr>';
   rows.forEach(function(p){var bl=isBlum(p);h+='<tr data-row="'+esc(p.id)+'"'+(p.type==='box'?' class="dim"':'')+'><td class="r-ser" data-l="серия">'+(bl?esc(p.series)+'<span class="om"> · '+esc(p.len)+'</span>':esc(p.name||p.series||'')+(p.size?'<span class="om"> · '+esc(p.size)+'</span>':''))+'</td><td class="r-len hm" data-l="длина">'+esc(bl?p.len:(p.size||''))+'</td><td class="r-dmp" data-l="доводчик">'+(bl?(p.damper==='BLUMOTION'?'да':p.damper==='NONE'?'нет':'?'):'')+'</td><td class="r-tip" data-l="TIP-ON">'+(p.tipon?'да':'')+'</td>'+
     '<td class="r-qty" data-l="кол-во"><input type="number" inputmode="numeric" min="0" class="inl n" data-qty="'+esc(p.id)+'" value="'+esc(p.qty==null?'':p.qty)+'" placeholder="?"></td><td class="r-art" data-l="артикул">'+esc(p.art||'')+'</td>'+
-    '<td class="r-place" data-l="место"><input class="inl" data-place="'+esc(p.id)+'" placeholder="стеллаж-полка" value="'+esc(p.place||'')+'">'+(addrsOf(p.place).length?'<button class="go" data-goreg="'+esc(p.id)+'" title="показать на плане">🗺</button>':'')+(p.origin?'<div class="small">'+esc(p.origin)+'</div>':'')+'</td>'+
+    '<td class="r-place" data-l="место"><input class="inl" data-place="'+esc(p.id)+'" placeholder="стеллаж-полка" value="'+esc(p.place||'')+'">'+(addrsOf(p.place).length?'<button class="go" data-goreg="'+esc(p.id)+'" title="показать на плане">🗺</button>':'')+(p.origin?'<div class="small">'+esc(p.origin)+'</div>':'')+urlHtml(p)+'</td>'+
     '<td class="r-op" data-l="упаковка"><select class="sel" data-op="'+esc(p.id)+'"><option value=""'+(!p.opened?' selected':'')+'>?</option><option value="sealed"'+(p.opened==='sealed'?' selected':'')+'>целое</option><option value="opened"'+(p.opened==='opened'?' selected':'')+'>вскрыто</option></select></td>'+
     '<td class="r-ph" data-l="фото">'+thumbsHtml(p.id,false,true)+'</td><td class="r-chk" data-l="проверено"><input type="checkbox" data-id="'+esc(p.id)+'" '+(p.checked?'checked':'')+'>'+(p.checkedAt?'<div class="small">'+esc(p.checkedAt)+(p.checkedBy?' · '+esc(p.checkedBy):'')+'</div>':'')+'</td>'+
     '<td class="r-del" data-l=""><button class="edt" data-edit="'+esc(p.id)+'" title="изменить позицию">✎ изменить</button><button class="del" data-del="'+esc(p.id)+'">✕ удалить</button></td></tr>'});
@@ -1201,7 +1220,7 @@ function setAddCat(){var c=$('aCat').value,bl=c==='rails'||c==='boxes';
 function fillCats(){$('aCat').innerHTML=CATS.map(function(c){return '<option value="'+c[0]+'">'+c[1]+'</option>'}).join('')}
 function setSel(id,val){var el=$(id);if(val==null)val='';if(!Array.prototype.some.call(el.options,function(o){return o.value===String(val)})){var o=document.createElement('option');o.value=o.textContent=String(val);el.appendChild(o)}el.value=String(val)}
 function openAdd(){
-  if(state.editId){state.editId=null;['aLen','aArt','aNote','aName','aSize','aPl'].forEach(function(id){$(id).value=''});$('aQty').value='1'}   // после правки — чистая форма
+  if(state.editId){state.editId=null;['aLen','aArt','aNote','aName','aSize','aPl','aUrl'].forEach(function(id){$(id).value=''});$('aQty').value='1'}$('aPh').value='';   // после правки — чистая форма
   $('aTitle').textContent='Новая позиция в реестр';$('aAdd').textContent='Добавить';$('aMeta').textContent='';
   fillCats();$('aCat').value=state.regCat!=='all'&&CAT_LABEL[state.regCat]?state.regCat:'rails';setAddCat();$('shAdd').classList.add('on')}
 // правка любой позиции — встроенной (оцифровка) и добавленной людьми: та же форма, заполненная
@@ -1215,7 +1234,7 @@ function openEdit(id){var p=state.register.filter(function(x){return x.id===id})
   else if(pt==='box'&&pl.indexOf('коробка ')===0){$('aPlT').value='box';$('aPl').value=pl.slice(8)}
   else if(pt==='zone'&&pl.indexOf('зона типов, ')===0){$('aPlT').value='zone';$('aPl').value=pl.slice(12)}
   else{$('aPlT').value='free';$('aPl').value=pl}
-  setSel('aOrg',p.origin||'неизвестно');$('aOp').value=p.opened||'';
+  setSel('aOrg',p.origin||'неизвестно');$('aUrl').value=p.url||'';$('aPh').value='';$('aOp').value=p.opened||'';
   $('aTitle').textContent='Изменить позицию';$('aAdd').textContent='Сохранить';
   $('aMeta').textContent=(p.addedBy?'добавил '+p.addedBy+(p.addedAt?' '+p.addedAt:''):'встроенная'+(p.origin?' · '+p.origin:''))+(p.editedBy?' · изменил '+p.editedBy+' '+(p.editedAt||''):'');
   $('aHint').textContent='';$('shAdd').classList.add('on')}
@@ -1237,7 +1256,7 @@ function addPosition(){
     e.cat=cat;e.type=cat==='rails'?'rail':cat==='boxes'?'box':cat;e.series=ser;e.len=len;e.damper=bl?($('aDmp').value||null):null;e.tipon=bl&&$('aTip').value==='1';
     if(bl){delete e.name;delete e.size}else{e.name=name;e.size=$('aSize').value.trim()}
     e.qty=qty;e.unit=bl?'компл':'шт';e.art=$('aArt').value.trim();e.note=$('aNote').value.trim();if(e.place!==place)delete e.placeSrc;e.place=place;e.placeType=plT;e.origin=$('aOrg').value;e.opened=$('aOp').value||null;
-    e.editedBy=who;e.editedAt=new Date().toISOString().slice(0,10);e.updatedAt=Date.now();
+    e.url=normUrl($('aUrl').value);if(!e.url)delete e.url;e.editedBy=who;e.editedAt=new Date().toISOString().slice(0,10);e.updatedAt=Date.now();var phE=$('aPh').files;if(phE&&phE.length)addPhotos(e.id,phE);$('aPh').value='';$('aUrl').value='';
     saveRegister();['aLen','aArt','aNote','aName','aSize','aPl'].forEach(function(id){$(id).value=''});$('aQty').value='1';$('aHint').textContent='';
     $('shAdd').classList.remove('on');state.regQ='';$('regQ').value='';if(state.regCat!=='all'&&state.regCat!==cat){state.regCat=cat;lsSet('sverka.regcat',cat)}
     renderRegister();render();schedulePush();toast('Сохранено: '+titleOf(e));showRegItem(e.id);return}
@@ -1245,7 +1264,8 @@ function addPosition(){
     qty:qty,unit:bl?'компл':'шт',art:$('aArt').value.trim(),note:$('aNote').value.trim(),place:place,placeType:plT,origin:$('aOrg').value,opened:$('aOp').value||null,
     checked:false,checkedAt:null,addedBy:who,addedAt:new Date().toISOString().slice(0,10),updatedAt:Date.now()};
   if(!bl){p.name=name;p.size=$('aSize').value.trim()}
-  state.register.push(p);saveRegister();
+  var u0=normUrl($('aUrl').value);if(u0)p.url=u0;
+  state.register.push(p);saveRegister();var ph0=$('aPh').files;if(ph0&&ph0.length)addPhotos(p.id,ph0);$('aPh').value='';$('aUrl').value='';
   ['aLen','aArt','aNote','aName','aSize'].forEach(function(id){$(id).value=''});$('aQty').value='1';$('aHint').textContent='';
   $('shAdd').classList.remove('on');
   state.regQ='';$('regQ').value='';if(state.regCat!=='all'&&state.regCat!==cat){state.regCat=cat;lsSet('sverka.regcat',cat)}
@@ -1322,10 +1342,10 @@ function addrsOf(place){var s=String(place||''),out=[],re=/(^|[^\d-])(\d{1,2})-(
 function planIndex(){var by={},none=[];state.register.forEach(function(p){var a=addrsOf(p.place);if(!a.length){none.push(p);return}a.forEach(function(k){(by[k]=by[k]||[]).push(p)})});return {by:by,none:none}}
 function rackKeys(n){var r=RACK[n],k=[String(n)];for(var i=1;i<=r[6];i++)k.push(n+'-'+i);return k}
 function noteOf(k){var o=state.shelves[k];return o&&o.t?o.t:''}
-function planHay(p){return [titleOf(p),p.series,p.name,p.len,p.size,p.art,p.place,p.note,CAT_LABEL[catOf(p)]].join(' ').toLowerCase().replace(/ё/g,'е')}
+function planHay(p){return fold([titleOf(p),p.series,p.name,p.len,p.size,p.art,p.place,p.note,CAT_LABEL[catOf(p)]].join(' '))}
 function planSearch(q){var ix=planIndex(),hits=[],racks={};if(!q)return {hits:hits,racks:racks};var ts=q.split(/\s+/).filter(Boolean);
   Object.keys(ix.by).forEach(function(k){ix.by[k].forEach(function(p){var h=planHay(p);if(ts.every(function(t){return h.indexOf(t)>=0})){hits.push({k:k,p:p});racks[k.split('-')[0]]=1}})});
-  Object.keys(state.shelves).forEach(function(k){var t=noteOf(k).toLowerCase().replace(/ё/g,'е');if(t&&ts.every(function(x){return t.indexOf(x)>=0})&&RACK[+k.split('-')[0]]){hits.push({k:k,note:noteOf(k)});racks[k.split('-')[0]]=1}});
+  Object.keys(state.shelves).forEach(function(k){var t=fold(noteOf(k));if(t&&ts.every(function(x){return t.indexOf(x)>=0})&&RACK[+k.split('-')[0]]){hits.push({k:k,note:noteOf(k)});racks[k.split('-')[0]]=1}});
   RACKS.forEach(function(r){if(ts.length===1&&String(r[0])===ts[0])racks[r[0]]=1});
   hits.sort(function(a,b){var x=a.k.split('-'),y=b.k.split('-');return (+x[0]-+y[0])||((+x[1]||0)-(+y[1]||0))||(a.note?1:0)-(b.note?1:0)});
   return {hits:hits,racks:racks}}
@@ -1345,7 +1365,8 @@ function planSvg(q){var sr=planSearch(q),ix=planIndex(),NS='http://www.w3.org/20
 function itemRow(p){return '<div class="pit'+(p.checked?' chk':'')+'"><div class="pt"><b>'+esc(stockKey(p))+'</b>'+(function(){var t=[p.art&&p.art!==stockKey(p)?p.art:'',p.note].filter(Boolean).join(' · ');return t?'<span class="small">'+esc(t.slice(0,140))+'</span>':''})()+'</div>'+
   '<div class="pc"><input type="number" inputmode="numeric" min="0" class="inl n" data-pqty="'+esc(p.id)+'" value="'+esc(p.qty==null?'':p.qty)+'" placeholder="?" title="кол-во; пусто — не считали"><span class="small">'+esc(unitOf(p))+'</span>'+
   '<input class="inl pl" data-pplace="'+esc(p.id)+'" value="'+esc(p.place||'')+'" title="место; впишите другую полку — позиция переедет">'+(p.checked?'<span class="small" title="проверено">✓</span>':'')+
-  '<button class="edt" data-pedit="'+esc(p.id)+'" title="изменить позицию">✎</button></div></div>'}
+  '<button class="edt" data-pedit="'+esc(p.id)+'" title="изменить позицию">✎</button></div>'+
+  '<div class="pph">'+thumbsHtml(p.id,true,true)+urlHtml(p)+'</div></div>'}
 function noteBlock(k,edit){var t=noteOf(k),o=state.shelves[k];
   if(edit)return '<div class="plnote"><textarea data-ntext="'+esc(k)+'" placeholder="что лежит на полке — своими словами">'+esc(t)+'</textarea><div class="plnav"><button class="primary" data-nsave="'+esc(k)+'">Сохранить заметку</button><button data-ncancel="1">Отмена</button></div></div>';
   return t?'<div class="plnote">'+esc(t)+(o&&o.by?' <span class="small">· '+esc(o.src==='import'?o.by:(o.by+(o.at?' '+new Date(o.at).toLocaleDateString('ru-RU'):'')))+'</span>':'')+'</div>':''}
@@ -1362,10 +1383,10 @@ function renderPlan(){var b=$('plBody');if(!b)return;var ix=planIndex(),h='';
     if(rit.length||noteOf(rk)||state.planEdit===rk){h+='<div class="plshelf" data-shelf="'+n+'"><div class="plsh-h"><span class="a">'+n+'-?</span><span class="n">точная полка не известна</span><button data-nedit="'+rk+'">✎ заметка</button></div>'+noteBlock(rk,state.planEdit===rk)+rit.map(itemRow).join('')+'</div>'}
     for(var i=r[6];i>=1;i--){var k=n+'-'+i,it=ix.by[k]||[],nt=noteOf(k);
       h+='<div class="plshelf" data-shelf="'+k+'"><div class="plsh-h"><span class="a">'+k+'</span><span class="n">'+(it.length?'позиций: '+it.length:'')+'</span><button data-padd="'+k+'">＋ на полку</button><button data-nedit="'+k+'">✎ заметка</button></div>'+
-        noteBlock(k,state.planEdit===k)+it.map(itemRow).join('')+(!it.length&&!nt&&state.planEdit!==k?'<div class="small">'+(r[5]==='order'&&n>5?'на фото 25.09 не снято':'пусто или не описано')+'</div>':'')+'</div>'}
+        noteBlock(k,state.planEdit===k)+'<div class="shph">'+thumbsHtml('shelf:'+k,true,true)+'</div>'+it.map(itemRow).join('')+(!it.length&&!nt&&state.planEdit!==k?'<div class="small">'+(r[5]==='order'&&n>5?'на фото 25.09 не снято':'пусто или не описано')+'</div>':'')+'</div>'}
   }else{
     $('plTitle').textContent='План склада';
-    var P=planSvg(state.planQ.trim().toLowerCase().replace(/ё/g,'е')),placed=state.register.length-ix.none.length;
+    var P=planSvg(fold(state.planQ.trim())),placed=state.register.length-ix.none.length;
     h+='<div class="small">На плане '+placed+' поз. реестра'+(ix.none.length?' · <a href="#" data-pnone="1">без адреса: '+ix.none.length+'</a>':'')+'. Нажмите на стеллаж — полки, позиции и заметки; там же «＋ на полку» и перенос.</div>';
     h+='<div style="margin-top:8px"><input type="search" id="plQ" placeholder="Найти на складе: артикул, название, код заказа…" autocomplete="off" enterkeyhint="search" value="'+esc(state.planQ)+'"></div>';
     h+='<div class="plbox">'+P.svg+'</div><div class="pllegend">'+Object.keys(PZ).map(function(z){return '<span><i style="background:var('+PZ[z][1]+')"></i>'+PZ[z][0]+'</span>'}).join('')+'<span><i style="background:var(--acc);border-color:var(--acc);border-radius:50%;width:10px"></i>позиций реестра</span></div>'+
@@ -1373,10 +1394,10 @@ function renderPlan(){var b=$('plBody');if(!b)return;var ix=planIndex(),h='';
     if(state.planQ.trim()){var hs=P.sr.hits;
       h+='<div class="plhits">'+(hs.length?hs.slice(0,80).map(function(x){return '<div class="plhit" data-pgo="'+esc(x.k)+'"><span class="a">'+esc(x.k.indexOf('-')<0?x.k+'-?':x.k)+'</span><span>'+(x.p?'<b>'+esc(stockKey(x.p))+'</b> · '+esc(qtyTxt(x.p))+(x.p.art?' · '+esc(x.p.art):''):'<span class="small">заметка:</span> '+esc(x.note.slice(0,160)))+'</span></div>'}).join('')+(hs.length>80?'<div class="small">и ещё '+(hs.length-80)+'…</div>':''):'<div class="small">Ничего не найдено</div>')+'</div>'}
   }
-  b.innerHTML=h;bindPlan()}
+  b.innerHTML=h;bindThumbs(b);bindPlan()}
 function bindPlan(){var b=$('plBody'),byId=function(id){return state.register.filter(function(x){return x.id===id})[0]};
   var q=$('plQ');if(q){q.addEventListener('input',function(){state.planQ=q.value;var pos=q.selectionStart;renderPlan();var q2=$('plQ');q2.focus();try{q2.setSelectionRange(pos,pos)}catch(e){}})}
-  Array.prototype.forEach.call(b.querySelectorAll('[data-rack]'),function(g){var go=function(){var hs=state.planQ.trim()?planSearch(state.planQ.trim().toLowerCase().replace(/ё/g,'е')).hits.filter(function(x){return x.k.split('-')[0]===g.getAttribute('data-rack')&&x.k.indexOf('-')>0}):[];openPlan(+g.getAttribute('data-rack'),hs.length?+hs[0].k.split('-')[1]:null)};
+  Array.prototype.forEach.call(b.querySelectorAll('[data-rack]'),function(g){var go=function(){var hs=state.planQ.trim()?planSearch(fold(state.planQ.trim())).hits.filter(function(x){return x.k.split('-')[0]===g.getAttribute('data-rack')&&x.k.indexOf('-')>0}):[];openPlan(+g.getAttribute('data-rack'),hs.length?+hs[0].k.split('-')[1]:null)};
     g.addEventListener('click',go);g.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}})});
   Array.prototype.forEach.call(b.querySelectorAll('[data-pgo]'),function(el){el.addEventListener('click',function(){var x=el.getAttribute('data-pgo').split('-');openPlan(+x[0],x[1]?+x[1]:null)})});
   Array.prototype.forEach.call(b.querySelectorAll('[data-pback]'),function(el){el.addEventListener('click',function(){state.planRack=null;state.planEdit=null;renderPlan();$('shPlan').querySelector('.panel').scrollTop=0})});
@@ -1442,7 +1463,7 @@ function render(){
       if(m&&m.notes.length)h+='<div class="note">'+esc(m.notes.join(' · '))+'</div>';
       h+='</td>';
       h+='<td class="c-need">'+(r.qty!=null?esc(r.qty)+' '+esc(n&&n.unit?n.unit:r.unit):'<span class="note bad">—</span>')+'</td>';
-      h+='<td class="c-stk">'+(m&&m.status!=='skip'?'<div>'+esc(m.label)+'</div>'+addonsHtml(m,r)+m.hits.map(function(p){return '<div class="hitline" data-reg="'+esc(p.id)+'" title="открыть в реестре"><div class="key">'+esc(stockKey(p))+'</div><div class="hit">'+(p.place?'<b class="addr"'+(addrsOf(p.place).length?' data-go="'+esc(p.place)+'" title="показать на плане"':'')+'>📍 '+esc(p.place)+'</b> · ':'')+'<b>'+esc(qtyTxt(p))+'</b> · '+esc(p.art||'')+(p.checked?' · проверено '+esc(p.checkedAt||'')+(p.checkedBy?' ('+esc(p.checkedBy)+')':''):'')+(p.opened==='opened'?' · вскрыто':p.opened==='sealed'?' · целое':'')+' · <span class="go">в реестре →</span></div>'+issuedHtml(p)+'</div>'+((photos[p.id]||[]).length?thumbsHtml(p.id,true,false):'')}).join(''):'')+'</td>';
+      h+='<td class="c-stk">'+(m&&m.status!=='skip'?'<div>'+esc(m.label)+'</div>'+addonsHtml(m,r)+m.hits.map(function(p){return '<div class="hitline" data-reg="'+esc(p.id)+'" title="открыть в реестре"><div class="key">'+esc(stockKey(p))+'</div><div class="hit">'+(p.place?'<b class="addr"'+(addrsOf(p.place).length?' data-go="'+esc(p.place)+'" title="показать на плане"':'')+'>📍 '+esc(p.place)+'</b> · ':'')+'<b>'+esc(qtyTxt(p))+'</b> · '+esc(p.art||'')+(p.checked?' · проверено '+esc(p.checkedAt||'')+(p.checkedBy?' ('+esc(p.checkedBy)+')':''):'')+(p.opened==='opened'?' · вскрыто':p.opened==='sealed'?' · целое':'')+' · <span class="go">в реестре →</span>'+(p.url?' · '+urlHtml(p):'')+'</div>'+issuedHtml(p)+'</div>'+((photos[p.id]||[]).length?thumbsHtml(p.id,true,false):'')}).join(''):'')+'</td>';
       h+='<td class="hidecol raw">'+esc(r.unit)+(r.supplier?' · '+esc(r.supplier):'')+(r.note?' · '+noteHtml(r.note):'')+'</td></tr>';
     });
     h+='</table></div>';
@@ -1516,7 +1537,7 @@ $('viewerClose').addEventListener('click',function(){$('viewer').classList.remov
 $('viewer').addEventListener('click',function(e){if(e.target===$('viewer'))$('viewer').classList.remove('on')});
 $('viewerDel').addEventListener('click',function(){var id=$('viewer')._id;if(!id)return;if(!confirm('Удалить это фото?'))return;dbDel(id).then(function(){Object.keys(photos).forEach(function(k){photos[k]=photos[k].filter(function(p){return p.id!==id})});$('viewer').classList.remove('on');renderRegister();render();fbDeletePhoto(id);toast('Фото удалено')})});
 
-loadRegister();loadSettings();render();if(who&&!USERS[who]){who='';lsSet('sverka.who','')}$('btnWho').textContent=who||'кто?';loadPhotos().then(function(){render();fbInit();if(!who)setTimeout(askWho,600)});
+loadRegister();if(migrateNames()){saveRegister();saveShelves()}loadSettings();render();if(who&&!USERS[who]){who='';lsSet('sverka.who','')}$('btnWho').textContent=who||'кто?';loadPhotos().then(function(){render();fbInit();if(!who)setTimeout(askWho,600)});
 if('serviceWorker' in navigator){try{navigator.serviceWorker.register('./sw.js').catch(function(){})}catch(e){}}
 window.__sverka={mergeRemote:mergeRemote,localPayload:localPayload,state:state,photos:photos,DEL:DEL,markDel:markDel,getUnsent:function(){return _unsent}};
 })();
