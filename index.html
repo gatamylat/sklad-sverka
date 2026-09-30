@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Сверка склад ↔ заявка</title>
-<meta name="description" content="Инструмент Яны: бросить заявку конструктора — увидеть, какие направляющие есть на складе. Работает без сети.">
+<meta name="description" content="Сверка склад ↔ заявка: бросить заявку конструктора — увидеть, что из фурнитуры есть на складе и на какой полке. Работает без сети.">
 <style>
 :root{
   --bg:#FAF9F5;--surf:#FFFFFF;--t1:#1C1C1E;--t2:#8A8985;--t3:#C4C3BE;--acc:#1A7AE6;--accbg:rgba(26,122,230,.06);
@@ -265,6 +265,7 @@ svg.plan .num{font-weight:700}
 svg.plan .cnt circle{fill:var(--acc)}svg.plan .cnt text{fill:#fff;font-size:11px;font-weight:700}
 #shSet .sth{font-weight:600;font-size:14px;margin:16px 0 4px}#shSet .sth:first-of-type{margin-top:4px}
 .pit .pph{flex-basis:100%;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.pit .pph .thumbs{margin:0}.shph .thumbs{margin:4px 0}a.lnk{font-size:12.5px;color:var(--acc);text-decoration:none;white-space:nowrap}.hit a.lnk{font-size:inherit}
+table.reg tr[data-row]{cursor:pointer}table.reg tr[data-row]:hover td{background:var(--accbg)}.pit .pt{cursor:pointer}#shWho input.nm{font-family:inherit;font-size:16px;border:1.5px solid var(--brd);border-radius:8px;padding:6px 10px;background:var(--surf);color:var(--t1);flex:1;min-width:0}
 .plracks{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:8px 0 2px}.plracks button{min-width:36px;min-height:32px;padding:3px 6px;font-variant-numeric:tabular-nums}.plracks button.dim{opacity:.35}.plracks .small{margin-right:4px}
 .pllegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--t2);margin:6px 0 2px}
 .pllegend i{display:inline-block;width:14px;height:10px;border:1px solid var(--pz-line);border-radius:2px;margin-right:5px;vertical-align:-1px}
@@ -303,7 +304,7 @@ table.reg button.go{border:none;background:none;padding:2px 4px;min-height:0;cur
 <body>
 <div class="wrap">
   <header>
-    <div class="hl"><div class="ttl"><h1>Сверка склад ↔ заявка</h1><button class="who" id="btnWho" title="Кто работает — нажмите, чтобы сменить">—</button></div><div class="sub">Фурнитура склада · адрес «стеллаж-полка» · работает без сети · v19</div></div>
+    <div class="hl"><div class="ttl"><h1>Сверка склад ↔ заявка</h1><button class="who" id="btnWho" title="Кто работает — нажмите, чтобы сменить">—</button></div><div class="sub">Фурнитура склада · адрес «стеллаж-полка» · работает без сети · v21</div></div>
     <div class="acts"><button class="btn-reg" id="btnPlan">🗺 План</button><button class="btn-reg" id="btnReg">📋 Реестр</button><button class="btn-ico" id="btnSet" title="Настройки" aria-label="Настройки">⚙️</button></div>
     <div class="status"><span class="dot" id="syncDot"></span><span id="syncInfo">локально</span></div>
   </header>
@@ -391,10 +392,13 @@ table.reg button.go{border:none;background:none;padding:2px 4px;min-height:0;cur
 
 <div class="sheet" id="shWho"><div class="panel"><button class="xclose" data-close="shWho" title="Закрыть (Esc)" aria-label="Закрыть">✕</button><div class="handle"></div>
   <h2>Кто работает?</h2>
-  <div class="small">Выберите себя и введите свой пин-код.</div>
-  <div class="row" id="whoList"></div>
+  <div class="small" id="whoCur">Введите свой пин-код.</div>
   <div class="row"><input type="password" class="pin" id="whoPin" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" placeholder="пин-код"><button class="primary" id="whoOk">Войти</button><span class="small note bad" id="whoErr"></span></div>
-  <div class="row"><button id="shWhoClose">Отмена</button></div>
+  <div id="whoNameBox" hidden>
+    <div class="small">Как подписывать ваши правки — видят все: «добавил», «проверено», «фото». Можно поменять в любой момент, старые подписи обновятся сами.</div>
+    <div class="row"><input type="text" id="whoName" class="nm" maxlength="40" autocomplete="off" placeholder="например, имя"><button id="whoNameOk">Сохранить</button></div>
+  </div>
+  <div class="row"><button id="shWhoClose">Закрыть</button></div>
 </div></div>
 
 <script>/* SheetJS 0.18.5, Apache-2.0, встроен для работы без сети */
@@ -1025,14 +1029,14 @@ function shrink(file){return new Promise(function(res,rej){var img=new Image();v
 function addPhotos(pos,files){var list=Array.prototype.slice.call(files);if(!list.length)return;var chain=Promise.resolve();list.forEach(function(f){chain=chain.then(function(){return shrink(f).then(function(data){var o={id:pos+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),pos:pos,data:data,at:new Date().toISOString(),name:f.name,by:who,url:null};return dbPut(o).then(function(){(photos[pos]=photos[pos]||[]).push(o)})})})});
   chain.then(function(){toast('Фото добавлено: '+list.length);renderRegister();render();schedulePush()}).catch(function(e){toast('Не удалось сохранить фото: '+(e.message||e))})}
 function openViewer(id){var ph=null;Object.keys(photos).forEach(function(k){photos[k].forEach(function(p){if(p.id===id)ph=p})});if(!ph)return;var pos=state.register.filter(function(x){return x.id===ph.pos})[0];
-  $('viewerImg').src=ph.data||'';$('viewerCap').textContent=(pos?titleOf(pos)+(pos.art?' · '+pos.art:''):String(ph.pos).indexOf('shelf:')===0?'полка '+ph.pos.slice(6):'')+' · '+ph.at.slice(0,10)+(ph.by?' · '+ph.by:'')+(ph.name?' · '+ph.name:'');$('viewer').classList.add('on');$('viewer')._id=id}
+  $('viewerImg').src=ph.data||'';$('viewerCap').textContent=(pos?titleOf(pos)+(pos.art?' · '+pos.art:''):String(ph.pos).indexOf('shelf:')===0?'полка '+ph.pos.slice(6):'')+' · '+ph.at.slice(0,10)+(ph.by?' · '+accName(ph.by):'')+(ph.name?' · '+ph.name:'');$('viewer').classList.add('on');$('viewer')._id=id}
 function thumbsHtml(pos,small,withAdd){var l=photos[pos]||[];var h='<div class="thumbs">'+l.map(function(p){return p.data?'<img class="thumb'+(small?' sm':'')+'" src="'+p.data+'" data-ph="'+p.id+'" alt="" loading="lazy">':'<span class="thumb'+(small?' sm':'')+'" title="фото в облаке, нет сети"></span>'}).join('');
   if(withAdd)h+='<label class="addph" title="добавить фото"><input type="file" accept="image/*" multiple capture="environment" data-addph="'+esc(pos)+'">+</label>';return h+'</div>'}
 function bindThumbs(root){Array.prototype.forEach.call(root.querySelectorAll('[data-ph]'),function(im){im.addEventListener('click',function(){openViewer(im.getAttribute('data-ph'))})});
   Array.prototype.forEach.call(root.querySelectorAll('[data-addph]'),function(inp){inp.addEventListener('change',function(){addPhotos(inp.getAttribute('data-addph'),inp.files);inp.value=''})})}
 
 
-// ═══ ОБЛАКО (Firebase, по инструкции Пу v2: таймауты, long-polling, слияние по записям, не отправлять до первой загрузки) ═══
+// ═══ ОБЛАКО (Firebase, по инструкции Firebase v2: таймауты, long-polling, слияние по записям, не отправлять до первой загрузки) ═══
 var FB_APP='sklad-sverka', FB_DOC=null, FB_PH=null, FB_ISS=null, fbDb=null, fbEnabled=false, _firstSyncDone=false, _seenRemoteSync=0, _ownWriteId=null, _pushTimer=null, _unsent=0, _inMerge=false, _pushing=false;
 var who=lsGet('sverka.who')||'';
 var fbConfig={apiKey:"AIzaSyAgIA0PLvUOJsRN8tHRzC03evTTkt3KHHc",authDomain:"skills-tracker-3f21b.firebaseapp.com",projectId:"skills-tracker-3f21b",storageBucket:"skills-tracker-3f21b.firebasestorage.app",messagingSenderId:"108202530564",appId:"1:108202530564:web:31ecf70071f49a89abe251"};
@@ -1077,10 +1081,11 @@ function mergeRemote(r){var need=false,k;
   Object.keys(pm).forEach(function(id){if(DEL[id])return;if(!localIds[id]){var m=pm[id];var o={id:m.id,pos:m.pos,at:m.at,name:m.name||'',url:m.url,by:m.by||'',data:null};(photos[o.pos]=photos[o.pos]||[]).push(o);dbPut(o).catch(function(){})}});
   Object.keys(localIds).forEach(function(id){if(DEL[id]&&DEL[id]>=(new Date(localIds[id].at).getTime()||0)){dbDel(id);Object.keys(photos).forEach(function(k){photos[k]=photos[k].filter(function(p){return p.id!==id})})}});
   if(migrateNames())need=true;
+  var ra=r.accounts||{};Object.keys(ra).forEach(function(k){var a=ra[k],b=state.accNames[k];if(a&&(!b||(a.at||0)>(b.at||0)))state.accNames[k]=a});Object.keys(state.accNames).forEach(function(k){if(!ra[k]||(ra[k].at||0)<(state.accNames[k].at||0))need=true});lsSet(LS_ACC,JSON.stringify(state.accNames));if(who)whoShow();
   var rs=r.shelves||{};Object.keys(rs).forEach(function(k){var a=rs[k],b=state.shelves[k];if(a&&(!b||(a.at||0)>(b.at||0)))state.shelves[k]=a});
   Object.keys(state.shelves).forEach(function(k){if(!rs[k]||(rs[k].at||0)<(state.shelves[k].at||0))need=true});saveShelves();
   loadRegister();renderRegister();render();return need}
-function localPayload(){var ph=[];Object.keys(photos).forEach(function(k){photos[k].forEach(function(p){if(p.url)ph.push({id:p.id,pos:p.pos,at:p.at,name:p.name||'',url:p.url,by:p.by||''})})});return {items:state.register,photos:ph,del:DEL,shelves:state.shelves}}
+function localPayload(){var ph=[];Object.keys(photos).forEach(function(k){photos[k].forEach(function(p){if(p.url)ph.push({id:p.id,pos:p.pos,at:p.at,name:p.name||'',url:p.url,by:p.by||''})})});return {items:state.register,photos:ph,del:DEL,shelves:state.shelves,accounts:state.accNames}}
 function schedulePush(){_unsent++;if(!fbEnabled||!_firstSyncDone){setSync('','офлайн · '+_unsent+' не отправлено');return}if(_pushTimer)clearTimeout(_pushTimer);_pushTimer=setTimeout(pushNow,2000)}
 function flushPush(){if(_pushTimer){clearTimeout(_pushTimer);_pushTimer=null}if(_unsent>0&&fbEnabled&&_firstSyncDone)pushNow()}
 function pushNow(){if(!fbEnabled||!_firstSyncDone||_pushing)return;_pushing=true;setSync('warn','отправляю…');
@@ -1097,12 +1102,30 @@ function fbDeletePhoto(id){markDel(id);if(FB_PH){try{FB_PH.doc(id).delete().catc
 function forcePull(){if(!fbEnabled){toast('Облако недоступно');return}setSync('warn','загружаю…');fbTimeout(FB_DOC.get(),12000).then(function(doc){if(!doc.exists){toast('В облаке пусто');return}
   var snap=JSON.stringify({at:new Date().toISOString(),items:state.register});try{localStorage.setItem('sverka.snapshot.'+Date.now(),snap);var keys=Object.keys(localStorage).filter(function(k){return k.indexOf('sverka.snapshot.')===0}).sort();while(keys.length>5)localStorage.removeItem(keys.shift())}catch(e){}
   var rd=JSON.parse(doc.data().data||'{}');state.register=rd.items||state.register;lsSet(LS_REG,JSON.stringify({loadedAt:new Date().toLocaleString('ru-RU'),source:'облако',items:state.register}));_unsent=0;applyRemote(doc.data(),'force');toast('Загружено из облака')}).catch(function(e){toast('Не удалось: '+(e.code||e.message))})}
-var USERS={'Константин':'1002','Сергей':'5154','Яна':'1781'};
-function askWho(){$('whoPin').value='';$('whoErr').textContent='';var h='';Object.keys(USERS).forEach(function(n){h+='<button data-who="'+esc(n)+'"'+(n===who?' class="primary"':'')+'>'+esc(n)+'</button>'});$('whoList').innerHTML=h;$('whoList')._sel=USERS[who]?who:'';
-  Array.prototype.forEach.call($('whoList').querySelectorAll('[data-who]'),function(b){b.addEventListener('click',function(){$('whoList')._sel=b.getAttribute('data-who');Array.prototype.forEach.call($('whoList').querySelectorAll('[data-who]'),function(x){x.classList.toggle('primary',x===b)});$('whoErr').textContent='';$('whoPin').focus()})});
-  $('shWho').classList.add('on')}
-function confirmWho(){var n=$('whoList')._sel;if(!n){$('whoErr').textContent='Выберите имя';return}if($('whoPin').value.trim()!==USERS[n]){$('whoErr').textContent='Неверный пин-код';$('whoPin').value='';$('whoPin').focus();return}
-  who=n;lsSet('sverka.who',who);$('btnWho').textContent=who;$('shWho').classList.remove('on');toast('Работает: '+who)}
+// учётные записи обезличены (30.09): «№1», «№2»… — пин-код у каждой свой
+var USERS={"№1": "1002", "№2": "5154", "№3": "1781", "№4": "9515", "№5": "2416", "№6": "8724", "№7": "5528", "№8": "5402", "№9": "8557", "№10": "4717"};
+// старые подписи в данных (кто добавил/проверил/снял фото) переводятся в номер записи; в коде — только их хэши
+var OLD_ACCT={"4113526401": "№1", "4161004668": "№2", "194580193": "№3", "5895815": "№1", "1444376597": "№2"};
+function h32(t){var h=5381;for(var i=0;i<t.length;i++)h=(((h<<5)>>>0)+h+t.charCodeAt(i))>>>0;return h}
+function acct(v){if(!v)return v;var t=String(v).trim();if(/^№\d+$/.test(t))return t;return OLD_ACCT[String(h32(t))]||v}
+function acctLabel(v){return /^№\d+$/.test(String(v||''))?'учётная запись '+v:v}
+if(who&&!USERS[who]&&USERS[acct(who)]){who=acct(who);lsSet('sverka.who',who)}
+// имена учётных записей — не в коде, а в данных: каждый задаёт себе сам после входа (хранится в облаке вместе с реестром)
+var LS_ACC='sverka.accnames';
+state.accNames=(function(){try{var o=JSON.parse(lsGet(LS_ACC)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return {}}})();
+function accName(v){if(!v)return v;var o=state.accNames[v];return o&&o.n?o.n:v}
+function whoShow(){$('btnWho').textContent=who?accName(who):'кто?'}
+function askWho(){$('whoPin').value='';$('whoErr').textContent='';
+  $('whoCur').textContent=!who?'Введите свой пин-код.':accName(who)!==who?'Сейчас работает: '+accName(who)+' (учётная запись '+who+'). Чтобы войти под другой записью — введите её пин-код.':'Вы вошли под учётной записью '+who+'. Подпишитесь ниже — так вас будут видеть другие.';
+  $('whoNameBox').hidden=!who;$('whoName').value=who&&state.accNames[who]?state.accNames[who].n:'';
+  $('shWho').classList.add('on');setTimeout(function(){(who?$('whoName'):$('whoPin')).focus()},80)}
+function saveWhoName(){if(!who)return;var v=$('whoName').value.trim().slice(0,40);state.accNames[who]={n:v,at:Date.now()};lsSet(LS_ACC,JSON.stringify(state.accNames));
+  whoShow();renderRegister();render();schedulePush();toast(v?'Подпись: '+v:'Подпись убрана — будет номер записи');$('shWho').classList.remove('on')}
+function confirmWho(){var pin=$('whoPin').value.trim(),n=null;Object.keys(USERS).forEach(function(k){if(USERS[k]===pin)n=k});
+  if(!n){$('whoErr').textContent='Неверный пин-код';$('whoPin').value='';$('whoPin').focus();return}
+  who=n;lsSet('sverka.who',who);whoShow();$('whoErr').textContent='';toast('Работает: '+accName(who));
+  if(state.accNames[who]&&state.accNames[who].n){$('shWho').classList.remove('on');return}
+  askWho()}   // имени ещё нет — сразу предложить подписаться
 
 // ═══ СПИСАНИЯ ИЗ «ЗАКУПОК» (Apps Script пишет в shared/issues, приложение применяет к реестру один раз) ═══
 var LS_ISS_APPLIED='sverka.issues.applied', LS_ISS_UNM='sverka.issues.unmatched';
@@ -1166,8 +1189,8 @@ function urlHtml(p){return p&&p.url?'<a class="lnk" href="'+esc(p.url)+'" target
 function fold(t){return String(t==null?'':t).toLowerCase().replace(/ё/g,'е').replace(/[äàá]/g,'a').replace(/[öóò]/g,'o').replace(/[üúù]/g,'u').replace(/[éèë]/g,'e')}
 // 29.09: «Häfele»/«Kesseböhmer» в названиях → без умляутов, как пишут люди (поиск «hafele»)
 function deUmlaut(t){return String(t).replace(/Häfele/g,'Hafele').replace(/HÄFELE/g,'HAFELE').replace(/Kesseböhmer/g,'Kessebohmer')}
-function migrateNames(){var ch=0;state.register.forEach(function(p){['name','note','series'].forEach(function(f){if(p[f]&&/[äÄö]/.test(p[f])){var v=deUmlaut(p[f]);if(v!==p[f]){p[f]=v;p.updatedAt=Date.now();ch++}}})});
-  if(state.shelves)Object.keys(state.shelves).forEach(function(k){var o=state.shelves[k];if(o&&o.t&&/[äÄö]/.test(o.t)){var v=deUmlaut(o.t);if(v!==o.t){o.t=v;o.at=Date.now();ch++}}});
+function migrateNames(){var ch=0;state.register.forEach(function(p){['addedBy','editedBy','checkedBy'].forEach(function(f){if(p[f]){var v=acct(p[f]);if(v!==p[f]){p[f]=v;p.updatedAt=Date.now();ch++}}});if(/^опись\s+\S+$/.test(p.origin||'')&&p.origin!=='опись'){p.origin='опись';p.updatedAt=Date.now();ch++}['name','note','series'].forEach(function(f){if(p[f]&&/[äÄö]/.test(p[f])){var v=deUmlaut(p[f]);if(v!==p[f]){p[f]=v;p.updatedAt=Date.now();ch++}}})});
+  if(state.shelves)Object.keys(state.shelves).forEach(function(k){var o=state.shelves[k];if(o&&o.by){var b=acct(o.by);if(b!==o.by){o.by=b;o.at=Date.now();ch++}}if(o&&o.t&&/[äÄö]/.test(o.t)){var v=deUmlaut(o.t);if(v!==o.t){o.t=v;o.at=Date.now();ch++}}});
   return ch}
 function qtyTxt(p){return p.qty==null?'кол-во не считали':p.qty+' '+unitOf(p)}
 state.regCat=lsGet('sverka.regcat')||'all';state.regQ='';
@@ -1187,11 +1210,11 @@ function renderRegister(){
     .sort(function(a,b){return (catIdx[catOf(a)]-catIdx[catOf(b)])||titleOf(a).localeCompare(titleOf(b),'ru',{numeric:true})});
   var h='<table class="reg"><tr class="th"><th>серия</th><th>длина</th><th>доводчик</th><th>TIP-ON</th><th>кол-во</th><th>артикул</th><th>место</th><th>упаковка</th><th>фото</th><th>проверено</th><th></th></tr>';
   if(!rows.length)h+='<tr class="none"><td colspan="11">'+(q?'Ничего не найдено по «'+esc(state.regQ.trim())+'»':'В разделе «'+esc(CAT_LABEL[state.regCat]||'')+'» пока пусто — «＋ Добавить»')+'</td></tr>';
-  rows.forEach(function(p){var bl=isBlum(p);h+='<tr data-row="'+esc(p.id)+'"'+(p.type==='box'?' class="dim"':'')+'><td class="r-ser" data-l="серия">'+(bl?esc(p.series)+'<span class="om"> · '+esc(p.len)+'</span>':esc(p.name||p.series||'')+(p.size?'<span class="om"> · '+esc(p.size)+'</span>':''))+'</td><td class="r-len hm" data-l="длина">'+esc(bl?p.len:(p.size||''))+'</td><td class="r-dmp" data-l="доводчик">'+(bl?(p.damper==='BLUMOTION'?'да':p.damper==='NONE'?'нет':'?'):'')+'</td><td class="r-tip" data-l="TIP-ON">'+(p.tipon?'да':'')+'</td>'+
+  rows.forEach(function(p){var bl=isBlum(p);h+='<tr data-row="'+esc(p.id)+'"><td class="r-ser" data-l="серия">'+(bl?esc(p.series)+'<span class="om"> · '+esc(p.len)+'</span>':esc(p.name||p.series||'')+(p.size?'<span class="om"> · '+esc(p.size)+'</span>':''))+'</td><td class="r-len hm" data-l="длина">'+esc(bl?p.len:(p.size||''))+'</td><td class="r-dmp" data-l="доводчик">'+(bl?(p.damper==='BLUMOTION'?'да':p.damper==='NONE'?'нет':'?'):'')+'</td><td class="r-tip" data-l="TIP-ON">'+(p.tipon?'да':'')+'</td>'+
     '<td class="r-qty" data-l="кол-во"><input type="number" inputmode="numeric" min="0" class="inl n" data-qty="'+esc(p.id)+'" value="'+esc(p.qty==null?'':p.qty)+'" placeholder="?"></td><td class="r-art" data-l="артикул">'+esc(p.art||'')+'</td>'+
     '<td class="r-place" data-l="место"><input class="inl" data-place="'+esc(p.id)+'" placeholder="стеллаж-полка" value="'+esc(p.place||'')+'">'+(addrsOf(p.place).length?'<button class="go" data-goreg="'+esc(p.id)+'" title="показать на плане">🗺</button>':'')+(p.origin?'<div class="small">'+esc(p.origin)+'</div>':'')+urlHtml(p)+'</td>'+
     '<td class="r-op" data-l="упаковка"><select class="sel" data-op="'+esc(p.id)+'"><option value=""'+(!p.opened?' selected':'')+'>?</option><option value="sealed"'+(p.opened==='sealed'?' selected':'')+'>целое</option><option value="opened"'+(p.opened==='opened'?' selected':'')+'>вскрыто</option></select></td>'+
-    '<td class="r-ph" data-l="фото">'+thumbsHtml(p.id,false,true)+'</td><td class="r-chk" data-l="проверено"><input type="checkbox" data-id="'+esc(p.id)+'" '+(p.checked?'checked':'')+'>'+(p.checkedAt?'<div class="small">'+esc(p.checkedAt)+(p.checkedBy?' · '+esc(p.checkedBy):'')+'</div>':'')+'</td>'+
+    '<td class="r-ph" data-l="фото">'+thumbsHtml(p.id,false,true)+'</td><td class="r-chk" data-l="проверено"><input type="checkbox" data-id="'+esc(p.id)+'" '+(p.checked?'checked':'')+'>'+(p.checkedAt?'<div class="small">'+esc(p.checkedAt)+(p.checkedBy?' · '+esc(accName(p.checkedBy)):'')+'</div>':'')+'</td>'+
     '<td class="r-del" data-l=""><button class="edt" data-edit="'+esc(p.id)+'" title="изменить позицию">✎ изменить</button><button class="del" data-del="'+esc(p.id)+'">✕ удалить</button></td></tr>'});
   h+='</table>';$('regTable').innerHTML=h;bindThumbs($('regTable'));renderIssInfo();syncRegBar();if($('shPlan').classList.contains('on')&&!state.planEdit)renderPlan();
   Array.prototype.forEach.call($('regTable').querySelectorAll('[data-op]'),function(sl){sl.addEventListener('change',function(){var p=state.register.filter(function(x){return x.id===sl.getAttribute('data-op')})[0];if(p){p.opened=sl.value||null;p.updatedAt=Date.now();saveRegister();schedulePush()}})});
@@ -1207,6 +1230,7 @@ function renderRegister(){
     p.place=inp.value.trim();delete p.placeSrc;if(addrsOf(p.place).length)p.placeType='addr';p.updatedAt=Date.now();saveRegister();render();schedulePush();toast('Место сохранено')})});
   Array.prototype.forEach.call($('regTable').querySelectorAll('[data-goreg]'),function(bt){bt.addEventListener('click',function(){var p=byId(bt.getAttribute('data-goreg'));if(p)goPlace(p.place)})});
   Array.prototype.forEach.call($('regTable').querySelectorAll('[data-edit]'),function(b){b.addEventListener('click',function(){openEdit(b.getAttribute('data-edit'))})});
+  Array.prototype.forEach.call($('regTable').querySelectorAll('tr[data-row]'),function(tr){tr.addEventListener('click',function(e){if(e.target.closest('input,select,button,a,label,img,textarea,.thumbs'))return;openEdit(tr.getAttribute('data-row'))})});
   Array.prototype.forEach.call($('regTable').querySelectorAll('[data-del]'),function(b){b.addEventListener('click',function(){var p=byId(b.getAttribute('data-del'));if(!p)return;
     if(!confirm('Удалить '+titleOf(p)+' ('+p.qty+' '+unitOf(p)+')? Фото тоже удалятся.'))return;
     markDel(p.id);(photos[p.id]||[]).forEach(function(ph){markDel(ph.id);dbDel(ph.id).catch(function(){});if(FB_PH){try{FB_PH.doc(ph.id).delete().catch(function(){})}catch(e){}}});delete photos[p.id];
@@ -1236,7 +1260,7 @@ function openEdit(id){var p=state.register.filter(function(x){return x.id===id})
   else{$('aPlT').value='free';$('aPl').value=pl}
   setSel('aOrg',p.origin||'неизвестно');$('aUrl').value=p.url||'';$('aPh').value='';$('aOp').value=p.opened||'';
   $('aTitle').textContent='Изменить позицию';$('aAdd').textContent='Сохранить';
-  $('aMeta').textContent=(p.addedBy?'добавил '+p.addedBy+(p.addedAt?' '+p.addedAt:''):'встроенная'+(p.origin?' · '+p.origin:''))+(p.editedBy?' · изменил '+p.editedBy+' '+(p.editedAt||''):'');
+  $('aMeta').textContent=(p.addedBy?'добавил '+accName(p.addedBy)+(p.addedAt?' '+p.addedAt:''):'встроенная'+(p.origin?' · '+p.origin:''))+(p.editedBy?' · изменил '+accName(p.editedBy)+' '+(p.editedAt||''):'');
   $('aHint').textContent='';$('shAdd').classList.add('on')}
 function showRegItem(id){var tr=$('regTable').querySelector('tr[data-row="'+id+'"]');if(!tr)return;
   setTimeout(function(){if(tr.scrollIntoView)tr.scrollIntoView({block:'center',behavior:'smooth'});tr.classList.remove('flash');void tr.offsetWidth;tr.classList.add('flash')},60)}
@@ -1386,7 +1410,7 @@ function itemRow(p){return '<div class="pit'+(p.checked?' chk':'')+'"><div class
   '<div class="pph">'+thumbsHtml(p.id,true,true)+urlHtml(p)+'</div></div>'}
 function noteBlock(k,edit){var t=noteOf(k),o=state.shelves[k];
   if(edit)return '<div class="plnote"><textarea data-ntext="'+esc(k)+'" placeholder="что лежит на полке — своими словами">'+esc(t)+'</textarea><div class="plnav"><button class="primary" data-nsave="'+esc(k)+'">Сохранить заметку</button><button data-ncancel="1">Отмена</button></div></div>';
-  return t?'<div class="plnote">'+esc(t)+(o&&o.by?' <span class="small">· '+esc(o.src==='import'?o.by:(o.by+(o.at?' '+new Date(o.at).toLocaleDateString('ru-RU'):'')))+'</span>':'')+'</div>':''}
+  return t?'<div class="plnote">'+esc(t)+(o&&o.by?' <span class="small">· '+esc(o.src==='import'?o.by:(accName(o.by)+(o.at?' '+new Date(o.at).toLocaleDateString('ru-RU'):'')))+'</span>':'')+'</div>':''}
 function renderPlan(){var b=$('plBody');if(!b)return;var ix=planIndex(),h='';
   if(state.planRack==='none'){
     $('plTitle').textContent='Без адреса';
@@ -1422,6 +1446,7 @@ function bindPlan(){var b=$('plBody'),byId=function(id){return state.register.fi
   Array.prototype.forEach.call(b.querySelectorAll('[data-pnone]'),function(el){el.addEventListener('click',function(e){e.preventDefault();state.planRack='none';renderPlan()})});
   Array.prototype.forEach.call(b.querySelectorAll('[data-padd]'),function(el){el.addEventListener('click',function(){openAdd();$('aPlT').value='addr';$('aPl').value=el.getAttribute('data-padd');$('aTitle').textContent='Новая позиция на полку '+el.getAttribute('data-padd')})});
   Array.prototype.forEach.call(b.querySelectorAll('[data-pedit]'),function(el){el.addEventListener('click',function(){openEdit(el.getAttribute('data-pedit'))})});
+  Array.prototype.forEach.call(b.querySelectorAll('.pit .pt'),function(el){el.addEventListener('click',function(){var bt=el.parentNode.querySelector('[data-pedit]');if(bt)openEdit(bt.getAttribute('data-pedit'))})});
   Array.prototype.forEach.call(b.querySelectorAll('[data-pqty]'),function(inp){inp.addEventListener('change',function(){var p=byId(inp.getAttribute('data-pqty'));if(!p)return;
     var v=inp.value.trim()===''?null:Number(inp.value);if(v!==null&&(isNaN(v)||v<0)){inp.value=p.qty==null?'':p.qty;toast('Кол-во — число от 0 или пусто (не считали)');return}
     p.qty=v;p.updatedAt=Date.now();saveRegister();render();schedulePush();toast('Кол-во: '+titleOf(p)+' → '+(v==null?'не считали':v))})});
@@ -1480,7 +1505,7 @@ function render(){
       if(m&&m.notes.length)h+='<div class="note">'+esc(m.notes.join(' · '))+'</div>';
       h+='</td>';
       h+='<td class="c-need">'+(r.qty!=null?esc(r.qty)+' '+esc(n&&n.unit?n.unit:r.unit):'<span class="note bad">—</span>')+'</td>';
-      h+='<td class="c-stk">'+(m&&m.status!=='skip'?'<div>'+esc(m.label)+'</div>'+addonsHtml(m,r)+m.hits.map(function(p){return '<div class="hitline" data-reg="'+esc(p.id)+'" title="открыть в реестре"><div class="key">'+esc(stockKey(p))+'</div><div class="hit">'+(p.place?'<b class="addr"'+(addrsOf(p.place).length?' data-go="'+esc(p.place)+'" title="показать на плане"':'')+'>📍 '+esc(p.place)+'</b> · ':'')+'<b>'+esc(qtyTxt(p))+'</b> · '+esc(p.art||'')+(p.checked?' · проверено '+esc(p.checkedAt||'')+(p.checkedBy?' ('+esc(p.checkedBy)+')':''):'')+(p.opened==='opened'?' · вскрыто':p.opened==='sealed'?' · целое':'')+' · <span class="go">в реестре →</span>'+(p.url?' · '+urlHtml(p):'')+'</div>'+issuedHtml(p)+'</div>'+((photos[p.id]||[]).length?thumbsHtml(p.id,true,false):'')}).join(''):'')+'</td>';
+      h+='<td class="c-stk">'+(m&&m.status!=='skip'?'<div>'+esc(m.label)+'</div>'+addonsHtml(m,r)+m.hits.map(function(p){return '<div class="hitline" data-reg="'+esc(p.id)+'" title="открыть в реестре"><div class="key">'+esc(stockKey(p))+'</div><div class="hit">'+(p.place?'<b class="addr"'+(addrsOf(p.place).length?' data-go="'+esc(p.place)+'" title="показать на плане"':'')+'>📍 '+esc(p.place)+'</b> · ':'')+'<b>'+esc(qtyTxt(p))+'</b> · '+esc(p.art||'')+(p.checked?' · проверено '+esc(p.checkedAt||'')+(p.checkedBy?' ('+esc(accName(p.checkedBy))+')':''):'')+(p.opened==='opened'?' · вскрыто':p.opened==='sealed'?' · целое':'')+' · <span class="go">в реестре →</span>'+(p.url?' · '+urlHtml(p):'')+'</div>'+issuedHtml(p)+'</div>'+((photos[p.id]||[]).length?thumbsHtml(p.id,true,false):'')}).join(''):'')+'</td>';
       h+='<td class="hidecol raw">'+esc(r.unit)+(r.supplier?' · '+esc(r.supplier):'')+(r.note?' · '+noteHtml(r.note):'')+'</td></tr>';
     });
     h+='</table></div>';
@@ -1547,14 +1572,14 @@ $('regQ').addEventListener('input',function(){state.regQ=$('regQ').value;renderR
 window.addEventListener('resize',syncRegBar);
 $('regReset').addEventListener('click',function(){if(!fbEnabled){toast('Облако недоступно — нет сети');return}if(!confirm('Заменить реестр на этом устройстве тем, что лежит в облаке?'))return;forcePull()});
 $('btnCopy').addEventListener('click',copySummary);
-$('btnWho').addEventListener('click',askWho);$('whoOk').addEventListener('click',confirmWho);$('whoPin').addEventListener('keydown',function(e){if(e.key==='Enter')confirmWho()});$('shWhoClose').addEventListener('click',function(){$('shWho').classList.remove('on')});$('btnPull').addEventListener('click',forcePull);$('btnPush').addEventListener('click',function(){_unsent++;pushNow()});
+$('btnWho').addEventListener('click',askWho);$('whoOk').addEventListener('click',confirmWho);$('whoNameOk').addEventListener('click',saveWhoName);$('whoName').addEventListener('keydown',function(e){if(e.key==='Enter')saveWhoName()});$('whoPin').addEventListener('keydown',function(e){if(e.key==='Enter')confirmWho()});$('shWhoClose').addEventListener('click',function(){$('shWho').classList.remove('on')});$('btnPull').addEventListener('click',forcePull);$('btnPush').addEventListener('click',function(){_unsent++;pushNow()});
 document.addEventListener('keydown',function(e){if(e.key!=='Escape'&&e.key!=='Esc')return;if($('viewer').classList.contains('on')){$('viewer').classList.remove('on');return}
   var open=['shWho','shAdd','shPlan','shReg','shSet'].filter(function(id){return $(id).classList.contains('on')});if(open.length){$(open[0]).classList.remove('on');e.preventDefault()}});
 $('viewerClose').addEventListener('click',function(){$('viewer').classList.remove('on')});
 $('viewer').addEventListener('click',function(e){if(e.target===$('viewer'))$('viewer').classList.remove('on')});
 $('viewerDel').addEventListener('click',function(){var id=$('viewer')._id;if(!id)return;if(!confirm('Удалить это фото?'))return;dbDel(id).then(function(){Object.keys(photos).forEach(function(k){photos[k]=photos[k].filter(function(p){return p.id!==id})});$('viewer').classList.remove('on');renderRegister();render();fbDeletePhoto(id);toast('Фото удалено')})});
 
-loadRegister();if(migrateNames()){saveRegister();saveShelves()}loadSettings();render();if(who&&!USERS[who]){who='';lsSet('sverka.who','')}$('btnWho').textContent=who||'кто?';loadPhotos().then(function(){render();fbInit();if(!who)setTimeout(askWho,600)});
+loadRegister();if(migrateNames()){saveRegister();saveShelves()}loadSettings();render();if(who&&!USERS[who]){who='';lsSet('sverka.who','')}whoShow();loadPhotos().then(function(){var pc=0;Object.keys(photos).forEach(function(k){photos[k].forEach(function(x){var b=acct(x.by);if(b!==x.by){x.by=b;pc++;dbPut(x).catch(function(){})}})});if(pc)schedulePush();render();fbInit();if(!who)setTimeout(askWho,600)});
 if('serviceWorker' in navigator){try{navigator.serviceWorker.register('./sw.js').catch(function(){})}catch(e){}}
 window.__sverka={mergeRemote:mergeRemote,localPayload:localPayload,state:state,photos:photos,DEL:DEL,markDel:markDel,getUnsent:function(){return _unsent}};
 })();
