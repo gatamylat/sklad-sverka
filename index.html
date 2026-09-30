@@ -266,6 +266,11 @@ svg.plan .cnt circle{fill:var(--acc)}svg.plan .cnt text{fill:#fff;font-size:11px
 #shSet .sth{font-weight:600;font-size:14px;margin:16px 0 4px}#shSet .sth:first-of-type{margin-top:4px}
 .pit .pph{flex-basis:100%;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.pit .pph .thumbs{margin:0}.shph .thumbs{margin:4px 0}a.lnk{font-size:12.5px;color:var(--acc);text-decoration:none;white-space:nowrap}.hit a.lnk{font-size:inherit}
 table.reg tr[data-row]{cursor:pointer}table.reg tr[data-row]:hover td{background:var(--accbg)}.pit .pt{cursor:pointer}#shWho input.nm{font-family:inherit;font-size:16px;border:1.5px solid var(--brd);border-radius:8px;padding:6px 10px;background:var(--surf);color:var(--t1);flex:1;min-width:0}
+.pit button.mvb{padding:4px 8px;min-height:0;font-size:12px;color:var(--t2)}.mvbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}.mvhist{font-size:12.5px;display:grid;gap:3px;margin-top:4px;padding:8px 10px;background:var(--bg);border-radius:8px}.small.bad,.bad{color:var(--dng)}
+.pit:hover{background:var(--accbg)}.pit{border-radius:0 8px 8px 0;padding-right:6px}
+table.reg td.r-note{font-size:12.5px;color:var(--t2);max-width:260px;white-space:normal;overflow-wrap:anywhere}
+@media (max-width:900px){table.reg td.r-note{order:56;flex:1 1 100%;max-width:none}table.reg td.r-note:empty{display:none}}
+.totop{position:sticky;bottom:14px;display:none;margin:0 0 0 auto;width:46px;height:46px;border-radius:50%;padding:0;font-size:22px;line-height:1;background:var(--acc);color:#fff;border-color:var(--acc);box-shadow:0 4px 14px rgba(0,0,0,.22);z-index:4}.totop.on{display:block}
 .plracks{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:8px 0 2px}.plracks button{min-width:36px;min-height:32px;padding:3px 6px;font-variant-numeric:tabular-nums}.plracks button.dim{opacity:.35}.plracks .small{margin-right:4px}
 .pllegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--t2);margin:6px 0 2px}
 .pllegend i{display:inline-block;width:14px;height:10px;border:1px solid var(--pz-line);border-radius:2px;margin-right:5px;vertical-align:-1px}
@@ -304,7 +309,7 @@ table.reg button.go{border:none;background:none;padding:2px 4px;min-height:0;cur
 <body>
 <div class="wrap">
   <header>
-    <div class="hl"><div class="ttl"><h1>Сверка склад ↔ заявка</h1><button class="who" id="btnWho" title="Кто работает — нажмите, чтобы сменить">—</button></div><div class="sub">Фурнитура склада · адрес «стеллаж-полка» · работает без сети · v21</div></div>
+    <div class="hl"><div class="ttl"><h1>Сверка склад ↔ заявка</h1><button class="who" id="btnWho" title="Кто работает — нажмите, чтобы сменить">—</button></div><div class="sub">Фурнитура склада · адрес «стеллаж-полка» · работает без сети · v22</div></div>
     <div class="acts"><button class="btn-reg" id="btnPlan">🗺 План</button><button class="btn-reg" id="btnReg">📋 Реестр</button><button class="btn-ico" id="btnSet" title="Настройки" aria-label="Настройки">⚙️</button></div>
     <div class="status"><span class="dot" id="syncDot"></span><span id="syncInfo">локально</span></div>
   </header>
@@ -360,11 +365,13 @@ table.reg button.go{border:none;background:none;padding:2px 4px;min-height:0;cur
   </div>
   <div id="regTable" style="margin-top:4px"></div>
   <div class="row"><button id="shRegClose">Закрыть</button></div>
+  <button class="totop" data-top="shReg" aria-label="Наверх" title="Наверх">↑</button>
 </div></div>
 
 <div class="sheet" id="shPlan"><div class="panel"><button class="xclose" data-close="shPlan" title="Закрыть (Esc)" aria-label="Закрыть">✕</button><div class="handle"></div>
   <h2 id="plTitle">План склада</h2>
   <div id="plBody"></div>
+  <button class="totop" data-top="shPlan" aria-label="Наверх" title="Наверх">↑</button>
 </div></div>
 
 <div class="sheet" id="shAdd"><div class="panel"><button class="xclose" data-close="shAdd" title="Закрыть (Esc)" aria-label="Закрыть">✕</button><div class="handle"></div>
@@ -384,9 +391,27 @@ table.reg button.go{border:none;background:none;padding:2px 4px;min-height:0;cur
     <label>откуда пришло<select id="aOrg"><option>опись</option><option>зелёные заказы</option><option>оцифровка 22.09</option><option>фото 25.09</option><option>возврат со сборки</option><option>неизвестно</option></select></label>
     <label>упаковка<select id="aOp"><option value="">?</option><option value="sealed">целое</option><option value="opened">вскрыто</option></select></label>
     <label class="wide">примечание<input type="text" id="aNote" autocomplete="off"></label>
+    <label>цена за шт., ₽<input type="number" id="aPrice" inputmode="decimal" min="0" step="0.01" placeholder="закупочная, если известна"></label>
     <label class="wide">ссылка на фурнитуру<input type="url" id="aUrl" inputmode="url" placeholder="https://… — сайт поставщика, каталог" autocomplete="off"></label>
-    <label class="wide">фото<input type="file" id="aPh" accept="image/*" multiple></label>
+    <div class="wide" id="aPhBox" hidden><span class="small">фото позиции — нажмите, чтобы открыть; «+» — снять новое</span><div id="aPhotos"></div></div>
+    <label class="wide"><span id="aPhL">фото</span><input type="file" id="aPh" accept="image/*" multiple></label>
+    <div class="wide" id="aMoves" hidden></div>
     <div class="wide act"><button class="primary" id="aAdd">Добавить</button><button id="aCancel" data-close="shAdd">Отмена</button><span class="small" id="aHint"></span></div>
+  </div>
+</div></div>
+
+<div class="sheet" id="shMove"><div class="panel"><button class="xclose" data-close="shMove" title="Закрыть (Esc)" aria-label="Закрыть">✕</button><div class="handle"></div>
+  <h2 id="mvTitle">На заказ</h2>
+  <div class="small" id="mvWhat"></div>
+  <div class="form">
+    <label class="wide mv-o">код заказа<input type="text" id="mvOrder" inputmode="numeric" placeholder="25-12-03-07" autocomplete="off"></label>
+    <label class="wide mv-o">что происходит<select id="mvHow"><option value="issued">выдано на заказ — ушло со склада</option><option value="stored">отложено в место хранения заказа</option></select></label>
+    <label class="wide mv-o mv-to">куда отложено<input type="text" id="mvTo" placeholder="стеллаж-полка или «коробка заказа»" autocomplete="off"></label>
+    <label class="wide mv-r">причина<select id="mvWhy"><option>выкинуто</option><option>испорчено, брак</option><option>внесено ошибочно</option><option>не нашлось на месте</option><option>другое</option></select></label>
+    <label class="wide mv-b">куда вернуть (стеллаж-полка)<input type="text" id="mvBack" placeholder="например 24-3" autocomplete="off"></label>
+    <label><span id="mvQtyL">сколько</span><input type="number" id="mvQty" inputmode="numeric" min="0" placeholder="всё"></label>
+    <label class="wide">комментарий<input type="text" id="mvNote" autocomplete="off"></label>
+    <div class="wide act"><button class="primary" id="mvOk">Готово</button><button data-close="shMove">Отмена</button><span class="small note bad" id="mvErr"></span></div>
   </div>
 </div></div>
 
@@ -1141,7 +1166,7 @@ function applyIssues(items){
     if(!it||!it.id||seen[it.id])return;seen[it.id]=1;applied.push(it.id);newIds=true;
     var len=Number(it.len),q=Number(it.qty)||0,date=it.date||String(it.at||'').slice(0,10);
     if(q<=0)return;
-    var base=state.register.filter(function(p){return p.type==='rail'&&p.series===it.series&&Number(p.len)===len&&p.qty>0});
+    var base=state.register.filter(function(p){return !p.gone&&p.type==='rail'&&p.series===it.series&&Number(p.len)===len&&p.qty>0});
     var cand=it.damper?base.filter(function(p){return p.damper===it.damper}):base,similar=false;
     if(it.damper&&!cand.length&&base.length){cand=base;similar=true}
     cand=cand.map(function(p){return [p,state.register.indexOf(p)]}).sort(function(a,b){return ((b[0].checked?1:0)-(a[0].checked?1:0))||(a[1]-b[1])}).map(function(x){return x[0]});
@@ -1171,7 +1196,7 @@ function loadRegister(){
   var saved=lsGet(LS_REG); var src='';
   if(saved){try{var o=JSON.parse(saved);if(o&&o.items&&o.items.length){state.register=o.items;state.regSource=o.source||'встроенный';src=(o.source||'встроенный')+', отметки от '+(o.loadedAt||'');}}catch(e){}}
   if(!state.register.length) state.register=JSON.parse(JSON.stringify(REGISTER_BUILTIN));
-  var n=state.register.length,rails=state.register.filter(function(p){return p.type==='rail'});
+  var act=activeReg(),n=act.length,rails=act.filter(function(p){return p.type==='rail'});
   var q=rails.reduce(function(a,p){return a+(p.qty||0)},0), chk=state.register.filter(function(p){return p.checked}).length, nq=state.register.filter(function(p){return p.qty==null}).length;
   $('regInfo').textContent=n?'реестр: '+n+' поз. (направляющие Blum: '+rails.length+' поз., '+q+' компл.) · проверено '+chk+' · без счёта '+nq+(src?' · '+src:''):'реестр пуст — загрузите файл кнопкой «Загрузить реестр» или дождитесь загрузки из облака';
 }
@@ -1196,27 +1221,28 @@ function qtyTxt(p){return p.qty==null?'кол-во не считали':p.qty+' 
 state.regCat=lsGet('sverka.regcat')||'all';state.regQ='';
 function regMatches(p,q){if(!q)return true;var hay=fold([titleOf(p),p.series,p.name,p.len,p.size,p.art,p.place,p.note,p.origin,CAT_LABEL[catOf(p)],isBlum(p)?Normalizer.featureLabel(p):''].join(' '));q=fold(q);
   return q.split(/\s+/).every(function(t){return !t||hay.indexOf(t)>=0})}
-function renderCats(){var cnt={all:state.register.length};state.register.forEach(function(p){var c=catOf(p);cnt[c]=(cnt[c]||0)+1});
+function renderCats(){var cnt={all:0,gone:0};state.register.forEach(function(p){if(p.gone){cnt.gone++;return}cnt.all++;var c=catOf(p);cnt[c]=(cnt[c]||0)+1});
   var h='<button data-cat="all"'+(state.regCat==='all'?' class="on"':'')+'>Все<span class="n">'+cnt.all+'</span></button>';
   CATS.forEach(function(c){var n=cnt[c[0]]||0;h+='<button data-cat="'+c[0]+'" class="'+(state.regCat===c[0]?'on':'')+(n?'':' empty')+'">'+c[1]+'<span class="n">'+n+'</span></button>'});
+  h+='<button data-cat="gone" class="'+(state.regCat==='gone'?'on':'')+(cnt.gone?'':' empty')+'">Убрано и выдано<span class="n">'+cnt.gone+'</span></button>';
   $('regCats').innerHTML=h;
   Array.prototype.forEach.call($('regCats').querySelectorAll('[data-cat]'),function(b){b.addEventListener('click',function(){state.regCat=b.getAttribute('data-cat');lsSet('sverka.regcat',state.regCat);renderRegister()})})}
 function syncRegBar(){try{$('shReg').style.setProperty('--rb',$('regBar').offsetHeight+'px')}catch(e){}}
 function renderRegister(){
-  if(state.regCat!=='all'&&!CAT_LABEL[state.regCat])state.regCat='all';
+  if(state.regCat!=='all'&&state.regCat!=='gone'&&!CAT_LABEL[state.regCat])state.regCat='all';
   renderCats();
   var q=(state.regQ||'').trim().toLowerCase().replace(/ё/g,'е'),catIdx={};CATS.forEach(function(c,i){catIdx[c[0]]=i});
-  var rows=state.register.filter(function(p){return (state.regCat==='all'||catOf(p)===state.regCat)&&regMatches(p,q)})
+  var rows=state.register.filter(function(p){return (state.regCat==='gone'?p.gone:!p.gone&&(state.regCat==='all'||catOf(p)===state.regCat))&&regMatches(p,q)})
     .sort(function(a,b){return (catIdx[catOf(a)]-catIdx[catOf(b)])||titleOf(a).localeCompare(titleOf(b),'ru',{numeric:true})});
-  var h='<table class="reg"><tr class="th"><th>серия</th><th>длина</th><th>доводчик</th><th>TIP-ON</th><th>кол-во</th><th>артикул</th><th>место</th><th>упаковка</th><th>фото</th><th>проверено</th><th></th></tr>';
-  if(!rows.length)h+='<tr class="none"><td colspan="11">'+(q?'Ничего не найдено по «'+esc(state.regQ.trim())+'»':'В разделе «'+esc(CAT_LABEL[state.regCat]||'')+'» пока пусто — «＋ Добавить»')+'</td></tr>';
+  var h='<table class="reg"><tr class="th"><th>серия</th><th>длина</th><th>доводчик</th><th>TIP-ON</th><th>кол-во</th><th>артикул</th><th>примечание</th><th>место</th><th>упаковка</th><th>фото</th><th>проверено</th><th></th></tr>';
+  if(!rows.length)h+='<tr class="none"><td colspan="12">'+(q?'Ничего не найдено по «'+esc(state.regQ.trim())+'»':'В разделе «'+esc(CAT_LABEL[state.regCat]||'')+'» пока пусто — «＋ Добавить»')+'</td></tr>';
   rows.forEach(function(p){var bl=isBlum(p);h+='<tr data-row="'+esc(p.id)+'"><td class="r-ser" data-l="серия">'+(bl?esc(p.series)+'<span class="om"> · '+esc(p.len)+'</span>':esc(p.name||p.series||'')+(p.size?'<span class="om"> · '+esc(p.size)+'</span>':''))+'</td><td class="r-len hm" data-l="длина">'+esc(bl?p.len:(p.size||''))+'</td><td class="r-dmp" data-l="доводчик">'+(bl?(p.damper==='BLUMOTION'?'да':p.damper==='NONE'?'нет':'?'):'')+'</td><td class="r-tip" data-l="TIP-ON">'+(p.tipon?'да':'')+'</td>'+
-    '<td class="r-qty" data-l="кол-во"><input type="number" inputmode="numeric" min="0" class="inl n" data-qty="'+esc(p.id)+'" value="'+esc(p.qty==null?'':p.qty)+'" placeholder="?"></td><td class="r-art" data-l="артикул">'+esc(p.art||'')+'</td>'+
-    '<td class="r-place" data-l="место"><input class="inl" data-place="'+esc(p.id)+'" placeholder="стеллаж-полка" value="'+esc(p.place||'')+'">'+(addrsOf(p.place).length?'<button class="go" data-goreg="'+esc(p.id)+'" title="показать на плане">🗺</button>':'')+(p.origin?'<div class="small">'+esc(p.origin)+'</div>':'')+urlHtml(p)+'</td>'+
+    '<td class="r-qty" data-l="кол-во"><input type="number" inputmode="numeric" min="0" class="inl n" data-qty="'+esc(p.id)+'" value="'+esc(p.qty==null?'':p.qty)+'" placeholder="?"></td><td class="r-art" data-l="артикул">'+esc(p.art||'')+'</td><td class="r-note" data-l="примечание" title="'+esc(p.note||'')+'">'+esc(String(p.note||'').length>140?String(p.note).slice(0,140)+'…':(p.note||''))+'</td>'+
+    '<td class="r-place" data-l="место"><input class="inl" data-place="'+esc(p.id)+'" placeholder="стеллаж-полка" value="'+esc(p.place||'')+'">'+(addrsOf(p.place).length?'<button class="go" data-goreg="'+esc(p.id)+'" title="показать на плане">🗺</button>':'')+(p.gone?'<div class="small bad">'+esc(p.gone.why||'убрано')+' · '+esc(String(p.gone.at||'').slice(0,10))+'</div>':p.origin?'<div class="small">'+esc(p.origin)+'</div>':'')+urlHtml(p)+'</td>'+
     '<td class="r-op" data-l="упаковка"><select class="sel" data-op="'+esc(p.id)+'"><option value=""'+(!p.opened?' selected':'')+'>?</option><option value="sealed"'+(p.opened==='sealed'?' selected':'')+'>целое</option><option value="opened"'+(p.opened==='opened'?' selected':'')+'>вскрыто</option></select></td>'+
     '<td class="r-ph" data-l="фото">'+thumbsHtml(p.id,false,true)+'</td><td class="r-chk" data-l="проверено"><input type="checkbox" data-id="'+esc(p.id)+'" '+(p.checked?'checked':'')+'>'+(p.checkedAt?'<div class="small">'+esc(p.checkedAt)+(p.checkedBy?' · '+esc(accName(p.checkedBy)):'')+'</div>':'')+'</td>'+
     '<td class="r-del" data-l=""><button class="edt" data-edit="'+esc(p.id)+'" title="изменить позицию">✎ изменить</button><button class="del" data-del="'+esc(p.id)+'">✕ удалить</button></td></tr>'});
-  h+='</table>';$('regTable').innerHTML=h;bindThumbs($('regTable'));renderIssInfo();syncRegBar();if($('shPlan').classList.contains('on')&&!state.planEdit)renderPlan();
+  h+='</table>';$('regTable').innerHTML=h;bindThumbs($('regTable'));if(state.editId&&$('shAdd').classList.contains('on'))cardPhotos();renderIssInfo();syncRegBar();if($('shPlan').classList.contains('on')&&!state.planEdit)renderPlan();
   Array.prototype.forEach.call($('regTable').querySelectorAll('[data-op]'),function(sl){sl.addEventListener('change',function(){var p=state.register.filter(function(x){return x.id===sl.getAttribute('data-op')})[0];if(p){p.opened=sl.value||null;p.updatedAt=Date.now();saveRegister();schedulePush()}})});
   $('regMeta').textContent=state.register.length+' позиций'+(rows.length!==state.register.length?', показано '+rows.length:'')+'. Поля по Х5: серия · длина · доводчик · TIP-ON · кол-во · место · проверено.';
   Array.prototype.forEach.call($('regTable').querySelectorAll('input[type=checkbox]'),function(cb){cb.addEventListener('change',function(){
@@ -1244,9 +1270,11 @@ function setAddCat(){var c=$('aCat').value,bl=c==='rails'||c==='boxes';
 function fillCats(){$('aCat').innerHTML=CATS.map(function(c){return '<option value="'+c[0]+'">'+c[1]+'</option>'}).join('')}
 function setSel(id,val){var el=$(id);if(val==null)val='';if(!Array.prototype.some.call(el.options,function(o){return o.value===String(val)})){var o=document.createElement('option');o.value=o.textContent=String(val);el.appendChild(o)}el.value=String(val)}
 function openAdd(){
-  if(state.editId){state.editId=null;['aLen','aArt','aNote','aName','aSize','aPl','aUrl'].forEach(function(id){$(id).value=''});$('aQty').value='1'}$('aPh').value='';   // после правки — чистая форма
-  $('aTitle').textContent='Новая позиция в реестр';$('aAdd').textContent='Добавить';$('aMeta').textContent='';
-  fillCats();$('aCat').value=state.regCat!=='all'&&CAT_LABEL[state.regCat]?state.regCat:'rails';setAddCat();$('shAdd').classList.add('on')}
+  if(state.editId){state.editId=null;['aLen','aArt','aNote','aName','aSize','aPl','aUrl','aPrice'].forEach(function(id){$(id).value=''});$('aQty').value='1'}$('aPh').value='';   // после правки — чистая форма
+  $('aTitle').textContent='Новая позиция в реестр';$('aPhBox').hidden=true;$('aMoves').hidden=true;$('aPhL').textContent='фото';$('aAdd').textContent='Добавить';$('aMeta').textContent='';
+  fillCats();$('aCat').value=state.regCat!=='all'&&CAT_LABEL[state.regCat]?state.regCat:'rails';setAddCat();$('aCancel').textContent='Отмена';
+  var dr=null;try{dr=JSON.parse(lsGet('sverka.draft')||'null')}catch(e){}if(dr&&!formFilled(formSnap())){restoreForm(dr);setTimeout(function(){toast('Черновик восстановлен')},50)}
+  $('shAdd').classList.add('on');state.addSnap=snapStr(formSnap())}
 // правка любой позиции — встроенной (оцифровка) и добавленной людьми: та же форма, заполненная
 function openEdit(id){var p=state.register.filter(function(x){return x.id===id})[0];if(!p)return;state.editId=id;
   fillCats();var c=catOf(p),bl=c==='rails'||c==='boxes';$('aCat').value=c;setAddCat();
@@ -1258,13 +1286,15 @@ function openEdit(id){var p=state.register.filter(function(x){return x.id===id})
   else if(pt==='box'&&pl.indexOf('коробка ')===0){$('aPlT').value='box';$('aPl').value=pl.slice(8)}
   else if(pt==='zone'&&pl.indexOf('зона типов, ')===0){$('aPlT').value='zone';$('aPl').value=pl.slice(12)}
   else{$('aPlT').value='free';$('aPl').value=pl}
-  setSel('aOrg',p.origin||'неизвестно');$('aUrl').value=p.url||'';$('aPh').value='';$('aOp').value=p.opened||'';
-  $('aTitle').textContent='Изменить позицию';$('aAdd').textContent='Сохранить';
-  $('aMeta').textContent=(p.addedBy?'добавил '+accName(p.addedBy)+(p.addedAt?' '+p.addedAt:''):'встроенная'+(p.origin?' · '+p.origin:''))+(p.editedBy?' · изменил '+accName(p.editedBy)+' '+(p.editedAt||''):'');
-  $('aHint').textContent='';$('shAdd').classList.add('on')}
+  setSel('aOrg',p.origin||'неизвестно');$('aUrl').value=p.url||'';$('aPh').value='';cardPhotos();$('aPrice').value=p.price==null?'':p.price;$('aOp').value=p.opened||'';
+  $('aTitle').textContent=p.gone?'Позиция (не на полке)':'Изменить позицию';$('aAdd').textContent='Сохранить';cardMoves();
+  $('aMeta').textContent=(p.addedBy?'добавил '+accName(p.addedBy)+(p.addedAt?' '+p.addedAt:''):'из файла загрузки'+(p.origin?' · '+p.origin:''))+(p.editedBy?' · изменил '+accName(p.editedBy)+' '+(p.editedAt||''):'');
+  $('aHint').textContent='';$('aCancel').textContent='Не сохранять';$('shAdd').classList.add('on');state.addSnap=snapStr(formSnap())}
 function showRegItem(id){var tr=$('regTable').querySelector('tr[data-row="'+id+'"]');if(!tr)return;
   setTimeout(function(){if(tr.scrollIntoView)tr.scrollIntoView({block:'center',behavior:'smooth'});tr.classList.remove('flash');void tr.offsetWidth;tr.classList.add('flash')},60)}
 // открыть реестр на конкретной позиции (клик по позиции склада в результате сверки)
+function cardPhotos(){var id=state.editId,box=$('aPhBox');if(!id){box.hidden=true;$('aPhL').textContent='фото';return}
+  box.hidden=false;$('aPhL').textContent='ещё фото — из галереи или камерой';$('aPhotos').innerHTML=thumbsHtml(id,false,true);bindThumbs($('aPhotos'))}
 function openRegItem(id){var p=state.register.filter(function(x){return x.id===id})[0];if(!p)return;
   state.regQ='';$('regQ').value='';state.regCat=catOf(p);lsSet('sverka.regcat',state.regCat);renderRegister();$('shReg').classList.add('on');syncRegBar();showRegItem(id)}
 function addPosition(){
@@ -1280,16 +1310,16 @@ function addPosition(){
     e.cat=cat;e.type=cat==='rails'?'rail':cat==='boxes'?'box':cat;e.series=ser;e.len=len;e.damper=bl?($('aDmp').value||null):null;e.tipon=bl&&$('aTip').value==='1';
     if(bl){delete e.name;delete e.size}else{e.name=name;e.size=$('aSize').value.trim()}
     e.qty=qty;e.unit=bl?'компл':'шт';e.art=$('aArt').value.trim();e.note=$('aNote').value.trim();if(e.place!==place)delete e.placeSrc;e.place=place;e.placeType=plT;e.origin=$('aOrg').value;e.opened=$('aOp').value||null;
-    e.url=normUrl($('aUrl').value);if(!e.url)delete e.url;e.editedBy=who;e.editedAt=new Date().toISOString().slice(0,10);e.updatedAt=Date.now();var phE=$('aPh').files;if(phE&&phE.length)addPhotos(e.id,phE);$('aPh').value='';$('aUrl').value='';
+    e.url=normUrl($('aUrl').value);if(!e.url)delete e.url;var pr=parseFloat(String($('aPrice').value).replace(',','.'));if(isNaN(pr))delete e.price;else e.price=pr;$('aPrice').value='';e.editedBy=who;e.editedAt=new Date().toISOString().slice(0,10);e.updatedAt=Date.now();var phE=$('aPh').files;if(phE&&phE.length)addPhotos(e.id,phE);$('aPh').value='';$('aUrl').value='';
     saveRegister();['aLen','aArt','aNote','aName','aSize','aPl'].forEach(function(id){$(id).value=''});$('aQty').value='1';$('aHint').textContent='';
     $('shAdd').classList.remove('on');state.regQ='';$('regQ').value='';if(state.regCat!=='all'&&state.regCat!==cat){state.regCat=cat;lsSet('sverka.regcat',cat)}
-    renderRegister();render();schedulePush();toast('Сохранено: '+titleOf(e));showRegItem(e.id);return}
+    renderRegister();render();schedulePush();toast((state.autoSave?'Сохранено при закрытии: ':'Сохранено: ')+titleOf(e));showRegItem(e.id);return}
   var p={id:'P'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),type:cat==='rails'?'rail':cat==='boxes'?'box':cat,cat:cat,series:ser,len:len,damper:bl?($('aDmp').value||null):null,tipon:bl&&$('aTip').value==='1',side:null,
     qty:qty,unit:bl?'компл':'шт',art:$('aArt').value.trim(),note:$('aNote').value.trim(),place:place,placeType:plT,origin:$('aOrg').value,opened:$('aOp').value||null,
     checked:false,checkedAt:null,addedBy:who,addedAt:new Date().toISOString().slice(0,10),updatedAt:Date.now()};
   if(!bl){p.name=name;p.size=$('aSize').value.trim()}
-  var u0=normUrl($('aUrl').value);if(u0)p.url=u0;
-  state.register.push(p);saveRegister();var ph0=$('aPh').files;if(ph0&&ph0.length)addPhotos(p.id,ph0);$('aPh').value='';$('aUrl').value='';
+  var u0=normUrl($('aUrl').value);if(u0)p.url=u0;var pr0=parseFloat(String($('aPrice').value).replace(',','.'));if(!isNaN(pr0))p.price=pr0;$('aPrice').value='';
+  state.register.push(p);saveRegister();lsSet('sverka.draft','');var ph0=$('aPh').files;if(ph0&&ph0.length)addPhotos(p.id,ph0);$('aPh').value='';$('aUrl').value='';
   ['aLen','aArt','aNote','aName','aSize'].forEach(function(id){$(id).value=''});$('aQty').value='1';$('aHint').textContent='';
   $('shAdd').classList.remove('on');
   state.regQ='';$('regQ').value='';if(state.regCat!=='all'&&state.regCat!==cat){state.regCat=cat;lsSet('sverka.regcat',cat)}
@@ -1325,7 +1355,7 @@ function importPack(o,fname){
     if(ex)idMap[it.id]=ex.id;
     if(ex){var ch=false;
       if(it.place&&it.place!==ex.place){if(!ex.place||OLD_PLACE.test(ex.place)||ex.placeSrc==='import'){ex.place=it.place;ex.placeType=it.placeType||'addr';ex.placeSrc='import';ch=true}else kept++}
-      ['art','name','size','price','cat','arts'].forEach(function(f){if(it[f]!=null&&it[f]!==''&&(ex[f]==null||ex[f]==='')){ex[f]=it[f];ch=true}});
+      ['art','name','size','price','cat','arts','url'].forEach(function(f){if(it[f]!=null&&it[f]!==''&&(ex[f]==null||ex[f]==='')){ex[f]=it[f];ch=true}});
       if(it.note&&it.note!==ex.note&&(!ex.note||it.note.indexOf(ex.note)===0)){ex.note=it.note;ch=true}
       if(ex.qty==null&&it.qty!=null&&!(ex.issued&&ex.issued.length)){ex.qty=it.qty;ch=true}
       if(ch){ex.updatedAt=now;upd++}else same++;return}
@@ -1380,7 +1410,7 @@ function addrsOf(place){var s=String(place||''),out=[],re=/(^|[^\d-])(\d{1,2})-(
   while((m=re.exec(s))){var a=(+m[2])+'-'+(+m[3]);if(RACK[+m[2]]&&out.indexOf(a)<0)out.push(a)}
   if(!out.length){var r=/(?:\bу|стеллаж[аеу]?)\s+(\d{1,2})\b/.exec(s);if(r&&RACK[+r[1]])out.push(String(+r[1]))}
   return out}
-function planIndex(){var by={},none=[];state.register.forEach(function(p){var a=addrsOf(p.place);if(!a.length){none.push(p);return}a.forEach(function(k){(by[k]=by[k]||[]).push(p)})});return {by:by,none:none}}
+function planIndex(){var by={},none=[];state.register.forEach(function(p){if(p.gone)return;var a=addrsOf(p.place);if(!a.length){none.push(p);return}a.forEach(function(k){(by[k]=by[k]||[]).push(p)})});return {by:by,none:none}}
 function rackKeys(n){var r=RACK[n],k=[String(n)];for(var i=1;i<=r[6];i++)k.push(n+'-'+i);return k}
 function noteOf(k){var o=state.shelves[k];return o&&o.t?o.t:''}
 function planHay(p){return fold([titleOf(p),p.series,p.name,p.len,p.size,p.art,p.place,p.note,CAT_LABEL[catOf(p)]].join(' '))}
@@ -1406,7 +1436,7 @@ function planSvg(q){var sr=planSearch(q),ix=planIndex(),NS='http://www.w3.org/20
 function itemRow(p){return '<div class="pit'+(p.checked?' chk':'')+'"><div class="pt"><b>'+esc(stockKey(p))+'</b>'+(function(){var t=[p.art&&p.art!==stockKey(p)?p.art:'',p.note].filter(Boolean).join(' · ');return t?'<span class="small">'+esc(t.slice(0,140))+'</span>':''})()+'</div>'+
   '<div class="pc"><input type="number" inputmode="numeric" min="0" class="inl n" data-pqty="'+esc(p.id)+'" value="'+esc(p.qty==null?'':p.qty)+'" placeholder="?" title="кол-во; пусто — не считали"><span class="small">'+esc(unitOf(p))+'</span>'+
   '<input class="inl pl" data-pplace="'+esc(p.id)+'" value="'+esc(p.place||'')+'" title="место; впишите другую полку — позиция переедет">'+(p.checked?'<span class="small" title="проверено">✓</span>':'')+
-  '<button class="edt" data-pedit="'+esc(p.id)+'" title="изменить позицию">✎</button></div>'+
+  '<button class="edt" data-pedit="'+esc(p.id)+'" title="изменить позицию">✎</button><button class="mvb" data-pmv="order" data-pid="'+esc(p.id)+'" title="на заказ: выдано или отложено">→ заказ</button><button class="mvb" data-pmv="remove" data-pid="'+esc(p.id)+'" title="убрать с полки — останется в истории">✕</button></div>'+
   '<div class="pph">'+thumbsHtml(p.id,true,true)+urlHtml(p)+'</div></div>'}
 function noteBlock(k,edit){var t=noteOf(k),o=state.shelves[k];
   if(edit)return '<div class="plnote"><textarea data-ntext="'+esc(k)+'" placeholder="что лежит на полке — своими словами">'+esc(t)+'</textarea><div class="plnav"><button class="primary" data-nsave="'+esc(k)+'">Сохранить заметку</button><button data-ncancel="1">Отмена</button></div></div>';
@@ -1444,8 +1474,9 @@ function bindPlan(){var b=$('plBody'),byId=function(id){return state.register.fi
   Array.prototype.forEach.call(b.querySelectorAll('[data-pback]'),function(el){el.addEventListener('click',function(){state.planRack=null;state.planEdit=null;renderPlan();$('shPlan').querySelector('.panel').scrollTop=0})});
   Array.prototype.forEach.call(b.querySelectorAll('[data-prack]'),function(el){el.addEventListener('click',function(){state.planEdit=null;openPlan(+el.getAttribute('data-prack'));$('shPlan').querySelector('.panel').scrollTop=0})});
   Array.prototype.forEach.call(b.querySelectorAll('[data-pnone]'),function(el){el.addEventListener('click',function(e){e.preventDefault();state.planRack='none';renderPlan()})});
-  Array.prototype.forEach.call(b.querySelectorAll('[data-padd]'),function(el){el.addEventListener('click',function(){openAdd();$('aPlT').value='addr';$('aPl').value=el.getAttribute('data-padd');$('aTitle').textContent='Новая позиция на полку '+el.getAttribute('data-padd')})});
+  Array.prototype.forEach.call(b.querySelectorAll('[data-padd]'),function(el){el.addEventListener('click',function(){openAdd();$('aPlT').value='addr';$('aPl').value=el.getAttribute('data-padd');state.addSnap=snapStr(formSnap());$('aTitle').textContent='Новая позиция на полку '+el.getAttribute('data-padd')})});
   Array.prototype.forEach.call(b.querySelectorAll('[data-pedit]'),function(el){el.addEventListener('click',function(){openEdit(el.getAttribute('data-pedit'))})});
+  Array.prototype.forEach.call(b.querySelectorAll('[data-pmv]'),function(el){el.addEventListener('click',function(){openMove(el.getAttribute('data-pid'),el.getAttribute('data-pmv'))})});
   Array.prototype.forEach.call(b.querySelectorAll('.pit .pt'),function(el){el.addEventListener('click',function(){var bt=el.parentNode.querySelector('[data-pedit]');if(bt)openEdit(bt.getAttribute('data-pedit'))})});
   Array.prototype.forEach.call(b.querySelectorAll('[data-pqty]'),function(inp){inp.addEventListener('change',function(){var p=byId(inp.getAttribute('data-pqty'));if(!p)return;
     var v=inp.value.trim()===''?null:Number(inp.value);if(v!==null&&(isNaN(v)||v<0)){inp.value=p.qty==null?'':p.qty;toast('Кол-во — число от 0 или пусто (не считали)');return}
@@ -1458,6 +1489,64 @@ function bindPlan(){var b=$('plBody'),byId=function(id){return state.register.fi
   Array.prototype.forEach.call(b.querySelectorAll('[data-nsave]'),function(el){el.addEventListener('click',function(){var k=el.getAttribute('data-nsave'),ta=$('plBody').querySelector('[data-ntext]');
     state.shelves[k]={t:ta?ta.value.trim():'',at:Date.now(),by:who||''};saveShelves();state.planEdit=null;schedulePush();renderPlan();toast('Заметка к полке '+k+' сохранена')})});
 }
+
+
+
+// ═══ КАРТОЧКА: случайный выход не теряет введённое (30.09) ═══
+// ✕, тап мимо, Esc: правка — сохраняется сама; новая позиция — остаётся черновиком до следующего «＋ Добавить». «Не сохранять» / «Отмена» — выйти без сохранения.
+var CARD_F=['aCat','aSer','aLen','aDmp','aTip','aName','aSize','aQty','aArt','aPlT','aPl','aOrg','aOp','aNote','aPrice','aUrl'];
+function formSnap(){var o={};CARD_F.forEach(function(id){var el=$(id);if(el)o[id]=el.value});return o}
+function snapStr(o){return JSON.stringify(o)}
+function formFilled(o){return ['aLen','aName','aSize','aArt','aPl','aNote','aPrice','aUrl'].some(function(k){return o[k]&&String(o[k]).trim()})}
+function restoreForm(o){if(!o)return;if(o.aCat){$('aCat').value=o.aCat;setAddCat()}CARD_F.forEach(function(id){if(id!=='aCat'&&o[id]!=null&&$(id)){if($(id).tagName==='SELECT')setSel(id,o[id]);else $(id).value=o[id]}})}
+function closeAdd(mode){var sh=$('shAdd');if(!sh.classList.contains('on'))return;var cur=formSnap(),changed=snapStr(cur)!==state.addSnap;
+  if(mode==='discard'){if(!state.editId){lsSet('sverka.draft','');['aLen','aArt','aNote','aName','aSize','aPl','aUrl','aPrice'].forEach(function(id){$(id).value=''});$('aQty').value='1'}sh.classList.remove('on');return}
+  if(state.editId){if(changed){state.autoSave=true;addPosition();state.autoSave=false}else sh.classList.remove('on');return}
+  if(changed&&formFilled(cur)){lsSet('sverka.draft',JSON.stringify(cur));toast('Черновик сохранён — «＋ Добавить» продолжит')}
+  sh.classList.remove('on')}
+
+// ═══ ДВИЖЕНИЯ ПО ПОЗИЦИИ (30.09): «на заказ» и «убрать» — ничего не удаляется, всё пишется в историю позиции (p.moves) ═══
+// kind: order (how: issued — выдано / stored — отложено в место хранения заказа), remove (why), back (вернули на полку), issue (списание из «Закупок», p.issued)
+// Если ушло всё — p.gone: позиции нет на полке, в сверке и на плане, но она остаётся в реестре в разделе «Убрано и выдано».
+function isGone(p){return !!(p&&p.gone)}
+function activeReg(){return state.register.filter(function(p){return !p.gone})}
+var ORDER_CODE=/^\d{2}-\d{2}-\d{2}-\d{2}(-\d{2})?$/;
+state.mv=null;
+function openMove(id,kind){var p=state.register.filter(function(x){return x.id===id})[0];if(!p)return;state.mv={id:id,kind:kind};
+  $('mvTitle').textContent=kind==='order'?'На заказ':kind==='remove'?'Убрать с полки':'Вернуть на полку';
+  $('mvWhat').textContent=titleOf(p)+(p.art?' · '+p.art:'')+' · '+(p.place||'без места')+' · '+(p.qty==null?'кол-во не считали':'на полке '+p.qty+' '+unitOf(p));
+  Array.prototype.forEach.call(document.querySelectorAll('#shMove .mv-o'),function(el){el.hidden=kind!=='order'});
+  Array.prototype.forEach.call(document.querySelectorAll('#shMove .mv-r'),function(el){el.hidden=kind!=='remove'});
+  Array.prototype.forEach.call(document.querySelectorAll('#shMove .mv-b'),function(el){el.hidden=kind!=='back'});
+  $('mvOrder').value='';$('mvHow').value='issued';$('mvTo').value='';$('mvNote').value='';$('mvErr').textContent='';$('mvBack').value=p.gone&&p.gone.from?p.gone.from:(p.place||'');
+  $('mvQty').value='';$('mvQty').placeholder=kind==='back'?'сколько вернули':p.qty==null?'всё':'всё ('+p.qty+')';$('mvQtyL').textContent=kind==='back'?'сколько вернули':'сколько';
+  setMvTo();$('shMove').classList.add('on');setTimeout(function(){(kind==='order'?$('mvOrder'):$('mvQty')).focus()},80)}
+function setMvTo(){var el=document.querySelector('#shMove .mv-to');if(el)el.hidden=!(state.mv&&state.mv.kind==='order'&&$('mvHow').value==='stored')}
+function doMove(){var m=state.mv;if(!m)return;var p=state.register.filter(function(x){return x.id===m.id})[0];if(!p){$('shMove').classList.remove('on');return}
+  var qs=$('mvQty').value.trim(),n=qs===''?null:Number(qs);if(n!==null&&(isNaN(n)||n<=0)){$('mvErr').textContent='сколько — число больше 0 или пусто (всё)';return}
+  var now=new Date(),rec={id:'mv'+now.getTime().toString(36)+Math.random().toString(36).slice(2,5),kind:m.kind,at:now.toISOString(),by:who||'',src:'приложение',from:p.place||'',note:$('mvNote').value.trim()};
+  if(m.kind==='order'){var o=$('mvOrder').value.trim().replace(/[_\s]/g,'-');if(!ORDER_CODE.test(o)){$('mvErr').textContent='код заказа вида 25-12-03-07';$('mvOrder').focus();return}rec.order=o;rec.how=$('mvHow').value;if(rec.how==='stored')rec.to=$('mvTo').value.trim()||'место хранения заказа'}
+  if(m.kind==='remove')rec.why=$('mvWhy').value;
+  if(m.kind==='back'){var to=$('mvBack').value.trim();if(!addrsOf(to).length){$('mvErr').textContent='куда вернуть — стеллаж-полка, например 24-3';return}
+    rec.to=to;rec.qty=n;p.place=to;p.placeType='addr';delete p.placeSrc;if(n!=null)p.qty=(p.qty||0)+n;else if(p.gone&&p.gone.qty!=null)p.qty=(p.qty||0)+p.gone.qty;delete p.gone}
+  else{var take;if(p.qty!=null){take=n==null?p.qty:Math.min(n,p.qty);p.qty-=take}else take=n;
+    rec.qty=take;var all=(p.qty!=null&&p.qty<=0)||(p.qty==null&&n==null);
+    if(all)p.gone={at:rec.at,by:rec.by,from:p.place||'',qty:take,why:m.kind==='order'?(rec.how==='stored'?'отложено на заказ ':'выдано на заказ ')+rec.order:rec.why}}
+  p.moves=(p.moves||[]).concat([rec]);p.updatedAt=Date.now();p.editedBy=who;p.editedAt=now.toISOString().slice(0,10);
+  saveRegister();$('shMove').classList.remove('on');renderRegister();render();schedulePush();if($('shAdd').classList.contains('on')&&state.editId===p.id)cardMoves();
+  toast(m.kind==='back'?'Вернули на '+p.place:(p.gone?'Убрано с полки: ':'Записано: ')+titleOf(p)+(rec.qty!=null?' · '+rec.qty+' '+unitOf(p):''))}
+function moveText(r){var q=r.qty!=null?r.qty+' ':'';
+  if(r.kind==='order')return (r.how==='stored'?'отложено на заказ ':'выдано на заказ ')+r.order+(q?' · '+q.trim():'')+(r.to?' → '+r.to:'');
+  if(r.kind==='remove')return 'убрано: '+(r.why||'')+(q?' · '+q.trim():'');
+  if(r.kind==='back')return 'вернули на '+r.to+(q?' · '+q.trim():'');
+  if(r.kind==='issue')return 'выдано по «Закупкам»'+(r.order?' на '+r.order:'')+(q?' · '+q.trim():'');return r.kind}
+function movesOf(p){var l=(p.moves||[]).slice();(p.issued||[]).forEach(function(x){l.push({kind:'issue',qty:x.qty,order:x.order,at:x.date||'',by:'',src:'«Закупки»'})});
+  return l.sort(function(a,b){return String(a.at)<String(b.at)?-1:1})}
+function cardMoves(){var box=$('aMoves'),id=state.editId,p=id&&state.register.filter(function(x){return x.id===id})[0];if(!p){box.hidden=true;box.innerHTML='';return}
+  var l=movesOf(p),h='<div class="mvbar">'+(p.gone?'<span class="small bad">сейчас не на полке: '+esc(p.gone.why||'')+'</span><button data-mv="back">↩ вернуть на полку</button>':'<button data-mv="order">→ на заказ</button><button data-mv="remove">✕ убрать с полки</button>')+'</div>';
+  if(l.length)h+='<div class="mvhist"><div class="small">история</div>'+l.map(function(r){return '<div>'+esc(String(r.at).slice(0,10))+' · '+esc(moveText(r))+(r.from?' · с '+esc(r.from):'')+(r.by?' · '+esc(accName(r.by)):'')+(r.note?' · «'+esc(r.note)+'»':'')+'</div>'}).join('')+'</div>';
+  box.innerHTML=h;box.hidden=false;
+  Array.prototype.forEach.call(box.querySelectorAll('[data-mv]'),function(b){b.addEventListener('click',function(){openMove(id,b.getAttribute('data-mv'))})})}
 
 // ── настройки ──
 function loadSettings(){var l=lsGet(LS_LIVE);if(l){try{state.live=JSON.parse(l)}catch(e){}}state.showAll=lsGet(LS_SHOWALL)==='1';var th=lsGet(LS_THEME);if(th)document.documentElement.setAttribute('data-theme',th);
@@ -1481,7 +1570,7 @@ function noteHtml(t){var out='',last=0,re=/https?:\/\/[^\s]+/g,m;while((m=re.exe
 function render(){
   var out=$('out'); $('tools').classList.toggle('on',state.files.length>0); $('drop').classList.toggle('compact',state.files.length>0); if(!state.files.length){out.innerHTML='';updateBar();return;}
   var h='';
-  Core.matchAll(state.files,state.register,state.live);
+  Core.matchAll(state.files,activeReg(),state.live);
   state.files.forEach(function(f){
     h+='<div class="card"><div class="hd"><div><h2><span class="code">'+esc(f.order||'—')+'</span>'+esc(cardTitle(f))+'</h2><div class="meta">'+esc(noCode(f.fileName,f.order))+(f.ok?' · лист «'+esc(f.sheet)+'» · вариант '+f.variant+(f.warnings.length?' · '+esc(f.warnings.join('; ')):''):'')+'</div></div><button class="ghost" data-rm="'+f.id+'">убрать</button></div>';
     if(!f.ok){h+='<div class="empty">'+esc(f.error)+'</div></div>';return;}
@@ -1561,8 +1650,10 @@ $('btnClear').addEventListener('click',function(){state.files=[];state.picked={}
 $('btnSet').addEventListener('click',function(){$('shSet').classList.add('on')});$('shSetClose').addEventListener('click',function(){$('shSet').classList.remove('on')});
 $('btnReg').addEventListener('click',function(){renderRegister();$('shReg').classList.add('on');syncRegBar()});
 $('btnPlan').addEventListener('click',function(){openPlan(state.planRack==='none'?null:state.planRack)});$('shRegClose').addEventListener('click',function(){$('shReg').classList.remove('on')});
-Array.prototype.forEach.call(document.querySelectorAll('[data-close]'),function(b){b.addEventListener('click',function(){$(b.getAttribute('data-close')).classList.remove('on')})});
-[$('shSet'),$('shReg'),$('shPlan'),$('shWho'),$('shAdd')].forEach(function(sh){sh.addEventListener('click',function(e){if(e.target===sh)sh.classList.remove('on')})});
+Array.prototype.forEach.call(document.querySelectorAll('[data-close]'),function(b){b.addEventListener('click',function(){var t=b.getAttribute('data-close');if(t==='shAdd'){closeAdd(b.id==='aCancel'?'discard':'auto');return}$(t).classList.remove('on')})});
+[$('shSet'),$('shReg'),$('shPlan'),$('shWho'),$('shAdd'),$('shMove')].forEach(function(sh){sh.addEventListener('click',function(e){if(e.target!==sh)return;if(sh.id==='shAdd'){closeAdd('auto');return}sh.classList.remove('on')})});
+// «наверх»
+Array.prototype.forEach.call(document.querySelectorAll('[data-top]'),function(b){var pn=$(b.getAttribute('data-top')).querySelector('.panel');pn.addEventListener('scroll',function(){b.classList.toggle('on',pn.scrollTop>400)});b.addEventListener('click',function(){pn.scrollTo({top:0,behavior:'smooth'})})});
 $('showAll').addEventListener('change',function(e){state.showAll=e.target.checked;lsSet(LS_SHOWALL,state.showAll?'1':'0');render()});
 $('darkMode').addEventListener('change',function(e){var th=e.target.checked?'dark':'light';document.documentElement.setAttribute('data-theme',th);lsSet(LS_THEME,th)});
 $('regFile').addEventListener('change',function(e){if(e.target.files[0])importRegisterFile(e.target.files[0]);e.target.value=''});
@@ -1571,10 +1662,10 @@ $('btnAdd').addEventListener('click',openAdd);$('aCat').addEventListener('change
 $('regQ').addEventListener('input',function(){state.regQ=$('regQ').value;renderRegister()});
 window.addEventListener('resize',syncRegBar);
 $('regReset').addEventListener('click',function(){if(!fbEnabled){toast('Облако недоступно — нет сети');return}if(!confirm('Заменить реестр на этом устройстве тем, что лежит в облаке?'))return;forcePull()});
-$('btnCopy').addEventListener('click',copySummary);
+$('btnCopy').addEventListener('click',copySummary);$('mvOk').addEventListener('click',doMove);$('mvHow').addEventListener('change',setMvTo);
 $('btnWho').addEventListener('click',askWho);$('whoOk').addEventListener('click',confirmWho);$('whoNameOk').addEventListener('click',saveWhoName);$('whoName').addEventListener('keydown',function(e){if(e.key==='Enter')saveWhoName()});$('whoPin').addEventListener('keydown',function(e){if(e.key==='Enter')confirmWho()});$('shWhoClose').addEventListener('click',function(){$('shWho').classList.remove('on')});$('btnPull').addEventListener('click',forcePull);$('btnPush').addEventListener('click',function(){_unsent++;pushNow()});
 document.addEventListener('keydown',function(e){if(e.key!=='Escape'&&e.key!=='Esc')return;if($('viewer').classList.contains('on')){$('viewer').classList.remove('on');return}
-  var open=['shWho','shAdd','shPlan','shReg','shSet'].filter(function(id){return $(id).classList.contains('on')});if(open.length){$(open[0]).classList.remove('on');e.preventDefault()}});
+  var open=['shWho','shMove','shAdd','shPlan','shReg','shSet'].filter(function(id){return $(id).classList.contains('on')});if(open.length){if(open[0]==='shAdd')closeAdd('auto');else $(open[0]).classList.remove('on');e.preventDefault()}});
 $('viewerClose').addEventListener('click',function(){$('viewer').classList.remove('on')});
 $('viewer').addEventListener('click',function(e){if(e.target===$('viewer'))$('viewer').classList.remove('on')});
 $('viewerDel').addEventListener('click',function(){var id=$('viewer')._id;if(!id)return;if(!confirm('Удалить это фото?'))return;dbDel(id).then(function(){Object.keys(photos).forEach(function(k){photos[k]=photos[k].filter(function(p){return p.id!==id})});$('viewer').classList.remove('on');renderRegister();render();fbDeletePhoto(id);toast('Фото удалено')})});
