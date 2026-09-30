@@ -303,7 +303,7 @@ table.reg button.go{border:none;background:none;padding:2px 4px;min-height:0;cur
 <body>
 <div class="wrap">
   <header>
-    <div class="hl"><div class="ttl"><h1>Сверка склад ↔ заявка</h1><button class="who" id="btnWho" title="Кто работает — нажмите, чтобы сменить">—</button></div><div class="sub">Фурнитура склада · адрес «стеллаж-полка» · работает без сети · v18</div></div>
+    <div class="hl"><div class="ttl"><h1>Сверка склад ↔ заявка</h1><button class="who" id="btnWho" title="Кто работает — нажмите, чтобы сменить">—</button></div><div class="sub">Фурнитура склада · адрес «стеллаж-полка» · работает без сети · v19</div></div>
     <div class="acts"><button class="btn-reg" id="btnPlan">🗺 План</button><button class="btn-reg" id="btnReg">📋 Реестр</button><button class="btn-ico" id="btnSet" title="Настройки" aria-label="Настройки">⚙️</button></div>
     <div class="status"><span class="dot" id="syncDot"></span><span id="syncInfo">локально</span></div>
   </header>
@@ -1291,13 +1291,14 @@ function importRegisterFile(file){
 var OLD_PLACE=/^зона направляющих/;
 function artKeyOf(p){var b=Core.artParts((p.arts&&p.arts[0])||p.art);return b?b.key+'|'+(b.color||'')+'|'+(b.variant||''):''}
 function importPack(o,fname){
-  if(!Array.isArray(o.items)){toast('В файле нет списка позиций');return}
-  var byId={},byArt={},now=Date.now(),today=new Date().toISOString().slice(0,10),add=0,upd=0,same=0,del=0,kept=0;
+  if(!Array.isArray(o.items))o.items=[];if(!o.items.length&&!Array.isArray(o.photos)&&!o.shelves){toast('В файле нет ни позиций, ни фото');return}
+  var byId={},byArt={},idMap={},now=Date.now(),today=new Date().toISOString().slice(0,10),add=0,upd=0,same=0,del=0,kept=0;
   state.register.forEach(function(p){byId[p.id]=p;if(p.type!=='rail'){var k=artKeyOf(p);if(k&&!byArt[catOf(p)+'#'+k])byArt[catOf(p)+'#'+k]=p}});
   o.items.forEach(function(it){if(!it||!it.id)return;
     if(DEL[it.id]){del++;return}
     var ex=byId[it.id];
     if(!ex&&it.type!=='rail'){var k=artKeyOf(it);if(k)ex=byArt[catOf(it)+'#'+k]}   // эту позицию уже завели руками
+    if(ex)idMap[it.id]=ex.id;
     if(ex){var ch=false;
       if(it.place&&it.place!==ex.place){if(!ex.place||OLD_PLACE.test(ex.place)||ex.placeSrc==='import'){ex.place=it.place;ex.placeType=it.placeType||'addr';ex.placeSrc='import';ch=true}else kept++}
       ['art','name','size','price','cat','arts'].forEach(function(f){if(it[f]!=null&&it[f]!==''&&(ex[f]==null||ex[f]==='')){ex[f]=it[f];ch=true}});
@@ -1305,13 +1306,29 @@ function importPack(o,fname){
       if(ex.qty==null&&it.qty!=null&&!(ex.issued&&ex.issued.length)){ex.qty=it.qty;ch=true}
       if(ch){ex.updatedAt=now;upd++}else same++;return}
     var p=JSON.parse(JSON.stringify(it));p.checked=false;p.checkedAt=null;p.placeSrc='import';p.addedBy=who||'';p.addedAt=today;p.importedFrom=(o.date||'')+' '+fname;p.updatedAt=now;
-    state.register.push(p);byId[p.id]=p;add++});
+    state.register.push(p);byId[p.id]=p;idMap[it.id]=p.id;add++});
   var sh=o.shelves&&o.shelves.notes,shA=0,shU=0;
   if(sh&&typeof sh==='object')Object.keys(sh).forEach(function(k){var cur=state.shelves[k];if(!cur||!cur.t){state.shelves[k]={t:sh[k],at:now,by:o.shelves.source||'файл',src:'import'};shA++}else if(cur.src==='import'&&cur.t!==sh[k]){cur.t=sh[k];cur.at=now;shU++}});
   if(shA||shU)saveShelves();
   state.regSource='файл '+fname;saveRegister();renderRegister();render();schedulePush();
   var msg='Загружено из «'+fname+'»: новых '+add+', дополнено '+upd+', без изменений '+same+(shA||shU?', заметок к полкам: новых '+shA+', обновлено '+shU:'')+(kept?', место правили руками — не тронуто: '+kept:'')+(del?', удалённые раньше — пропущено: '+del:'');
-  $('regMeta').textContent=msg;toast('Новых '+add+', дополнено '+upd+(fbEnabled?' — отправляю в облако':' — отправлю, когда будет сеть'));
+  $('regMeta').textContent=msg;
+  // фото из файла: pos — id позиции в файле (или «shelf:24-3»); если позиция в реестре под другим id — ищем по артикулу
+  var phs=Array.isArray(o.photos)?o.photos:[];
+  if(!phs.length){toast('Новых '+add+', дополнено '+upd+(fbEnabled?' — отправляю в облако':' — отправлю, когда будет сеть'));return}
+  var have={};Object.keys(photos).forEach(function(k){photos[k].forEach(function(x){have[x.id]=1})});
+  var artIx={};state.register.forEach(function(p){var k=artKeyOf(p);if(k&&!artIx[k])artIx[k]=p.id;if(p.art&&!artIx['='+p.art])artIx['='+p.art]=p.id});
+  var phA=0,phSame=0,phNo=0,chain=Promise.resolve();
+  phs.forEach(function(ph){if(!ph||!ph.id||!ph.pos||!ph.data)return;
+    if(have[ph.id]||DEL[ph.id]){phSame++;return}
+    var pos=ph.pos;
+    if(pos.indexOf('shelf:')!==0){pos=idMap[pos]||(byId[pos]&&pos)||(ph.art&&(artIx[artKeyOf({art:ph.art})]||artIx['='+ph.art]))||null}
+    if(!pos){phNo++;return}
+    var rec={id:ph.id,pos:pos,data:ph.data,at:ph.at||new Date().toISOString(),name:ph.name||'',by:ph.by||'',url:null};have[ph.id]=1;phA++;
+    chain=chain.then(function(){return dbPut(rec).then(function(){(photos[pos]=photos[pos]||[]).push(rec)}).catch(function(){})})});
+  chain.then(function(){Object.keys(photos).forEach(function(k){photos[k].sort(function(a,b){return a.at<b.at?-1:1})});renderRegister();render();if(phA)schedulePush();
+    var m2=msg+(phs.length?' · фото: новых '+phA+(phSame?', уже были '+phSame:'')+(phNo?', позиция не найдена '+phNo:''):'');$('regMeta').textContent=m2;
+    toast('Фото: новых '+phA+(phA?(fbEnabled?' — отправляю в облако, это займёт несколько минут':' — отправлю, когда будет сеть'):''))});
 }
 function exportRegister(){var ph=[];Object.keys(photos).forEach(function(k){photos[k].forEach(function(p){ph.push(p)})});var blob=new Blob([JSON.stringify({loadedAt:new Date().toISOString(),source:state.regSource||'это устройство',items:state.register,photos:ph},null,1)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='реестр_склад_'+new Date().toISOString().slice(0,10)+'.json';a.click();}
 
