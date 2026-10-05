@@ -1344,14 +1344,16 @@ function importRegisterFile(file){
 // У заведённых не трогаем кол-во, «проверено», фото, списания и место, которое правили руками.
 var OLD_PLACE=/^зона направляющих/;
 function artKeyOf(p){var b=Core.artParts((p.arts&&p.arts[0])||p.art);return b?b.key+'|'+(b.color||'')+'|'+(b.variant||''):''}
-function importPack(o,fname){
-  if(!Array.isArray(o.items))o.items=[];if(!o.items.length&&!Array.isArray(o.photos)&&!o.shelves){toast('В файле нет ни позиций, ни фото');return}
-  var byId={},byArt={},idMap={},now=Date.now(),today=new Date().toISOString().slice(0,10),add=0,upd=0,same=0,del=0,kept=0;
+function importPack(o,fname,pre){
+  if(o.mode==='count'){importCount(o,fname);return}
+  if(!Array.isArray(o.items))o.items=[];if(pre&&!o.items.length&&!Array.isArray(o.photos)&&!o.shelves){renderRegister();render();schedulePush();$('regMeta').textContent=pre;toast(pre);return}if(!o.items.length&&!Array.isArray(o.photos)&&!o.shelves){toast('В файле нет ни позиций, ни фото');return}
+  var byId={},byArt={},idMap={},noItem=0,now=Date.now(),today=new Date().toISOString().slice(0,10),add=0,upd=0,same=0,del=0,kept=0;
   state.register.forEach(function(p){byId[p.id]=p;if(p.type!=='rail'){var k=artKeyOf(p);if(k&&!byArt[catOf(p)+'#'+k])byArt[catOf(p)+'#'+k]=p}});
   o.items.forEach(function(it){if(!it||!it.id)return;
     if(DEL[it.id]){del++;return}
     var ex=byId[it.id];
     if(!ex&&it.type!=='rail'){var k=artKeyOf(it);if(k)ex=byArt[catOf(it)+'#'+k]}   // эту позицию уже завели руками
+    if(!ex&&it.fillOnly){noItem++;return}   // файл-дополнение: только дописать поля у тех, кто уже есть
     if(ex)idMap[it.id]=ex.id;
     if(ex){var ch=false;
       if(it.place&&it.place!==ex.place){if(!ex.place||OLD_PLACE.test(ex.place)||ex.placeSrc==='import'){ex.place=it.place;ex.placeType=it.placeType||'addr';ex.placeSrc='import';ch=true}else kept++}
@@ -1365,11 +1367,11 @@ function importPack(o,fname){
   if(sh&&typeof sh==='object')Object.keys(sh).forEach(function(k){var cur=state.shelves[k];if(!cur||!cur.t){state.shelves[k]={t:sh[k],at:now,by:o.shelves.source||'файл',src:'import'};shA++}else if(cur.src==='import'&&cur.t!==sh[k]){cur.t=sh[k];cur.at=now;shU++}});
   if(shA||shU)saveShelves();
   state.regSource='файл '+fname;saveRegister();renderRegister();render();schedulePush();
-  var msg='Загружено из «'+fname+'»: новых '+add+', дополнено '+upd+', без изменений '+same+(shA||shU?', заметок к полкам: новых '+shA+', обновлено '+shU:'')+(kept?', место правили руками — не тронуто: '+kept:'')+(del?', удалённые раньше — пропущено: '+del:'');
+  var msg=(pre||'')+'Загружено из «'+fname+'»: новых '+add+', дополнено '+upd+', без изменений '+same+(shA||shU?', заметок к полкам: новых '+shA+', обновлено '+shU:'')+(kept?', место правили руками — не тронуто: '+kept:'')+(del?', удалённые раньше — пропущено: '+del:'')+(noItem?', позиции нет в реестре — пропущено: '+noItem:'');
   $('regMeta').textContent=msg;
   // фото из файла: pos — id позиции в файле (или «shelf:24-3»); если позиция в реестре под другим id — ищем по артикулу
   var phs=Array.isArray(o.photos)?o.photos:[];
-  if(!phs.length){toast('Новых '+add+', дополнено '+upd+(fbEnabled?' — отправляю в облако':' — отправлю, когда будет сеть'));return}
+  if(!phs.length){toast((pre||'')+'Новых '+add+', дополнено '+upd+(fbEnabled?' — отправляю в облако':' — отправлю, когда будет сеть'));return}
   var have={};Object.keys(photos).forEach(function(k){photos[k].forEach(function(x){have[x.id]=1})});
   var artIx={};state.register.forEach(function(p){var k=artKeyOf(p);if(k&&!artIx[k])artIx[k]=p.id;if(p.art&&!artIx['='+p.art])artIx['='+p.art]=p.id});
   var phA=0,phSame=0,phNo=0,chain=Promise.resolve();
@@ -1384,6 +1386,30 @@ function importPack(o,fname){
     var m2=msg+(phs.length?' · фото: новых '+phA+(phSame?', уже были '+phSame:'')+(phNo?', позиция не найдена '+phNo:''):'');$('regMeta').textContent=m2;
     toast('Фото: новых '+phA+(phA?(fbEnabled?' — отправляю в облако, это займёт несколько минут':' — отправлю, когда будет сеть'):''))});
 }
+// v23: пакет «пересчёт» (mode:'count') — итог описи по позициям, которые уже есть в реестре.
+// counts: [{id, art?, qty} — посчитано столько | {id, gone:'причина'} — нет на складе | set:{…} — поправить признаки | noteAdd — дописать в примечание]
+// Старое кол-во не теряется: в историю позиции пишется «пересчёт: было → стало». Повторная загрузка того же файла (o.id) ничего не меняет.
+// items — новые позиции, как в обычном пакете.
+function importCount(o,fname){
+  var pk=o.id||fname,src=o.source||fname,counts=Array.isArray(o.counts)?o.counts:[],byId={},byArt={},now=new Date(),at=o.at||now.toISOString(),n={chg:0,same:0,gone:0,again:0,no:0,back:0};
+  state.register.forEach(function(p){byId[p.id]=p;if(p.type!=='rail'){var k=artKeyOf(p);if(k&&!byArt[catOf(p)+'#'+k])byArt[catOf(p)+'#'+k]=p}});
+  counts.forEach(function(c){if(!c||!c.id)return;
+    var p=byId[c.id];if(!p&&c.art&&c.type!=='rail'){var k=artKeyOf(c);if(k)p=byArt[catOf(c)+'#'+k]}
+    if(!p){n.no++;return}
+    if((p.moves||[]).some(function(r){return r.pack===pk})){n.again++;return}
+    var rec={id:'mv'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),at:at,by:who||'',src:src,pack:pk,from:p.place||'',note:c.note||''};
+    if(c.gone){if(p.gone){n.again++;return}
+      rec.kind='remove';rec.why=c.gone;rec.qty=p.qty;p.gone={at:at,by:rec.by,from:p.place||'',qty:p.qty,why:c.gone};if(p.qty!=null)p.qty=0;n.gone++}
+    else{rec.kind='count';rec.was=p.qty;rec.qty=c.qty;
+      if(p.gone){rec.note=(rec.note?rec.note+'; ':'')+'было «'+(p.gone.why||'убрано')+'» — нашлось';delete p.gone;n.back++}
+      if(p.qty===c.qty)n.same++;else n.chg++;p.qty=c.qty}
+    if(c.set&&typeof c.set==='object')Object.keys(c.set).forEach(function(f){p[f]=c.set[f]});
+    if(c.noteAdd&&String(p.note||'').indexOf(c.noteAdd)<0)p.note=(p.note?p.note+'; ':'')+c.noteAdd;
+    p.moves=(p.moves||[]).concat([rec]);p.updatedAt=Date.now();p.editedBy=who;p.editedAt=now.toISOString().slice(0,10)});
+  saveRegister();
+  var pre='Пересчёт «'+src+'»: совпало '+n.same+', кол-во изменено '+n.chg+', убрано «нет на складе» '+n.gone+(n.back?', вернули на полку '+n.back:'')+(n.again?', уже внесено раньше — пропущено '+n.again:'')+(n.no?', позиции нет в реестре — пропущено '+n.no:'')+'. ';
+  var o2={format:o.format,date:o.date,items:Array.isArray(o.items)?o.items:[]};
+  importPack(o2,fname,pre)}
 function exportRegister(){var ph=[];Object.keys(photos).forEach(function(k){photos[k].forEach(function(p){ph.push(p)})});var blob=new Blob([JSON.stringify({loadedAt:new Date().toISOString(),source:state.regSource||'это устройство',items:state.register,photos:ph},null,1)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='реестр_склад_'+new Date().toISOString().slice(0,10)+'.json';a.click();}
 
 
@@ -1539,6 +1565,7 @@ function moveText(r){var q=r.qty!=null?r.qty+' ':'';
   if(r.kind==='order')return (r.how==='stored'?'отложено на заказ ':'выдано на заказ ')+r.order+(q?' · '+q.trim():'')+(r.to?' → '+r.to:'');
   if(r.kind==='remove')return 'убрано: '+(r.why||'')+(q?' · '+q.trim():'');
   if(r.kind==='back')return 'вернули на '+r.to+(q?' · '+q.trim():'');
+  if(r.kind==='count')return 'пересчёт'+(r.src?' ('+r.src+')':'')+': '+(r.was==null?'?':r.was)+' → '+r.qty+(r.was===r.qty?' — совпало':'');
   if(r.kind==='issue')return 'выдано по «Закупкам»'+(r.order?' на '+r.order:'')+(q?' · '+q.trim():'');return r.kind}
 function movesOf(p){var l=(p.moves||[]).slice();(p.issued||[]).forEach(function(x){l.push({kind:'issue',qty:x.qty,order:x.order,at:x.date||'',by:'',src:'«Закупки»'})});
   return l.sort(function(a,b){return String(a.at)<String(b.at)?-1:1})}
