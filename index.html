@@ -309,7 +309,7 @@ table.reg button.go{border:none;background:none;padding:2px 4px;min-height:0;cur
 <body>
 <div class="wrap">
   <header>
-    <div class="hl"><div class="ttl"><h1>Сверка склад ↔ заявка</h1><button class="who" id="btnWho" title="Кто работает — нажмите, чтобы сменить">—</button></div><div class="sub">Фурнитура склада · адрес «стеллаж-полка» · работает без сети · v24</div></div>
+    <div class="hl"><div class="ttl"><h1>Сверка склад ↔ заявка</h1><button class="who" id="btnWho" title="Кто работает — нажмите, чтобы сменить">—</button></div><div class="sub">Фурнитура склада · адрес «стеллаж-полка» · работает без сети · v25</div></div>
     <div class="acts"><button class="btn-reg" id="btnPlan">🗺 План</button><button class="btn-reg" id="btnReg">📋 Реестр</button><button class="btn-ico" id="btnSet" title="Настройки" aria-label="Настройки">⚙️</button></div>
     <div class="status"><span class="dot" id="syncDot"></span><span id="syncInfo">локально</span></div>
   </header>
@@ -1181,10 +1181,15 @@ function applyIssuesDoc(data){var items;try{items=JSON.parse((data&&data.items)|
 function applyIssues(items){
   if(!_firstSyncDone||!Array.isArray(items))return;
   var applied=lsArr(LS_ISS_APPLIED),seen={},unm=lsArr(LS_ISS_UNM),newIds=false,unmNew=false,changed=0;
-  applied.forEach(function(id){seen[id]=1});
+  // v25: списание из «не нашли на полке» пробуем снова при каждом обновлении — его могла «съесть» старая версия
+  // приложения, открытая в другой вкладке (v23 не понимала списаний по артикулу). Применённое ищем в самом реестре.
+  var unmIds={};unm.forEach(function(u){if(u&&u.id)unmIds[u.id]=1});
+  applied.forEach(function(id){if(!unmIds[id])seen[id]=1});
   state.register.forEach(function(p){(p.issued||[]).forEach(function(x){if(x&&x.id)seen[x.id]=1})});   // след в самом реестре — защита от повтора на другом устройстве
+  var unm0=unm.length;unm=unm.filter(function(u){return !(u&&u.id&&seen[u.id]&&u.why!=='не хватило на полке')});if(unm.length!==unm0)unmNew=true;   // v25: уже применено (на другом устройстве) — убрать из «не нашли»
   items.forEach(function(it){
-    if(!it||!it.id||seen[it.id])return;seen[it.id]=1;applied.push(it.id);newIds=true;
+    if(!it||!it.id||seen[it.id])return;seen[it.id]=1;if(applied.indexOf(it.id)<0)applied.push(it.id);newIds=true;
+    if(unmIds[it.id]){for(var k0=unm.length-1;k0>=0;k0--)if(unm[k0].id===it.id)unm.splice(k0,1);unmNew=true}
     if(it.kind==='notfound'){for(var k=unm.length-1;k>=0;k--)if(unm[k].id===it.ref){unm.splice(k,1);unmNew=true}if(markNotFound(it))changed++;return}
     var len=Number(it.len),q=Number(it.qty)||0,date=it.date||String(it.at||'').slice(0,10);
     if(q<=0)return;
