@@ -871,51 +871,72 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   }
 
   // ── сверка по артикулу: всё, что не направляющие Blum (петли, подъёмники, комплектующие, свет, крепёж…) ──
-  // Ключ — первое слово артикула без точек и дефисов; цвет (ONS, NI, OG…) и вариант Arlight «(2)» сравниваются отдельно:
-  // совпал ключ, а цвет/вариант другой → «похожее». Хвост из букв (70T3550.TL ↔ 70T3550.TLMB) → «похожее».
+  // Артикул делится на: key — первое слово без точек и дефисов; full — все слова, кроме цвета; цвет; вариант Arlight «(2)».
+  // В «Закупках» артикул полный (71B3550 MB V250 ONS), на полке — короткий (71B3550 ONS, 70.1503 BP ONI, TA0213 WUGL).
+  // То же самое: короткий артикул полки = первое слово заявки, или совпали целиком (TA0213WUGL = TA0213 WUGL).
+  // Похожее: отличается только хвост из букв (70T3550.TL ↔ 70T3550.TLMB, 174H7100 ↔ 174H7100E), или другой цвет / вариант,
+  //          или в заявке цвет не указан, а на полке указан.
+  // v24: цвет и по названию «терра»; «ONI» на этикетках = ONS; лишние слова на полке (SBL, HPL-SR) больше не совпадают с другим исполнением.
   var LAT = { 'А': 'A', 'В': 'B', 'Е': 'E', 'К': 'K', 'М': 'M', 'Н': 'H', 'О': 'O', 'Р': 'P', 'С': 'C', 'Т': 'T', 'Х': 'X', 'У': 'Y' };
-  var COLOR = /^(ONS|ONI|NI|OG|SEIW|R?9005|R?9006|R73[67]|TGR|OBI)$/;
+  var COLOR = /^(ONS|ONI|NI|OG|SEIW|TERS|R?9005|R?9006|R73[67]|TGR|OBI)$/;
+  var COLOR_TAIL = /^V?\d+(TERS|ONS|NI)$/;                     // 250TERS, V50TERS — цвет приклеен к коду упаковки
   function artParts(src) {
-    var t = String(src == null ? '' : src).toUpperCase().replace(/[АВЕКМНОРСТХУ]/g, function (c) { return LAT[c]; }).replace(/ /g, ' ').trim();
+    var t = String(src == null ? '' : src).toUpperCase().replace(/[АВЕКМНОРСТХУ]/g, function (c) { return LAT[c]; }).replace(/ /g, ' ').replace(/\([^)]*\s[^)]*\)/g, ' ').trim();
     if (!t || !/\d/.test(t)) return null;
-    var toks = t.split(/\s+/), head = toks[0], color = '';
-    toks.slice(1).forEach(function (x) { x = x.replace(/^[-.]+/, ''); if (!color && COLOR.test(x)) color = x.replace(/^R(?=900)/, ''); });
+    var toks = t.split(/\s+/), head = toks[0], color = '', rest = [];
+    toks.slice(1).forEach(function (x) {
+      x = x.replace(/^[-.]+/, ''); if (!x) return;
+      if (COLOR.test(x)) { if (!color) color = x.replace(/^R(?=900)/, ''); return; }
+      var ct = COLOR_TAIL.exec(x); if (ct) { if (!color) color = ct[1]; return; }
+      rest.push(x);
+    });
     var mc = /^(.*\d.*?)-(OG|ONS|ONI|NI|SEIW)$/.exec(head); if (mc) { head = mc[1]; color = color || mc[2]; }
     var mv = /\((\d+)\)$/.exec(head), variant = mv ? mv[1] : ''; head = head.replace(/\(\d+\)$/, '');
     var key = head.replace(/[^A-Z0-9]/g, '');
     if (key.length < 4 || !/\d/.test(key)) return null;
-    return { key: key, color: color, variant: variant };
+    if (color === 'ONI') color = 'ONS';                      // «ONI» на этикетках склада = оникс (ONS)
+    var full = (head + rest.join('')).replace(/[^A-Z0-9]/g, '');
+    return { key: key, full: full, color: color, variant: variant };
   }
+  function letterTail(long, short) { return long.length > short.length && long.indexOf(short) === 0 && /^[A-Z]{1,6}$/.test(long.slice(short.length)); }
   function matchArt(r, register) {
     var a = artParts(r.art); if (!a) return null;
     var nm = String(r.name || '');
-    if (!a.color) { if (/оникс/i.test(nm)) a.color = 'ONS'; else if (/никел/i.test(nm) && !/черн/i.test(nm)) a.color = 'NI'; }
+    if (!a.color) { if (/оникс/i.test(nm)) a.color = 'ONS'; else if (/терра/i.test(nm)) a.color = 'TERS'; else if (/никел/i.test(nm) && !/черн/i.test(nm)) a.color = 'NI'; }
     var exact = [], similar = [], why = {};
     register.forEach(function (p) {
-      if (p.type === 'rail' || !(p.qty == null || p.qty > 0)) return;
+      if (p.type === 'rail' || p.gone || !(p.qty == null || p.qty > 0)) return;
       (p.arts && p.arts.length ? p.arts : [p.art]).forEach(function (k) {
-        var b = artParts(k); if (!b) return; var hit = '';
-        if (b.key === a.key) {
-          if (a.variant && b.variant && a.variant !== b.variant) hit = 'вариант в заявке (' + a.variant + '), на полке (' + b.variant + ')';
-          else if (a.color && b.color && a.color !== b.color) hit = 'цвет в заявке ' + a.color + ', на полке ' + b.color;
-          else hit = '=';
-        } else if ((a.key.indexOf(b.key) === 0 && /^[A-Z]{1,4}$/.test(a.key.slice(b.key.length))) ||
-                   (b.key.indexOf(a.key) === 0 && /^[A-Z]{1,4}$/.test(b.key.slice(a.key.length)))) hit = 'артикул почти тот же: на полке ' + k;
-        if (!hit) return;
+        var b = artParts(k); if (!b) return; var hit = '', same = false, near = false;
+        var bk = b.full, other = false;                        // что написано на полке, без цвета
+        if (bk === a.key || bk === a.full) same = true;
+        else if (letterTail(a.key, bk) || letterTail(a.full, bk)) near = true;
+        else if (letterTail(bk, a.key)) { if (a.full === a.key) near = true; else other = true; }   // 955.1008 HPL-KL ≠ 955.1008 HPL-SR
+        if (!same && !near && !other) return;
+        if (other) hit = 'исполнение другое: в заявке ' + r.art + ', на полке ' + k;
+        else if (a.variant && b.variant && a.variant !== b.variant) hit = 'вариант в заявке (' + a.variant + '), на полке (' + b.variant + ')';
+        else if (a.color && b.color && a.color !== b.color) hit = 'цвет в заявке ' + a.color + ', на полке ' + b.color;
+        else if (!a.color && b.color) hit = 'в заявке цвет не указан, на полке ' + b.color;
+        else if (near) hit = 'артикул почти тот же: на полке ' + k;
+        else hit = '=';
         if (hit === '=') { if (exact.indexOf(p) < 0) exact.push(p); }
         else if (exact.indexOf(p) < 0 && similar.indexOf(p) < 0) { similar.push(p); why[p.id] = hit; }
       });
     });
     similar = similar.filter(function (p) { return exact.indexOf(p) < 0; });
+    // сначала те, где цвет на полке указан и совпал, потом — где на полке цвет не указан
+    var colorRank = function (p) { var b = artParts(p.art); return b && a.color && b.color === a.color ? 0 : 1; };
+    exact.sort(function (x, y) { return colorRank(x) - colorRank(y); });
     if (exact.length) {
       var notes = [], ru = (r.norm && r.norm.unit) || '', pu = exact[0].unit || 'шт', mism = false;
       if (ru && pu !== ru && !(/^(шт|компл)$/.test(ru) && /^(шт|компл)$/.test(pu))) { mism = true; notes.push('в заявке ' + ru + ', на складе считаем в ' + pu + ' — пересчитать'); }
+      if (a.color && colorRank(exact[0]) === 1) notes.push('цвет на полке не указан — проверить, что ' + a.color);
       var chk = exact.filter(function (p) { return p.checked; });
       return { status: chk.length ? 'green' : 'orange', label: '', hits: chk.length ? chk : exact, notes: notes, byArt: true, unit: pu, unitMismatch: mism };
     }
     if (similar.length) {
       var ws = []; similar.forEach(function (p) { if (ws.indexOf(why[p.id]) < 0) ws.push(why[p.id]); });
-      return { status: 'yellow', label: 'есть похожее', hits: similar, notes: ws, byArt: true, unit: similar[0].unit || 'шт' };
+      return { status: 'yellow', label: 'есть похожее', hits: similar, notes: ws, why: why, byArt: true, unit: similar[0].unit || 'шт' };
     }
     return null;
   }
@@ -1164,13 +1185,16 @@ function applyIssues(items){
   state.register.forEach(function(p){(p.issued||[]).forEach(function(x){if(x&&x.id)seen[x.id]=1})});   // след в самом реестре — защита от повтора на другом устройстве
   items.forEach(function(it){
     if(!it||!it.id||seen[it.id])return;seen[it.id]=1;applied.push(it.id);newIds=true;
+    if(it.kind==='notfound'){for(var k=unm.length-1;k>=0;k--)if(unm[k].id===it.ref){unm.splice(k,1);unmNew=true}if(markNotFound(it))changed++;return}
     var len=Number(it.len),q=Number(it.qty)||0,date=it.date||String(it.at||'').slice(0,10);
     if(q<=0)return;
+    if(it.kind==='art'){var u0=unm.length;if(applyArtIssue(it,q,date,unm))changed++;if(unm.length>u0)unmNew=true;return}
     var base=state.register.filter(function(p){return !p.gone&&p.type==='rail'&&p.series===it.series&&Number(p.len)===len&&p.qty>0});
     var cand=it.damper?base.filter(function(p){return p.damper===it.damper}):base,similar=false;
     if(it.damper&&!cand.length&&base.length){cand=base;similar=true}
     cand=cand.map(function(p){return [p,state.register.indexOf(p)]}).sort(function(a,b){return ((b[0].checked?1:0)-(a[0].checked?1:0))||(a[1]-b[1])}).map(function(x){return x[0]});
-    var need=q;
+    var need=bindMoves(state.register.filter(function(p){return p.type==='rail'&&p.series===it.series&&Number(p.len)===len&&(!it.damper||p.damper===it.damper)}),it,q,date);
+    if(need<q)changed++;
     cand.forEach(function(p){if(need<=0)return;var take=Math.min(need,p.qty);if(!(take>0))return;
       var rec={id:it.id,qty:take,order:it.order||'',date:date};if(similar)rec.similar=true;
       p.qty-=take;p.issued=(p.issued||[]).concat([rec]);p.updatedAt=Date.now();need-=take;changed++});
@@ -1182,14 +1206,40 @@ function applyIssues(items){
   if(changed){saveRegister();renderRegister();render();schedulePush();toast('Списано по «Закупкам»')}
   else if(unmNew)renderRegister();
 }
+// v24: списание по артикулу (петли, планки, заглушки…). Скрипт сам выбирает позиции на полке (it.ids) —
+// так же, как сверка по артикулу; если их уже нет — ищем заново. Кол-во не считали (null) — пишем только историю.
+function applyArtIssue(it,q,date,unm){
+  var live=state.register.filter(function(p){return !p.gone&&p.type!=='rail'});
+  var cand=(it.ids||[]).map(function(id){return live.filter(function(p){return p.id===id})[0]}).filter(Boolean);
+  if(!cand.length){var m=Core.matchArt({art:it.art,name:it.name,norm:{unit:it.unit}},live);if(m&&m.status!=='yellow')cand=m.hits.slice()}
+  var need=bindMoves(state.register.filter(function(p){return (it.ids||[]).indexOf(p.id)>=0}),it,q,date),did=need<q,okUnit=function(p){var pu=p.unit||'шт',ru=it.unit||'';return !ru||pu===ru||(/^(шт|компл)$/.test(pu)&&/^(шт|компл)$/.test(ru))};
+  cand.filter(function(p){return p.qty!=null&&p.qty>0&&okUnit(p)}).forEach(function(p){if(need<=0)return;var take=Math.min(need,p.qty);
+    p.qty-=take;p.issued=(p.issued||[]).concat([{id:it.id,qty:take,order:it.order||'',date:date}]);p.updatedAt=Date.now();need-=take;did=true});
+  if(need>0&&cand.length){var p=cand.filter(function(x){return x.qty==null||!okUnit(x)})[0];
+    if(p){p.issued=(p.issued||[]).concat([{id:it.id,qty:need,order:it.order||'',date:date,uncounted:true}]);p.updatedAt=Date.now();need=0;did=true}}
+  if(need>0){unm.push({id:it.id,key:it.art||it.key||'',qty:need,unit:it.unit||'шт',order:it.order||'',date:date,why:did?'не хватило на полке':'нет на полке'})}
+  return did}
+// Отметка в приложении «→ на заказ» с тем же кодом заказа уже сняла позицию с полки — списание из «Закупок»
+// привязываем к ней и второй раз не уменьшаем (документ «Движения по складу и скрипт в «Закупках» (30.09)»).
+function bindMoves(list,it,need,date){
+  list.forEach(function(p){(p.moves||[]).forEach(function(m){if(need<=0||m.kind!=='order'||!it.order||m.order!==it.order||m.issueId)return;
+    m.issueId=it.id;var q=m.qty!=null?Math.min(m.qty,need):need;
+    p.issued=(p.issued||[]).concat([{id:it.id,qty:q,order:it.order,date:date,bound:true}]);p.updatedAt=Date.now();need-=q})});
+  return need}
+// «Не нашлось» (решение 01.10): строку в «Закупках» вернули из «Выдать со склада» в закупку — скрипт присылает notfound,
+// у позиций, с которых списали по этой строке, появляется примечание «не нашлось — проверить». Кол-во не трогаем.
+function markNotFound(it){var d=it.date||String(it.at||'').slice(0,10),hit=false,t='⚠ не нашлось на полке по «Закупкам»: заказ '+(it.order||'')+', '+d+' — проверить';
+  state.register.forEach(function(p){var l=(p.issued||[]).filter(function(x){return x&&x.id===it.ref});if(!l.length)return;
+    l.forEach(function(x){x.notFound=d});if(String(p.note||'').indexOf(t)<0)p.note=(p.note?p.note+'; ':'')+t;p.updatedAt=Date.now();hit=true});
+  return hit}
 function renderIssInfo(){var el=$('regIss');if(!el)return;var since=new Date(Date.now()-30*864e5).toISOString().slice(0,10),ids={},q=0;
   state.register.forEach(function(p){(p.issued||[]).forEach(function(x){if(x&&x.date>=since){ids[x.id]=1;q+=x.qty||0}})});
   var n=Object.keys(ids).length,unm=lsArr(LS_ISS_UNM);
-  var h='списано по «Закупкам»: '+n+' за 30 дней'+(q?' ('+q+' компл.)':'');
-  if(unm.length)h+=' · <details class="unm"><summary>не нашли на полке: '+unm.length+'</summary><ul>'+unm.slice().reverse().map(function(u){return '<li>'+esc(u.key)+' · '+esc(u.qty)+' компл. · '+esc(u.order)+' · '+esc(u.date)+(u.why==='не хватило на полке'?' · не хватило':'')+'</li>'}).join('')+'</ul></details>';
+  var h='списано по «Закупкам»: '+n+' за 30 дней';
+  if(unm.length)h+=' · <details class="unm"><summary>не нашли на полке: '+unm.length+'</summary><ul>'+unm.slice().reverse().map(function(u){return '<li>'+esc(u.key)+' · '+esc(u.qty)+' '+esc(u.unit||'компл')+' · '+esc(u.order)+' · '+esc(u.date)+(u.why==='не хватило на полке'?' · не хватило':'')+'</li>'}).join('')+'</ul></details>';
   el.innerHTML=h}
 function issuedHtml(p){var l=p.issued||[];if(!l.length)return '';var sum=0,last=l[0];l.forEach(function(x){sum+=x.qty||0;if((x.date||'')>=(last.date||''))last=x});
-  return '<div class="small">выдано: '+sum+' (последнее '+esc(last.date||'')+' → '+esc(last.order||'')+(last.similar?', похожее':'')+')</div>'}
+  return '<div class="small">выдано: '+sum+' (последнее '+esc(last.date||'')+' → '+esc(last.order||'')+(last.similar?', похожее':'')+(last.notFound?', не нашлось — проверить':'')+')</div>'}
 
 // ── реестр ──
 function loadRegister(){
