@@ -76,6 +76,11 @@ label.chip{display:inline-flex;gap:6px;align-items:center;border:1.5px solid var
 .viewer .vb{display:flex;gap:8px}.viewer .cap{color:#F0EFEA;font-size:12px}
 select.sel{font-family:inherit;font-size:12px;border:1.5px solid var(--brd);border-radius:6px;padding:3px 6px;background:var(--surf);color:var(--t1)}
 .small{font-size:12px;color:var(--t2)}
+.outbar{gap:8px;flex-wrap:wrap;align-items:center}.outbar input{flex:1;min-width:160px}
+.outgrp{margin:14px 0 4px;font-weight:600;font-size:14px}.outgrp .small{font-weight:400}
+table.outt{width:100%;border-collapse:collapse;font-size:13px}table.outt td,table.outt th{padding:5px 6px;border-bottom:1px solid var(--brd);text-align:left;vertical-align:top}
+table.outt th{font-weight:500;color:var(--t2);font-size:12px}table.outt tr[data-id]{cursor:pointer}table.outt tr[data-id]:hover{background:var(--accbg)}
+table.outt td.n{text-align:right;white-space:nowrap}.outwarn{color:#b35c00}
 @media (max-width:700px){.hidecol{display:none}.wrap{padding:12px 12px 90px}}
 /* ── шапка: название + имя, реестр, настройки ── */
 header .hl{flex:1 1 auto;min-width:0}
@@ -309,8 +314,8 @@ table.reg button.go{border:none;background:none;padding:2px 4px;min-height:0;cur
 <body>
 <div class="wrap">
   <header>
-    <div class="hl"><div class="ttl"><h1>Сверка склад ↔ заявка</h1><button class="who" id="btnWho" title="Кто работает — нажмите, чтобы сменить">—</button></div><div class="sub">Фурнитура склада · адрес «стеллаж-полка» · работает без сети · v25</div></div>
-    <div class="acts"><button class="btn-reg" id="btnPlan">🗺 План</button><button class="btn-reg" id="btnReg">📋 Реестр</button><button class="btn-ico" id="btnSet" title="Настройки" aria-label="Настройки">⚙️</button></div>
+    <div class="hl"><div class="ttl"><h1>Сверка склад ↔ заявка</h1><button class="who" id="btnWho" title="Кто работает — нажмите, чтобы сменить">—</button></div><div class="sub">Фурнитура склада · адрес «стеллаж-полка» · работает без сети · v26</div></div>
+    <div class="acts"><button class="btn-reg" id="btnPlan">🗺 План</button><button class="btn-reg" id="btnReg">📋 Реестр</button><button class="btn-reg" id="btnOut">📦 Выдано</button><button class="btn-ico" id="btnSet" title="Настройки" aria-label="Настройки">⚙️</button></div>
     <div class="status"><span class="dot" id="syncDot"></span><span id="syncInfo">локально</span></div>
   </header>
 
@@ -366,6 +371,20 @@ table.reg button.go{border:none;background:none;padding:2px 4px;min-height:0;cur
   <div id="regTable" style="margin-top:4px"></div>
   <div class="row"><button id="shRegClose">Закрыть</button></div>
   <button class="totop" data-top="shReg" aria-label="Наверх" title="Наверх">↑</button>
+</div></div>
+
+<div class="sheet" id="shOut"><div class="panel"><button class="xclose" data-close="shOut" title="Закрыть (Esc)" aria-label="Закрыть">✕</button><div class="handle"></div>
+  <h2>Выдано со склада</h2>
+  <div class="small">Что ушло с полок на заказы: по «Закупкам» (статус «Выдать со склада» / «Инвентаризация» — списывает скрипт) и отметки «→ на заказ» в приложении. Нажмите на строку — откроется позиция в реестре.</div>
+  <div class="row outbar">
+    <select id="outPer"><option value="30">за 30 дней</option><option value="90">за 90 дней</option><option value="all">за всё время</option></select>
+    <input type="search" id="outQ" placeholder="Заказ, артикул, позиция…" autocomplete="off">
+    <button id="outXlsx">Скачать (xlsx)</button>
+  </div>
+  <div class="small" id="outInfo"></div>
+  <div id="outBody"></div>
+  <div class="row"><button id="shOutClose">Закрыть</button></div>
+  <button class="totop" data-top="shOut" aria-label="Наверх" title="Наверх">↑</button>
 </div></div>
 
 <div class="sheet" id="shPlan"><div class="panel"><button class="xclose" data-close="shPlan" title="Закрыть (Esc)" aria-label="Закрыть">✕</button><div class="handle"></div>
@@ -1731,9 +1750,41 @@ $('btnLegend').addEventListener('click',function(){var on=$('legend').classList.
 $('btnClear').addEventListener('click',function(){state.files=[];state.picked={};render()});
 $('btnSet').addEventListener('click',function(){$('shSet').classList.add('on')});$('shSetClose').addEventListener('click',function(){$('shSet').classList.remove('on')});
 $('btnReg').addEventListener('click',function(){renderRegister();$('shReg').classList.add('on');syncRegBar()});
+// ═══ v26: «Выдано со склада» — что куда ушло (по «Закупкам» и отметкам «→ на заказ»), по заказам, с выгрузкой в xlsx ═══
+function outRows(){var rows=[];
+  state.register.forEach(function(p){var from=p.place||(p.gone&&p.gone.from)||'',pr=(typeof p.price==='number'&&p.price>0)?p.price:null,u=unitOf(p);
+    (p.issued||[]).forEach(function(x){if(!x||x.bound)return;   // привязанное к ручной отметке — показываем саму отметку
+      rows.push({p:p,date:x.date||'',order:x.order||'',qty:x.qty,unit:u,from:from,how:'по «Закупкам»',price:pr,
+        note:[x.uncounted?'кол-во на полке не считали':'',x.similar?'похожее (признак другой)':'',x.notFound?'не нашлось — проверить ('+x.notFound+')':''].filter(Boolean).join('; '),warn:!!x.notFound})});
+    (p.moves||[]).forEach(function(m){if(!m||m.kind!=='order')return;
+      rows.push({p:p,date:String(m.at||'').slice(0,10),order:m.order||'',qty:m.qty,unit:u,from:m.from||from,how:m.how==='stored'?'отложено на заказ'+(m.to?' → '+m.to:''):'выдано (отметка в приложении)',price:pr,note:m.note||'',warn:false})})});
+  return rows}
+function outFiltered(){var per=$('outPer').value,q=fold($('outQ').value||''),since=per==='all'?'':new Date(Date.now()-Number(per)*864e5).toISOString().slice(0,10);
+  return outRows().filter(function(r){if(since&&r.date<since)return false;if(!q)return true;
+    return fold([r.order,titleOf(r.p),r.p.art,r.p.name,r.from].join(' ')).indexOf(q)>=0})
+  .sort(function(a,b){return a.order<b.order?-1:a.order>b.order?1:(a.date<b.date?-1:a.date>b.date?1:0)})}
+function money(v){return Math.round(v).toLocaleString('ru-RU')+' ₽'}
+function renderOut(){var rows=outFiltered(),groups={},orders=[],sum=0,noPrice=0,rails=0;
+  rows.forEach(function(r){if(!groups[r.order]){groups[r.order]=[];orders.push(r.order)}groups[r.order].push(r);
+    if(r.price!=null&&r.qty!=null)sum+=r.price*r.qty;else noPrice++;if(r.p.type==='rail'&&r.qty)rails+=r.qty});
+  $('outInfo').innerHTML=rows.length?('строк: <b>'+rows.length+'</b> · заказов: <b>'+orders.length+'</b>'+(rails?' · направляющих: <b>'+rails+' компл.</b>':'')+
+    (sum?' · по известным ценам ≈ <b>'+money(sum)+'</b>':'')+(noPrice?' · без цены: '+noPrice:'')):'за этот период ничего не выдавалось';
+  $('outBody').innerHTML=orders.map(function(o){var g=groups[o],s=0;g.forEach(function(r){if(r.price!=null&&r.qty!=null)s+=r.price*r.qty});
+    return '<div class="outgrp">'+esc(o||'без заказа')+' <span class="small">· '+g.length+' стр.'+(s?' · ≈ '+money(s):'')+'</span></div>'+
+    '<table class="outt"><tr><th>дата</th><th>позиция</th><th>артикул</th><th class="n">сколько</th><th>с полки</th><th>как отмечено</th></tr>'+
+    g.map(function(r){return '<tr data-id="'+esc(r.p.id)+'"><td>'+esc(r.date)+'</td><td>'+esc(titleOf(r.p))+(r.note?'<div class="small'+(r.warn?' outwarn':'')+'">'+esc(r.note)+'</div>':'')+'</td><td>'+esc(r.p.art||'')+'</td><td class="n">'+(r.qty==null?'всё':esc(r.qty)+' '+esc(r.unit))+'</td><td>'+esc(r.from)+'</td><td>'+esc(r.how)+'</td></tr>'}).join('')+'</table>'}).join('');
+  Array.prototype.forEach.call($('outBody').querySelectorAll('tr[data-id]'),function(tr){tr.addEventListener('click',function(){$('shOut').classList.remove('on');openRegItem(tr.getAttribute('data-id'))})})}
+function outXlsx(){var rows=outFiltered();if(!rows.length){toast('Нечего выгружать');return}
+  var aoa=[['Заказ','Дата','Позиция','Артикул','Сколько','Ед.','С полки','Как отмечено','Цена за ед., ₽','Сумма, ₽','Примечание']];
+  rows.forEach(function(r){aoa.push([r.order,r.date,titleOf(r.p),r.p.art||'',r.qty==null?'':r.qty,r.unit,r.from,r.how,r.price==null?'':r.price,(r.price!=null&&r.qty!=null)?Math.round(r.price*r.qty*100)/100:'',r.note])});
+  var ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=[{wch:14},{wch:11},{wch:40},{wch:22},{wch:8},{wch:6},{wch:12},{wch:28},{wch:12},{wch:12},{wch:36}];
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Выдано со склада');XLSX.writeFile(wb,'Выдано со склада '+new Date().toISOString().slice(0,10)+'.xlsx')}
+$('btnOut').addEventListener('click',function(){renderOut();$('shOut').classList.add('on')});
+$('shOutClose').addEventListener('click',function(){$('shOut').classList.remove('on')});
+$('outPer').addEventListener('change',renderOut);$('outQ').addEventListener('input',renderOut);$('outXlsx').addEventListener('click',outXlsx);
 $('btnPlan').addEventListener('click',function(){openPlan(state.planRack==='none'?null:state.planRack)});$('shRegClose').addEventListener('click',function(){$('shReg').classList.remove('on')});
 Array.prototype.forEach.call(document.querySelectorAll('[data-close]'),function(b){b.addEventListener('click',function(){var t=b.getAttribute('data-close');if(t==='shAdd'){closeAdd(b.id==='aCancel'?'discard':'auto');return}$(t).classList.remove('on')})});
-[$('shSet'),$('shReg'),$('shPlan'),$('shWho'),$('shAdd'),$('shMove')].forEach(function(sh){sh.addEventListener('click',function(e){if(e.target!==sh)return;if(sh.id==='shAdd'){closeAdd('auto');return}sh.classList.remove('on')})});
+[$('shSet'),$('shReg'),$('shPlan'),$('shWho'),$('shAdd'),$('shMove'),$('shOut')].forEach(function(sh){sh.addEventListener('click',function(e){if(e.target!==sh)return;if(sh.id==='shAdd'){closeAdd('auto');return}sh.classList.remove('on')})});
 // «наверх»
 Array.prototype.forEach.call(document.querySelectorAll('[data-top]'),function(b){var pn=$(b.getAttribute('data-top')).querySelector('.panel');pn.addEventListener('scroll',function(){b.classList.toggle('on',pn.scrollTop>400)});b.addEventListener('click',function(){pn.scrollTo({top:0,behavior:'smooth'})})});
 $('showAll').addEventListener('change',function(e){state.showAll=e.target.checked;lsSet(LS_SHOWALL,state.showAll?'1':'0');render()});
@@ -1747,7 +1798,7 @@ $('regReset').addEventListener('click',function(){if(!fbEnabled){toast('Обла
 $('btnCopy').addEventListener('click',copySummary);$('mvOk').addEventListener('click',doMove);$('mvHow').addEventListener('change',setMvTo);
 $('btnWho').addEventListener('click',askWho);$('whoOk').addEventListener('click',confirmWho);$('whoNameOk').addEventListener('click',saveWhoName);$('whoName').addEventListener('keydown',function(e){if(e.key==='Enter')saveWhoName()});$('whoPin').addEventListener('keydown',function(e){if(e.key==='Enter')confirmWho()});$('shWhoClose').addEventListener('click',function(){$('shWho').classList.remove('on')});$('btnPull').addEventListener('click',forcePull);$('btnPush').addEventListener('click',function(){_unsent++;pushNow()});
 document.addEventListener('keydown',function(e){if(e.key!=='Escape'&&e.key!=='Esc')return;if($('viewer').classList.contains('on')){$('viewer').classList.remove('on');return}
-  var open=['shWho','shMove','shAdd','shPlan','shReg','shSet'].filter(function(id){return $(id).classList.contains('on')});if(open.length){if(open[0]==='shAdd')closeAdd('auto');else $(open[0]).classList.remove('on');e.preventDefault()}});
+  var open=['shWho','shMove','shAdd','shPlan','shOut','shReg','shSet'].filter(function(id){return $(id).classList.contains('on')});if(open.length){if(open[0]==='shAdd')closeAdd('auto');else $(open[0]).classList.remove('on');e.preventDefault()}});
 $('viewerClose').addEventListener('click',function(){$('viewer').classList.remove('on')});
 $('viewer').addEventListener('click',function(e){if(e.target===$('viewer'))$('viewer').classList.remove('on')});
 $('viewerDel').addEventListener('click',function(){var id=$('viewer')._id;if(!id)return;if(!confirm('Удалить это фото?'))return;dbDel(id).then(function(){Object.keys(photos).forEach(function(k){photos[k]=photos[k].filter(function(p){return p.id!==id})});$('viewer').classList.remove('on');renderRegister();render();fbDeletePhoto(id);toast('Фото удалено')})});
