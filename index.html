@@ -223,7 +223,7 @@ button.del{color:var(--dng);border-color:transparent;background:none;white-space
   header{margin-bottom:10px;gap:8px}
   header h1{font-size:20px}
   header .acts{flex-basis:100%}
-  header .acts .btn-reg{flex:1}
+  header .acts .btn-reg{flex:1;padding:8px 6px;min-width:0}
   .drop{padding:18px 14px}
   .legend{gap:6px 10px;font-size:11px}
   .card .hd{padding:10px 12px}
@@ -314,8 +314,8 @@ table.reg button.go{border:none;background:none;padding:2px 4px;min-height:0;cur
 <body>
 <div class="wrap">
   <header>
-    <div class="hl"><div class="ttl"><h1>Сверка склад ↔ заявка</h1><button class="who" id="btnWho" title="Кто работает — нажмите, чтобы сменить">—</button></div><div class="sub">Фурнитура склада · адрес «стеллаж-полка» · работает без сети · v26</div></div>
-    <div class="acts"><button class="btn-reg" id="btnPlan">🗺 План</button><button class="btn-reg" id="btnReg">📋 Реестр</button><button class="btn-reg" id="btnOut">📦 Выдано</button><button class="btn-ico" id="btnSet" title="Настройки" aria-label="Настройки">⚙️</button></div>
+    <div class="hl"><div class="ttl"><h1>Сверка склад ↔ заявка</h1><button class="who" id="btnWho" title="Кто работает — нажмите, чтобы сменить">—</button></div><div class="sub">Фурнитура склада · адрес «стеллаж-полка» · работает без сети · v27</div></div>
+    <div class="acts"><button class="btn-reg" id="btnPlan">🗺 План</button><button class="btn-reg" id="btnReg">📋 Реестр</button><button class="btn-reg" id="btnOut">📦 Выдано</button><button class="btn-reg" id="btnAdm" style="display:none" title="Лог изменений — только для учётной записи №1">🛠 Лог</button><button class="btn-ico" id="btnSet" title="Настройки" aria-label="Настройки">⚙️</button></div>
     <div class="status"><span class="dot" id="syncDot"></span><span id="syncInfo">локально</span></div>
   </header>
 
@@ -385,6 +385,26 @@ table.reg button.go{border:none;background:none;padding:2px 4px;min-height:0;cur
   <div id="outBody"></div>
   <div class="row"><button id="shOutClose">Закрыть</button></div>
   <button class="totop" data-top="shOut" aria-label="Наверх" title="Наверх">↑</button>
+</div></div>
+
+<div class="sheet" id="shAdm"><div class="panel"><button class="xclose" data-close="shAdm" title="Закрыть (Esc)" aria-label="Закрыть">✕</button><div class="handle"></div>
+  <h2>Админка · лог изменений</h2>
+  <div class="small" id="admLast"></div>
+  <div class="row outbar">
+    <select id="admPer"><option value="1">сегодня</option><option value="7" selected>за 7 дней</option><option value="30">за 30 дней</option><option value="all">за всё время</option></select>
+    <select id="admWho"></select>
+    <select id="admSrc"><option value="">все правки</option><option value="manual">в приложении</option><option value="iss">списания по «Закупкам»</option><option value="file">из файла</option><option value="push">записи в облако</option></select>
+    <input type="search" id="admQ" placeholder="Позиция, артикул, место…" autocomplete="off">
+    <button id="admXlsx">Скачать (xlsx)</button>
+  </div>
+  <div class="small" id="admInfo"></div>
+  <div id="admBody"></div>
+  <div class="sth">Правки без записи в логе</div>
+  <div class="small">Позиции, которые менялись за период, а в логе их нет: правили на устройстве со старой версией приложения (до v27) или до появления лога. Что именно поменяли — не известно, видно только дату правки и историю позиции.</div>
+  <div class="small" id="admOldInfo"></div>
+  <div id="admOld"></div>
+  <div class="row"><button id="shAdmClose">Закрыть</button></div>
+  <button class="totop" data-top="shAdm" aria-label="Наверх" title="Наверх">↑</button>
 </div></div>
 
 <div class="sheet" id="shPlan"><div class="panel"><button class="xclose" data-close="shPlan" title="Закрыть (Esc)" aria-label="Закрыть">✕</button><div class="handle"></div>
@@ -1091,7 +1111,7 @@ function dbDel(id){return dbTx('readwrite',function(st){st.delete(id)})}
 var photos={}; // pos → [{id,pos,data,at}]
 function loadPhotos(){return dbAll().then(function(all){Object.keys(photos).forEach(function(k){delete photos[k]});all.forEach(function(p){(photos[p.pos]=photos[p.pos]||[]).push(p)});Object.keys(photos).forEach(function(k){photos[k].sort(function(a,b){return a.at<b.at?-1:1})})})}
 function shrink(file){return new Promise(function(res,rej){var img=new Image();var url=URL.createObjectURL(file);img.onload=function(){var mx=800,w=img.width,h=img.height,k=Math.min(1,mx/Math.max(w,h));var c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',.7))};img.onerror=function(){URL.revokeObjectURL(url);rej(new Error('не картинка'))};img.src=url})}
-function addPhotos(pos,files){var list=Array.prototype.slice.call(files);if(!list.length)return;var chain=Promise.resolve();list.forEach(function(f){chain=chain.then(function(){return shrink(f).then(function(data){var o={id:pos+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),pos:pos,data:data,at:new Date().toISOString(),name:f.name,by:who,url:null};return dbPut(o).then(function(){(photos[pos]=photos[pos]||[]).push(o)})})})});
+function addPhotos(pos,files){var list=Array.prototype.slice.call(files);if(!list.length)return;var chain=Promise.resolve();list.forEach(function(f){chain=chain.then(function(){return shrink(f).then(function(data){var o={id:pos+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),pos:pos,data:data,at:new Date().toISOString(),name:f.name,by:who,url:null};return dbPut(o).then(function(){(photos[pos]=photos[pos]||[]).push(o);var pp=state.register.filter(function(x){return x.id===pos})[0];logAdd({pid:pp?pos:'',t:pp?titleOf(pp):pos,ch:[['фото','','добавлено']]})})})})});
   chain.then(function(){toast('Фото добавлено: '+list.length);renderRegister();render();schedulePush()}).catch(function(e){toast('Не удалось сохранить фото: '+(e.message||e))})}
 function openViewer(id){var ph=null;Object.keys(photos).forEach(function(k){photos[k].forEach(function(p){if(p.id===id)ph=p})});if(!ph)return;var pos=state.register.filter(function(x){return x.id===ph.pos})[0];
   $('viewerImg').src=ph.data||'';$('viewerCap').textContent=(pos?titleOf(pos)+(pos.art?' · '+pos.art:''):String(ph.pos).indexOf('shelf:')===0?'полка '+ph.pos.slice(6):'')+' · '+ph.at.slice(0,10)+(ph.by?' · '+accName(ph.by):'')+(ph.name?' · '+ph.name:'');$('viewer').classList.add('on');$('viewer')._id=id}
@@ -1110,7 +1130,7 @@ function setSync(cls,text,detail){$('syncDot').className='dot '+cls;$('syncInfo'
 function fbInit(){
   if(typeof firebase==='undefined'){setSync('','локально · библиотека облака не загрузилась (нет сети?)');return;}
   try{firebase.initializeApp(fbConfig);fbDb=firebase.firestore();try{fbDb.settings({experimentalAutoDetectLongPolling:true,merge:true})}catch(_){}
-    FB_DOC=fbDb.collection('apps').doc(FB_APP).collection('shared').doc('register');FB_PH=fbDb.collection('apps').doc(FB_APP).collection('photos');FB_ISS=fbDb.collection('apps').doc(FB_APP).collection('shared').doc('issues');fbAuth();
+    FB_DOC=fbDb.collection('apps').doc(FB_APP).collection('shared').doc('register');FB_PH=fbDb.collection('apps').doc(FB_APP).collection('photos');FB_ISS=fbDb.collection('apps').doc(FB_APP).collection('shared').doc('issues');FB_LOG=fbDb.collection('apps').doc(FB_APP).collection('shared').doc('log');fbAuth();
     window.addEventListener('online',function(){setSync('warn','связь вернулась…');fbAuth()});window.addEventListener('offline',function(){setSync('','офлайн · '+_unsent+' не отправлено')});
     document.addEventListener('visibilitychange',function(){if(document.hidden)flushPush()});window.addEventListener('pagehide',flushPush);
     setInterval(function(){if(!_firstSyncDone&&fbEnabled)fbFirstLoad();else if(_unsent>0)flushPush()},30000);
@@ -1125,9 +1145,10 @@ function fbFirstLoad(){if(!fbEnabled||_firstSyncDone)return;setSync('warn','за
     FB_DOC.onSnapshot(function(d){if(!d.exists||_pushing)return;var r=d.data();if(r._writeId&&r._writeId===_ownWriteId)return;applyRemote(r,'live')},function(e){console.warn('snapshot',e.code)});
     // списания из «Закупок» — только после того, как реестр увиден в облаке (иначе спишем со встроенного и затрём)
     pollIssues();
+    FB_LOG.onSnapshot(function(d){if(d.exists&&mergeLog(parseLog(d.data()))&&!_logPushing)scheduleLogPush()},function(e){console.warn('log snapshot',e.code||e.message)});if(_logUnsent||changeLog.length)scheduleLogPush();
     FB_ISS.onSnapshot(function(d){if(d.exists)applyIssuesDoc(d.data())},function(e){console.warn('issues snapshot',e.code||e.message)});
   }).catch(function(e){setSync('','офлайн · работаю локально ('+(e.code||e.message)+')')})}
-function applyRemote(rd,how){try{var rts=rd.lastSync&&rd.lastSync.toMillis?rd.lastSync.toMillis():0;if(rts)_seenRemoteSync=rts;var remote=JSON.parse(rd.data||'{}');_inMerge=true;var need=mergeRemote(remote);_inMerge=false;
+function applyRemote(rd,how){try{var rts=rd.lastSync&&rd.lastSync.toMillis?rd.lastSync.toMillis():0;if(rts)_seenRemoteSync=rts;_lastRemote={by:rd.updatedBy||'',at:rts,v:rd.appVersion||''};var remote=JSON.parse(rd.data||'{}');_inMerge=true;var need=mergeRemote(remote);_inMerge=false;
     setSync('ok','в облаке · '+(rd.updatedBy||'')+' '+(rts?new Date(rts).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''),'');if(need)schedulePush();fetchMissingPhotos()}catch(e){_inMerge=false;console.error('applyRemote',e)}}
 // слияние по записям: реестр по id (updatedAt), фото-метаданные по id, следы удалений
 var DEL=(function(){try{return JSON.parse(lsGet('sverka.del')||'{}')}catch(e){return{}}})();
@@ -1146,19 +1167,20 @@ function mergeRemote(r){var need=false,k;
   Object.keys(pm).forEach(function(id){if(DEL[id])return;if(!localIds[id]){var m=pm[id];var o={id:m.id,pos:m.pos,at:m.at,name:m.name||'',url:m.url,by:m.by||'',data:null};(photos[o.pos]=photos[o.pos]||[]).push(o);dbPut(o).catch(function(){})}});
   Object.keys(localIds).forEach(function(id){if(DEL[id]&&DEL[id]>=(new Date(localIds[id].at).getTime()||0)){dbDel(id);Object.keys(photos).forEach(function(k){photos[k]=photos[k].filter(function(p){return p.id!==id})})}});
   if(migrateNames())need=true;
+  _snap=snapOf(state.register);if(Array.isArray(r.log))mergeLog(r.log);
   var ra=r.accounts||{};Object.keys(ra).forEach(function(k){var a=ra[k],b=state.accNames[k];if(a&&(!b||(a.at||0)>(b.at||0)))state.accNames[k]=a});Object.keys(state.accNames).forEach(function(k){if(!ra[k]||(ra[k].at||0)<(state.accNames[k].at||0))need=true});lsSet(LS_ACC,JSON.stringify(state.accNames));if(who)whoShow();
   var rs=r.shelves||{};Object.keys(rs).forEach(function(k){var a=rs[k],b=state.shelves[k];if(a&&(!b||(a.at||0)>(b.at||0)))state.shelves[k]=a});
   Object.keys(state.shelves).forEach(function(k){if(!rs[k]||(rs[k].at||0)<(state.shelves[k].at||0))need=true});saveShelves();
   loadRegister();renderRegister();render();return need}
-function localPayload(){var ph=[];Object.keys(photos).forEach(function(k){photos[k].forEach(function(p){if(p.url)ph.push({id:p.id,pos:p.pos,at:p.at,name:p.name||'',url:p.url,by:p.by||''})})});return {items:state.register,photos:ph,del:DEL,shelves:state.shelves,accounts:state.accNames}}
+function localPayload(){var ph=[];Object.keys(photos).forEach(function(k){photos[k].forEach(function(p){if(p.url)ph.push({id:p.id,pos:p.pos,at:p.at,name:p.name||'',url:p.url,by:p.by||''})})});return {items:state.register,photos:ph,del:DEL,shelves:state.shelves,accounts:state.accNames,log:changeLog.slice(-150)}}
 function schedulePush(){_unsent++;if(!fbEnabled||!_firstSyncDone){setSync('','офлайн · '+_unsent+' не отправлено');return}if(_pushTimer)clearTimeout(_pushTimer);_pushTimer=setTimeout(pushNow,2000)}
-function flushPush(){if(_pushTimer){clearTimeout(_pushTimer);_pushTimer=null}if(_unsent>0&&fbEnabled&&_firstSyncDone)pushNow()}
+function flushPush(){if(_logUnsent&&!_logPushing)pushLog();if(_pushTimer){clearTimeout(_pushTimer);_pushTimer=null}if(_unsent>0&&fbEnabled&&_firstSyncDone)pushNow()}
 function pushNow(){if(!fbEnabled||!_firstSyncDone||_pushing)return;_pushing=true;setSync('warn','отправляю…');
   uploadPendingPhotos().then(function(){return fbTimeout(FB_DOC.get(),10000).catch(function(){return null})}).then(function(cur){
     if(cur&&cur.exists){var cd=cur.data();var rts=cd.lastSync&&cd.lastSync.toMillis?cd.lastSync.toMillis():0;if(rts&&rts>_seenRemoteSync&&cd._writeId!==_ownWriteId){_inMerge=true;try{mergeRemote(JSON.parse(cd.data||'{}'))}finally{_inMerge=false}}if(rts)_seenRemoteSync=rts}
     _ownWriteId='w'+Date.now()+Math.random().toString(36).slice(2,6);
-    return fbTimeout(FB_DOC.set({data:JSON.stringify(localPayload()),lastSync:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:who||'?',_writeId:_ownWriteId,appVersion:'0.2'},{merge:true}),12000)
-  }).then(function(){_unsent=0;_pushing=false;setSync('ok','в облаке · отправлено '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}),'')}).catch(function(e){_pushing=false;setSync('bad','не отправлено ('+(e.code||e.message)+') · '+_unsent);console.warn('push',e)})}
+    return fbTimeout(FB_DOC.set({data:JSON.stringify(localPayload()),lastSync:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:who||'?',_writeId:_ownWriteId,appVersion:APP_V},{merge:true}),12000)
+  }).then(function(){_unsent=0;_pushing=false;_lastRemote={by:who||'?',at:Date.now(),v:APP_V};logPushed();setSync('ok','в облаке · отправлено '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}),'')}).catch(function(e){_pushing=false;setSync('bad','не отправлено ('+(e.code||e.message)+') · '+_unsent);console.warn('push',e)})}
 function uploadPendingPhotos(){if(!FB_PH)return Promise.resolve();var list=[];Object.keys(photos).forEach(function(k){photos[k].forEach(function(p){if(!p.url&&p.data)list.push(p)})});var chain=Promise.resolve();
   list.forEach(function(p){chain=chain.then(function(){return fbTimeout(FB_PH.doc(p.id).set({pos:p.pos,at:p.at,name:p.name||'',by:p.by||'',data:p.data}),40000).then(function(){p.url='fs';return dbPut(p)}).catch(function(e){console.warn('upload',p.id,e.code||e.message)})})});return chain}
 function fetchMissingPhotos(){if(!FB_PH||!navigator.onLine)return;var list=[];Object.keys(photos).forEach(function(k){photos[k].forEach(function(p){if(!p.data&&p.url)list.push(p)})});if(!list.length)return;var chain=Promise.resolve();
@@ -1179,7 +1201,7 @@ if(who&&!USERS[who]&&USERS[acct(who)]){who=acct(who);lsSet('sverka.who',who)}
 var LS_ACC='sverka.accnames';
 state.accNames=(function(){try{var o=JSON.parse(lsGet(LS_ACC)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return {}}})();
 function accName(v){if(!v)return v;var o=state.accNames[v];return o&&o.n?o.n:v}
-function whoShow(){$('btnWho').textContent=who?accName(who):'кто?'}
+function whoShow(){$('btnWho').textContent=who?accName(who):'кто?';if(typeof admBtnShow==='function')admBtnShow()}
 function askWho(){$('whoPin').value='';$('whoErr').textContent='';
   $('whoCur').textContent=!who?'Введите свой пин-код.':accName(who)!==who?'Сейчас работает: '+accName(who)+' (учётная запись '+who+'). Чтобы войти под другой записью — введите её пин-код.':'Вы вошли под учётной записью '+who+'. Подпишитесь ниже — так вас будут видеть другие.';
   $('whoNameBox').hidden=!who;$('whoName').value=who&&state.accNames[who]?state.accNames[who].n:'';
@@ -1227,7 +1249,7 @@ function applyIssues(items){
   });
   if(newIds)lsSet(LS_ISS_APPLIED,JSON.stringify(applied.slice(-2000)));
   if(unmNew)lsSet(LS_ISS_UNM,JSON.stringify(unm.slice(-200)));
-  if(changed){saveRegister();renderRegister();render();schedulePush();toast('Списано по «Закупкам»')}
+  if(changed){_logSrc='списание по «Закупкам»';saveRegister();renderRegister();render();schedulePush();toast('Списано по «Закупкам»')}
   else if(unmNew)renderRegister();
 }
 // v24: списание по артикулу (петли, планки, заглушки…). Скрипт сам выбирает позиции на полке (it.ids) —
@@ -1270,11 +1292,100 @@ function loadRegister(){
   var saved=lsGet(LS_REG); var src='';
   if(saved){try{var o=JSON.parse(saved);if(o&&o.items&&o.items.length){state.register=o.items;state.regSource=o.source||'встроенный';src=(o.source||'встроенный')+', отметки от '+(o.loadedAt||'');}}catch(e){}}
   if(!state.register.length) state.register=JSON.parse(JSON.stringify(REGISTER_BUILTIN));
+  if(!_snap)_snap=snapOf(state.register);
   var act=activeReg(),n=act.length,rails=act.filter(function(p){return p.type==='rail'});
   var q=rails.reduce(function(a,p){return a+(p.qty||0)},0), chk=state.register.filter(function(p){return p.checked}).length, nq=state.register.filter(function(p){return p.qty==null}).length;
   $('regInfo').textContent=n?'реестр: '+n+' поз. (направляющие Blum: '+rails.length+' поз., '+q+' компл.) · проверено '+chk+' · без счёта '+nq+(src?' · '+src:''):'реестр пуст — загрузите файл кнопкой «Загрузить реестр» или дождитесь загрузки из облака';
 }
-function saveRegister(){lsSet(LS_REG,JSON.stringify({loadedAt:new Date().toLocaleString('ru-RU'),source:state.regSource||'это устройство',items:state.register}));loadRegister();}
+function saveRegister(){logDiff();lsSet(LS_REG,JSON.stringify({loadedAt:new Date().toLocaleString('ru-RU'),source:state.regSource||'это устройство',items:state.register}));loadRegister();}
+// ═══ v27: ЛОГ ИЗМЕНЕНИЙ — кто, когда, что поменял. Общий для всех устройств: облако shared/log (+ хвост в реестре на всякий случай) ═══
+var APP_V='v27',LS_LOG='sverka.log.v1',LOG_MAX=2000,LOG_PUSH_MAX=300,LOG_DAYS=180,_snap=null,_logSrc='',_logUnsent=false,FB_LOG=null,_logPushing=false,_logTimer=null,_logSincePush=0,_lastRemote=null;
+var changeLog=(function(){try{var a=JSON.parse(lsGet(LS_LOG)||'[]');return Array.isArray(a)?a:[]}catch(e){return []}})();
+var LOG_SKIP={id:1,updatedAt:1,editedAt:1,editedBy:1,checkedAt:1,checkedBy:1,addedBy:1,addedAt:1,placeSrc:1,placeType:1};
+var LOG_LBL={qty:'кол-во',place:'место',art:'артикул',arts:'артикулы',name:'название',series:'серия',len:'длина',damper:'доводчик',tipon:'TIP-ON',note:'заметка',checked:'проверено',gone:'нет на полке',price:'цена',size:'размер',url:'ссылка',cat:'раздел',type:'тип',color:'цвет',unit:'ед.'};
+function logId(i){return 'L'+Date.now().toString(36)+(i||0).toString(36)+Math.random().toString(36).slice(2,6)}
+function snapOf(list){var m={};(list||[]).forEach(function(p){if(p&&p.id)m[p.id]=JSON.stringify(p)});return m}
+function cut(s,n){s=String(s);return s.length>n?s.slice(0,n-1)+'…':s}
+function fmtV(k,v){if(v===undefined||v===null||v==='')return k==='qty'?'не считали':'—';if(v===true)return 'да';if(v===false)return 'нет';
+  if(k==='gone')return cut(v.why||'убрано',70);if(typeof v==='object')return cut(JSON.stringify(v),70);return cut(v,70)}
+function issText(r){return (r.qty!=null?r.qty+' ':'')+'на '+(r.order||'?')+(r.uncounted?' (кол-во не считали — только история)':'')+(r.bound?' (по отметке «на заказ»)':'')+(r.similar?' (похожая)':'')}
+function diffItem(a,b){var ch=[],k,seen={};
+  function arrNew(f,fmt,lbl){var had={};(a[f]||[]).forEach(function(r){if(r)had[r.id||JSON.stringify(r)]=1});(b[f]||[]).forEach(function(r){if(r&&!had[r.id||JSON.stringify(r)])ch.push([lbl,'',fmt(r)])})}
+  arrNew('issued',issText,'списание');arrNew('moves',function(r){return typeof moveText==='function'?moveText(r):(r.kind||'')},'перемещение');
+  for(k in a)seen[k]=1;for(k in b)seen[k]=1;
+  for(k in seen){if(LOG_SKIP[k]||k==='issued'||k==='moves')continue;var x=JSON.stringify(a[k]),y=JSON.stringify(b[k]);if(x===y)continue;ch.push([LOG_LBL[k]||k,fmtV(k,a[k]),fmtV(k,b[k])])}
+  return ch.slice(0,10)}
+function logDiff(){var src=_logSrc||'';_logSrc='';if(!_snap){_snap=snapOf(state.register);return}
+  var cur={},ents=[];
+  state.register.forEach(function(p){if(!p||!p.id)return;var s=JSON.stringify(p);cur[p.id]=s;var o=_snap[p.id];if(o===s)return;
+    if(o==null){ents.push({pid:p.id,t:titleOf(p),ch:[['добавлено','',(p.place?p.place+' · ':'')+(p.qty==null?'кол-во не считали':p.qty+' '+unitOf(p))]]});return}
+    var ch=diffItem(JSON.parse(o),p);if(ch.length)ents.push({pid:p.id,t:titleOf(p),ch:ch})});
+  Object.keys(_snap).forEach(function(id){if(!(id in cur)){var a;try{a=JSON.parse(_snap[id])}catch(e){a={id:id}}ents.push({pid:id,t:titleOf(a),ch:[['удалено из реестра','','']]})}});
+  _snap=cur;if(!ents.length)return;
+  if(ents.length>200)ents=[{pid:'',t:'весь реестр',ch:[['изменено позиций','',String(ents.length)]]}];
+  ents.forEach(function(e,i){logAdd(e,src,i,true)});saveLog();scheduleLogPush()}
+function logAdd(e,src,i,quiet){e.id=logId(i);e.at=Date.now();e.by=who||'?';e.src=src||e.src||'';e.v=APP_V;e.t=cut(e.t||'',90);changeLog.push(e);if(!e.push)_logSincePush++;if(!quiet){saveLog();scheduleLogPush()}}
+function trimLog(){var lim=Date.now()-LOG_DAYS*864e5,np=0;changeLog=changeLog.filter(function(e){return e&&e.id&&e.at>=lim});changeLog.sort(function(a,b){return a.at-b.at});
+  for(var i=changeLog.length-1;i>=0;i--)if(changeLog[i].push&&++np>LOG_PUSH_MAX)changeLog.splice(i,1);
+  if(changeLog.length>LOG_MAX)changeLog=changeLog.slice(-LOG_MAX)}
+function saveLog(){trimLog();lsSet(LS_LOG,JSON.stringify(changeLog))}
+// слить чужие записи; true — у нас есть записи, которых нет в arr (надо дослать)
+function mergeLog(arr){var have={},rid={},add=0;changeLog.forEach(function(e){have[e.id]=1});
+  (arr||[]).forEach(function(e){if(!e||!e.id)return;rid[e.id]=1;if(!have[e.id]){changeLog.push(e);have[e.id]=1;add++}});
+  if(add){saveLog();if($('shAdm')&&$('shAdm').classList.contains('on'))renderAdm()}
+  var lim=Date.now()-LOG_DAYS*864e5;return changeLog.some(function(e){return !rid[e.id]&&e.at>=lim})}
+function parseLog(d){try{var a=JSON.parse((d&&d.entries)||'[]');return Array.isArray(a)?a:[]}catch(e){return []}}
+function scheduleLogPush(){_logUnsent=true;if(!fbEnabled||!_firstSyncDone||!FB_LOG)return;if(_logTimer)clearTimeout(_logTimer);_logTimer=setTimeout(pushLog,3000)}
+function pushLog(){if(!FB_LOG||!fbEnabled||!_firstSyncDone||_logPushing)return;_logPushing=true;
+  fbTimeout(FB_LOG.get(),10000).then(function(d){if(d.exists)mergeLog(parseLog(d.data()));
+    return fbTimeout(FB_LOG.set({entries:JSON.stringify(changeLog),lastSync:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:who||'?',v:APP_V}),12000)})
+  .then(function(){_logUnsent=false;_logPushing=false}).catch(function(e){_logPushing=false;console.warn('log push',e&&(e.code||e.message))})}
+function logPushed(){var n=_logSincePush;_logSincePush=0;logAdd({push:1,n:n,t:'запись в облако'},'',0)}
+// ═══ v27: АДМИНКА (только учётная запись №1) — лог изменений ═══
+var ADMIN='№1';
+function admWhoLbl(v){if(!v||v==='?')return 'не вошёл';var n=accName(v);return n&&n!==v?n+' ('+v+')':v}
+function admSrcLbl(e){if(e.push)return 'запись в облако';var s=e.src||'';return s?s:'в приложении'}
+function admSrcKind(e){if(e.push)return 'push';var s=e.src||'';if(/Закупк/.test(s))return 'iss';if(/^файл/.test(s))return 'file';return 'manual'}
+function fmtDT(ms,withDate){var d=new Date(ms);return (withDate?d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'})+' ':'')+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}
+function admFiltered(){var per=$('admPer').value,w=$('admWho').value,s=$('admSrc').value,q=fold($('admQ').value||''),since=0;
+  if(per==='1'){var d0=new Date();d0.setHours(0,0,0,0);since=d0.getTime()}else if(per!=='all')since=Date.now()-Number(per)*864e5;
+  return changeLog.filter(function(e){if(e.at<since)return false;if(w&&e.by!==w)return false;var k=admSrcKind(e);if(s){if(k!==s)return false}else if(k==='push')return false;
+    if(!q)return true;return fold([e.t,e.pid,(e.ch||[]).map(function(c){return c.join(' ')}).join(' '),e.src].join(' ')).indexOf(q)>=0}).slice().sort(function(a,b){return b.at-a.at})}
+function chHtml(e){if(e.push)return e.n?'отправил свои правки: '+e.n:'<span class="small">своих правок нет — переслал то, что уже было (чужие правки, списания, фото, подписи)</span>';
+  return (e.ch||[]).map(function(c){return '<div><b>'+esc(c[0])+'</b>'+(c[1]||c[2]?': '+(c[1]?esc(c[1])+' → ':'')+esc(c[2]):'')+'</div>'}).join('')}
+function renderAdm(){
+  var lr=_lastRemote;
+  $('admLast').innerHTML=lr?'Последняя запись в облако: <b>'+esc(admWhoLbl(lr.by))+'</b>, '+(lr.at?esc(fmtDT(lr.at,true)):'')+' · версия '+esc(lr.v&&/^v/.test(lr.v)?lr.v:'v26 или старше')+'. Запись в облако — не всегда правка: устройство досылает и чужие изменения, списания, фото.':'Облако ещё не загружено.';
+  var rows=changeLog.length?admFiltered():[],days={},order=[];
+  $('admInfo').innerHTML=!changeLog.length?'Лог пока пуст — он начинается с этой версии (v27). Правки появятся, как только кто-то что-то изменит.':rows.length?'записей: <b>'+rows.length+'</b>':'за этот период под фильтром ничего нет';
+  rows.forEach(function(e){var d=new Date(e.at).toLocaleDateString('ru-RU',{weekday:'short',day:'2-digit',month:'2-digit'});if(!days[d]){days[d]=[];order.push(d)}days[d].push(e)});
+  $('admBody').innerHTML=order.map(function(d){return '<div class="outgrp">'+esc(d)+' <span class="small">· '+days[d].length+'</span></div><table class="outt"><tr><th>время</th><th>кто</th><th>позиция</th><th>что изменилось</th><th>откуда</th></tr>'+
+    days[d].map(function(e){return '<tr'+(e.pid?' data-id="'+esc(e.pid)+'"':'')+'><td>'+esc(fmtDT(e.at))+'</td><td>'+esc(admWhoLbl(e.by))+'</td><td>'+esc(e.t||'')+'</td><td>'+chHtml(e)+'</td><td class="small">'+esc(admSrcLbl(e))+(e.v&&e.v!==APP_V?' · '+esc(e.v):'')+'</td></tr>'}).join('')+'</table>'}).join('');
+  admBind($('admBody'));renderAdmOld()}
+// правки без записи в логе: устройства на старой версии или до v27 — видно только по дате правки позиции и её истории
+function renderAdmOld(){var per=$('admPer').value,since=per==='1'?(function(){var d=new Date();d.setHours(0,0,0,0);return d.getTime()})():per==='all'?0:Date.now()-Number(per)*864e5,w=$('admWho').value;
+  var logged={};changeLog.forEach(function(e){if(e.pid)(logged[e.pid]=logged[e.pid]||[]).push(e.at)});
+  var list=state.register.filter(function(p){var t=p.updatedAt||0;if(!t||t<since)return false;if(w&&(p.editedBy||'')!==w)return false;return !(logged[p.id]||[]).some(function(a){return Math.abs(a-t)<120000})})
+    .sort(function(a,b){return b.updatedAt-a.updatedAt}).slice(0,80);
+  $('admOldInfo').textContent=list.length?'позиций: '+list.length+(list.length>=80?' (показаны последние 80)':''):'нет — всё, что менялось за период, есть в логе';
+  $('admOld').innerHTML=list.length?'<table class="outt"><tr><th>когда</th><th>позиция</th><th>последнее в истории позиции</th><th>правил карточку</th></tr>'+list.map(function(p){
+    var iss=(p.issued||[]).slice(-1)[0],mv=(p.moves||[]).slice(-1)[0],last=[];
+    if(iss)last.push('списание '+issText(iss)+(iss.date?' · '+iss.date:''));if(mv)last.push((typeof moveText==='function'?moveText(mv):'перемещение')+(mv.at?' · '+String(mv.at).slice(0,10):''));
+    last.push('сейчас: '+(p.place||'—')+' · '+(p.qty==null?'кол-во не считали':p.qty+' '+unitOf(p)));
+    return '<tr data-id="'+esc(p.id)+'"><td>'+esc(fmtDT(p.updatedAt,true))+'</td><td>'+esc(titleOf(p))+(p.art?'<div class="small">'+esc(p.art)+'</div>':'')+'</td><td class="small">'+last.map(esc).join('<br>')+'</td><td>'+esc(p.editedBy?admWhoLbl(p.editedBy)+(p.editedAt?' · '+p.editedAt:''):'—')+'</td></tr>'}).join('')+'</table>':'';
+  admBind($('admOld'))}
+function admBind(box){Array.prototype.forEach.call(box.querySelectorAll('tr[data-id]'),function(tr){tr.addEventListener('click',function(){var id=tr.getAttribute('data-id');if(!state.register.some(function(p){return p.id===id})){toast('Этой позиции уже нет в реестре');return}$('shAdm').classList.remove('on');openRegItem(id)})})}
+function admXlsx(){var rows=admFiltered();if(!rows.length){toast('Нечего выгружать');return}
+  var aoa=[['Дата','Время','Учётная запись','Позиция','Что','Было','Стало','Откуда','Версия']];
+  rows.forEach(function(e){var d=new Date(e.at),ds=d.toLocaleDateString('ru-RU'),ts=d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+    if(e.push){aoa.push([ds,ts,admWhoLbl(e.by),'','запись в облако','',String(e.n||0)+' своих правок','',e.v||'']);return}
+    (e.ch||[[]]).forEach(function(c){aoa.push([ds,ts,admWhoLbl(e.by),e.t||'',c[0]||'',c[1]||'',c[2]||'',admSrcLbl(e),e.v||''])})});
+  var ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=[{wch:11},{wch:7},{wch:20},{wch:40},{wch:16},{wch:24},{wch:30},{wch:24},{wch:6}];
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Лог изменений');XLSX.writeFile(wb,'Лог изменений '+new Date().toISOString().slice(0,10)+'.xlsx')}
+function openAdm(){if(who!==ADMIN){toast('Админка — только для учётной записи '+ADMIN);return}
+  var sel=$('admWho'),cur=sel.value;sel.innerHTML='<option value="">все учётные записи</option>'+Object.keys(USERS).map(function(k){return '<option value="'+esc(k)+'">'+esc(admWhoLbl(k))+'</option>'}).join('');sel.value=cur;
+  renderAdm();$('shAdm').classList.add('on');if(FB_LOG&&fbEnabled)fbTimeout(FB_LOG.get(),10000).then(function(d){if(d.exists&&mergeLog(parseLog(d.data())))scheduleLogPush();renderAdm()}).catch(function(){})}
+function admBtnShow(){var b=$('btnAdm');if(b)b.style.display=who===ADMIN?'':'none'}
 // ── рубрикатор реестра ──
 var CATS=[['rails','Направляющие'],['rails2','Направляющие Hettich, Hafele'],['boxes','Ящики'],['boxparts','Комплектующие ящиков'],['mech','Механизмы TIP-ON, замки'],['hinges','Петли'],['lifts','Подъёмники'],['covers','Накладки, заглушки'],['orga','ORGA-LINE'],['baskets','Корзины'],['hangers','Подвесы'],['shelf','Мензолодержатели'],['light','Свет, диоды'],['profiles','Профили'],['fasteners','Крепёж, метизы'],['other','Прочее']];
 var CAT_LABEL={};CATS.forEach(function(c){CAT_LABEL[c[0]]=c[1]});
@@ -1406,19 +1517,19 @@ function importRegisterFile(file){
       if(o0&&o0.format==='sklad-sverka/import'){importPack(o0,file.name);return}
       var n0=(Array.isArray(o0&&o0.items)?o0.items:Array.isArray(o0)?o0:[]).length;
       if(!confirm('Это полная копия реестра: она заменит весь реестр ('+n0+' поз.). Продолжить?'))return;
-      try{var o=o0;var items=o.items||o;if(!Array.isArray(items))throw 0;items.forEach(function(it){it.updatedAt=Date.now()});state.register=items;state.regSource='файл '+file.name;saveRegister();schedulePush();
+      try{var o=o0;var items=o.items||o;if(!Array.isArray(items))throw 0;items.forEach(function(it){it.updatedAt=Date.now()});state.register=items;state.regSource='файл '+file.name;_logSrc=state.regSource;saveRegister();schedulePush();
       var ph=o.photos||[];var chain=Promise.resolve();ph.forEach(function(p){if(p&&p.id&&p.pos&&p.data)chain=chain.then(function(){return dbPut(p)})});chain.then(loadPhotos).then(function(){renderRegister();render();toast('Реестр загружен: '+items.length+' поз.'+(ph.length?', фото: '+ph.length:''))})}catch(e){toast('Не смог прочитать json')}};rd.readAsText(file);}
   else{rd.onload=function(){try{var wb=XLSX.read(rd.result,{type:'array'});var ws=wb.Sheets[wb.SheetNames[0]];var rows=XLSX.utils.sheet_to_json(ws,{defval:null});var items=[];
       rows.forEach(function(r,i){var ser=r['Серия']||r['series'],len=r['Длина, мм']||r['Длина']||r['len'],pr=String(r['Признак (с листа)']||r['Признак']||r['damper']||''),q=r['Кол-во, шт']||r['Кол-во']||r['qty'];
         if(!ser||!len)return; var smap={'MOVENTO 760H':'MOVENTO','TANDEM 560H':'TANDEM 560H','TANDEM 560F':'TANDEM 560F','TANDEM+ 550H':'TANDEM+ 550H','LEGRABOX 750':'LEGRABOX','TANDEMBOX 578':'TANDEMBOX'};
         var s2=smap[ser]||ser; items.push({id:'U'+(i+1),type:(/LEGRA|TANDEMBOX/.test(s2)?'box':'rail'),series:s2,len:parseInt(len,10),damper:(/без/i.test(pr)?'NONE':/довод|BLUMOTION/i.test(pr)?'BLUMOTION':null),tipon:/типон|tip/i.test(pr),qty:parseInt(q,10)||0,unit:'компл',art:r['Артикул Blum (выведен по формуле)']||r['Артикул']||r['art']||'',place:r['Место']||r['place']||'',checked:/да|yes|true|1/i.test(String(r['Проверено']||r['checked']||'')),origin:'файл '+file.name})});
-      if(!items.length)throw 0; items.forEach(function(it){it.updatedAt=Date.now()});state.register=items;state.regSource='файл '+file.name;saveRegister();schedulePush();renderRegister();render();toast('Реестр загружен: '+items.length+' поз.')}catch(e){toast('Не смог прочитать xlsx реестра')}};rd.readAsArrayBuffer(file);}
+      if(!items.length)throw 0; items.forEach(function(it){it.updatedAt=Date.now()});state.register=items;state.regSource='файл '+file.name;_logSrc=state.regSource;saveRegister();schedulePush();renderRegister();render();toast('Реестр загружен: '+items.length+' поз.')}catch(e){toast('Не смог прочитать xlsx реестра')}};rd.readAsArrayBuffer(file);}
 }
 // Пакет «sklad-sverka/import»: добавляет новые позиции и дописывает место в уже заведённые.
 // У заведённых не трогаем кол-во, «проверено», фото, списания и место, которое правили руками.
 var OLD_PLACE=/^зона направляющих/;
 function artKeyOf(p){var b=Core.artParts((p.arts&&p.arts[0])||p.art);return b?b.key+'|'+(b.color||'')+'|'+(b.variant||''):''}
-function importPack(o,fname,pre){
+function importPack(o,fname,pre){_logSrc='файл '+(fname||'');
   if(o.mode==='count'){importCount(o,fname);return}
   if(!Array.isArray(o.items))o.items=[];if(pre&&!o.items.length&&!Array.isArray(o.photos)&&!o.shelves){renderRegister();render();schedulePush();$('regMeta').textContent=pre;toast(pre);return}if(!o.items.length&&!Array.isArray(o.photos)&&!o.shelves){toast('В файле нет ни позиций, ни фото');return}
   var byId={},byArt={},idMap={},noItem=0,now=Date.now(),today=new Date().toISOString().slice(0,10),add=0,upd=0,same=0,del=0,kept=0;
@@ -1464,7 +1575,7 @@ function importPack(o,fname,pre){
 // counts: [{id, art?, qty} — посчитано столько | {id, gone:'причина'} — нет на складе | set:{…} — поправить признаки | noteAdd — дописать в примечание]
 // Старое кол-во не теряется: в историю позиции пишется «пересчёт: было → стало». Повторная загрузка того же файла (o.id) ничего не меняет.
 // items — новые позиции, как в обычном пакете.
-function importCount(o,fname){
+function importCount(o,fname){_logSrc='файл '+(fname||'');
   var pk=o.id||fname,src=o.source||fname,counts=Array.isArray(o.counts)?o.counts:[],byId={},byArt={},now=new Date(),at=o.at||now.toISOString(),n={chg:0,same:0,gone:0,again:0,no:0,back:0};
   state.register.forEach(function(p){byId[p.id]=p;if(p.type!=='rail'){var k=artKeyOf(p);if(k&&!byArt[catOf(p)+'#'+k])byArt[catOf(p)+'#'+k]=p}});
   counts.forEach(function(c){if(!c||!c.id)return;
@@ -1587,7 +1698,7 @@ function bindPlan(){var b=$('plBody'),byId=function(id){return state.register.fi
   Array.prototype.forEach.call(b.querySelectorAll('[data-nedit]'),function(el){el.addEventListener('click',function(){state.planEdit=el.getAttribute('data-nedit');renderPlan();var ta=$('plBody').querySelector('[data-ntext]');if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)}})});
   Array.prototype.forEach.call(b.querySelectorAll('[data-ncancel]'),function(el){el.addEventListener('click',function(){state.planEdit=null;renderPlan()})});
   Array.prototype.forEach.call(b.querySelectorAll('[data-nsave]'),function(el){el.addEventListener('click',function(){var k=el.getAttribute('data-nsave'),ta=$('plBody').querySelector('[data-ntext]');
-    state.shelves[k]={t:ta?ta.value.trim():'',at:Date.now(),by:who||''};saveShelves();state.planEdit=null;schedulePush();renderPlan();toast('Заметка к полке '+k+' сохранена')})});
+    state.shelves[k]={t:ta?ta.value.trim():'',at:Date.now(),by:who||''};saveShelves();logAdd({pid:'',t:'полка '+k,ch:[['заметка к полке','',ta?ta.value.trim():'']]});state.planEdit=null;schedulePush();renderPlan();toast('Заметка к полке '+k+' сохранена')})});
 }
 
 
@@ -1780,11 +1891,13 @@ function outXlsx(){var rows=outFiltered();if(!rows.length){toast('Нечего �
   var ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=[{wch:14},{wch:11},{wch:40},{wch:22},{wch:8},{wch:6},{wch:12},{wch:28},{wch:12},{wch:12},{wch:36}];
   var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Выдано со склада');XLSX.writeFile(wb,'Выдано со склада '+new Date().toISOString().slice(0,10)+'.xlsx')}
 $('btnOut').addEventListener('click',function(){renderOut();$('shOut').classList.add('on')});
+$('btnAdm').addEventListener('click',openAdm);$('shAdmClose').addEventListener('click',function(){$('shAdm').classList.remove('on')});
+['admPer','admWho','admSrc'].forEach(function(id){$(id).addEventListener('change',renderAdm)});$('admQ').addEventListener('input',renderAdm);$('admXlsx').addEventListener('click',admXlsx);
 $('shOutClose').addEventListener('click',function(){$('shOut').classList.remove('on')});
 $('outPer').addEventListener('change',renderOut);$('outQ').addEventListener('input',renderOut);$('outXlsx').addEventListener('click',outXlsx);
 $('btnPlan').addEventListener('click',function(){openPlan(state.planRack==='none'?null:state.planRack)});$('shRegClose').addEventListener('click',function(){$('shReg').classList.remove('on')});
 Array.prototype.forEach.call(document.querySelectorAll('[data-close]'),function(b){b.addEventListener('click',function(){var t=b.getAttribute('data-close');if(t==='shAdd'){closeAdd(b.id==='aCancel'?'discard':'auto');return}$(t).classList.remove('on')})});
-[$('shSet'),$('shReg'),$('shPlan'),$('shWho'),$('shAdd'),$('shMove'),$('shOut')].forEach(function(sh){sh.addEventListener('click',function(e){if(e.target!==sh)return;if(sh.id==='shAdd'){closeAdd('auto');return}sh.classList.remove('on')})});
+[$('shSet'),$('shReg'),$('shPlan'),$('shWho'),$('shAdd'),$('shMove'),$('shOut'),$('shAdm')].forEach(function(sh){sh.addEventListener('click',function(e){if(e.target!==sh)return;if(sh.id==='shAdd'){closeAdd('auto');return}sh.classList.remove('on')})});
 // «наверх»
 Array.prototype.forEach.call(document.querySelectorAll('[data-top]'),function(b){var pn=$(b.getAttribute('data-top')).querySelector('.panel');pn.addEventListener('scroll',function(){b.classList.toggle('on',pn.scrollTop>400)});b.addEventListener('click',function(){pn.scrollTo({top:0,behavior:'smooth'})})});
 $('showAll').addEventListener('change',function(e){state.showAll=e.target.checked;lsSet(LS_SHOWALL,state.showAll?'1':'0');render()});
@@ -1798,14 +1911,14 @@ $('regReset').addEventListener('click',function(){if(!fbEnabled){toast('Обла
 $('btnCopy').addEventListener('click',copySummary);$('mvOk').addEventListener('click',doMove);$('mvHow').addEventListener('change',setMvTo);
 $('btnWho').addEventListener('click',askWho);$('whoOk').addEventListener('click',confirmWho);$('whoNameOk').addEventListener('click',saveWhoName);$('whoName').addEventListener('keydown',function(e){if(e.key==='Enter')saveWhoName()});$('whoPin').addEventListener('keydown',function(e){if(e.key==='Enter')confirmWho()});$('shWhoClose').addEventListener('click',function(){$('shWho').classList.remove('on')});$('btnPull').addEventListener('click',forcePull);$('btnPush').addEventListener('click',function(){_unsent++;pushNow()});
 document.addEventListener('keydown',function(e){if(e.key!=='Escape'&&e.key!=='Esc')return;if($('viewer').classList.contains('on')){$('viewer').classList.remove('on');return}
-  var open=['shWho','shMove','shAdd','shPlan','shOut','shReg','shSet'].filter(function(id){return $(id).classList.contains('on')});if(open.length){if(open[0]==='shAdd')closeAdd('auto');else $(open[0]).classList.remove('on');e.preventDefault()}});
+  var open=['shWho','shMove','shAdd','shPlan','shOut','shAdm','shReg','shSet'].filter(function(id){return $(id).classList.contains('on')});if(open.length){if(open[0]==='shAdd')closeAdd('auto');else $(open[0]).classList.remove('on');e.preventDefault()}});
 $('viewerClose').addEventListener('click',function(){$('viewer').classList.remove('on')});
 $('viewer').addEventListener('click',function(e){if(e.target===$('viewer'))$('viewer').classList.remove('on')});
-$('viewerDel').addEventListener('click',function(){var id=$('viewer')._id;if(!id)return;if(!confirm('Удалить это фото?'))return;dbDel(id).then(function(){Object.keys(photos).forEach(function(k){photos[k]=photos[k].filter(function(p){return p.id!==id})});$('viewer').classList.remove('on');renderRegister();render();fbDeletePhoto(id);toast('Фото удалено')})});
+$('viewerDel').addEventListener('click',function(){var id=$('viewer')._id;if(!id)return;if(!confirm('Удалить это фото?'))return;dbDel(id).then(function(){var fp=null;Object.keys(photos).forEach(function(k){photos[k].forEach(function(p){if(p.id===id)fp=p})});if(fp){var pp=state.register.filter(function(x){return x.id===fp.pos})[0];logAdd({pid:pp?fp.pos:'',t:pp?titleOf(pp):fp.pos,ch:[['фото','','удалено']]})}Object.keys(photos).forEach(function(k){photos[k]=photos[k].filter(function(p){return p.id!==id})});$('viewer').classList.remove('on');renderRegister();render();fbDeletePhoto(id);toast('Фото удалено')})});
 
-loadRegister();if(migrateNames()){saveRegister();saveShelves()}loadSettings();render();if(who&&!USERS[who]){who='';lsSet('sverka.who','')}whoShow();loadPhotos().then(function(){var pc=0;Object.keys(photos).forEach(function(k){photos[k].forEach(function(x){var b=acct(x.by);if(b!==x.by){x.by=b;pc++;dbPut(x).catch(function(){})}})});if(pc)schedulePush();render();fbInit();if(!who)setTimeout(askWho,600)});
+loadRegister();if(migrateNames()){_logSrc='служебно (подписи)';saveRegister();saveShelves()}loadSettings();render();if(who&&!USERS[who]){who='';lsSet('sverka.who','')}whoShow();loadPhotos().then(function(){var pc=0;Object.keys(photos).forEach(function(k){photos[k].forEach(function(x){var b=acct(x.by);if(b!==x.by){x.by=b;pc++;dbPut(x).catch(function(){})}})});if(pc)schedulePush();render();fbInit();if(!who)setTimeout(askWho,600)});
 if('serviceWorker' in navigator){try{navigator.serviceWorker.register('./sw.js').catch(function(){})}catch(e){}}
-window.__sverka={mergeRemote:mergeRemote,localPayload:localPayload,state:state,photos:photos,DEL:DEL,markDel:markDel,getUnsent:function(){return _unsent}};
+window.__sverka={changeLog:function(){return changeLog},logDiff:logDiff,saveRegister:saveRegister,mergeLog:mergeLog,renderAdm:renderAdm,openAdm:openAdm,setWho:function(v){who=v;whoShow()},mergeRemote:mergeRemote,localPayload:localPayload,state:state,photos:photos,DEL:DEL,markDel:markDel,getUnsent:function(){return _unsent}};
 })();
 </script>
 </body>
